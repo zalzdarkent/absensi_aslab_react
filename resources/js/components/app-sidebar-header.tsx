@@ -1,6 +1,10 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import RfidModeToggleMini from '@/components/rfid-mode-toggle-mini';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { Radio } from 'lucide-react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (
@@ -8,6 +12,21 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
+            </div>
+            
+            {/* RFID Mode Toggle - Right Side */}
+            <div className="ml-auto">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Radio className="h-4 w-4" />
+                            <span className="sr-only">RFID Mode Toggle</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-72" align="end">
+                        <RfidModeToggleMini />
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );

@@ -2,7 +2,9 @@ import { Head, Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, UserCheck, UserX, Activity, Eye, Calendar } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
 
 interface User {
@@ -61,6 +63,24 @@ export default function Dashboard({
         return <Badge variant="outline">Belum Datang</Badge>;
     }
   };
+
+  // Chart configuration dengan tema amber
+  const chartConfig = {
+    count: {
+      label: "Kehadiran",
+      color: "#f59e0b", // Amber-500 yang lebih modern
+    },
+  };
+
+  // Format data untuk bar chart
+  const chartData = weekly_chart_data.map(item => ({
+    date: item.date,
+    count: item.count,
+  }));
+
+  // Hitung statistik
+  const maxAttendance = Math.max(...weekly_chart_data.map(d => d.count));
+  const avgAttendance = Math.round(weekly_chart_data.reduce((sum, d) => sum + d.count, 0) / weekly_chart_data.length);
 
   return (
     <AppLayout>
@@ -253,32 +273,58 @@ export default function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Grafik Kehadiran 7 Hari Terakhir
+              Tren Kehadiran 7 Hari Terakhir
             </CardTitle>
-            <CardDescription>
-              Jumlah check-in per hari dalam seminggu terakhir
+            <CardDescription className="flex items-center justify-between">
+              <span>Pola kehadiran aslab dalam seminggu terakhir</span>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1 text-green-600">
+                  <TrendingUp className="h-3 w-3" />
+                  <span>Rata-rata: {avgAttendance}/hari</span>
+                </div>
+                <div className="text-blue-600">
+                  <span>Puncak: {maxAttendance} orang</span>
+                </div>
+              </div>
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-end justify-between gap-2">
-              {weekly_chart_data.map((data, index) => (
-                <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                  <div
-                    className="bg-primary/80 rounded-t-md w-full min-h-[4px] flex items-end justify-center pb-2"
-                    style={{
-                      height: `${Math.max((data.count / Math.max(...weekly_chart_data.map(d => d.count))) * 240, 4)}px`
-                    }}
-                  >
-                    <span className="text-xs text-white font-medium">
-                      {data.count}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {data.date}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <ChartContainer config={chartConfig}>
+              <BarChart
+                accessibilityLayer
+                data={chartData}
+                margin={{
+                  top: 20,
+                  right: 12,
+                  bottom: 12,
+                  left: 12,
+                }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickCount={5}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Bar 
+                  dataKey="count" 
+                  fill="var(--color-count)" 
+                  radius={[4, 4, 0, 0]}
+                  className="hover:opacity-80 transition-opacity"
+                />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 

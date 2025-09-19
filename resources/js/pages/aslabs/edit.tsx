@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Loader2, Save, Scan } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Scan, CheckCircle, X } from 'lucide-react';
 import InputError from '@/components/input-error';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRfidScanner } from '@/hooks/use-rfid-scanner';
 import AppLayout from '@/layouts/app-layout';
 
 interface User {
@@ -40,7 +41,7 @@ const PRODI_OPTIONS = [
 ];
 
 export default function AslabsEdit({ aslab }: Props) {
-    const [isScanning, setIsScanning] = useState(false);
+    const [showScanSuccess, setShowScanSuccess] = useState(false);
 
     const { data, setData, patch, processing, errors } = useForm<FormData>({
         name: aslab.name,
@@ -52,19 +53,30 @@ export default function AslabsEdit({ aslab }: Props) {
         is_active: aslab.is_active,
     });
 
+    // RFID Scanner Hook
+    const { isScanning, startScanning, stopScanning, error: scanError } = useRfidScanner({
+        onScan: (rfidCode: string) => {
+            setData('rfid_code', rfidCode);
+            setShowScanSuccess(true);
+            stopScanning();
+            
+            // Hide success message after 3 seconds
+            setTimeout(() => setShowScanSuccess(false), 3000);
+        },
+        enabled: true
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         patch(`/aslabs/${aslab.id}`);
     };
 
     const handleScanRfid = () => {
-        setIsScanning(true);
-        // Simulate RFID scanning
-        setTimeout(() => {
-            setIsScanning(false);
-            // In real implementation, this would come from RFID reader
-            // setData('rfid_code', 'SCANNED_RFID_CODE');
-        }, 2000);
+        if (isScanning) {
+            stopScanning();
+        } else {
+            startScanning();
+        }
     };
 
     return (
@@ -190,27 +202,56 @@ export default function AslabsEdit({ aslab }: Props) {
                                     <div className="space-y-2">
                                         <Label htmlFor="rfid_code">Kode RFID</Label>
                                         <div className="flex gap-2">
-                                            <Input
-                                                id="rfid_code"
-                                                type="text"
-                                                value={data.rfid_code}
-                                                onChange={(e) => setData('rfid_code', e.target.value.toUpperCase())}
-                                                placeholder="Tempel kartu RFID atau masukkan kode"
-                                                className="flex-1"
-                                            />
+                                            <div className="relative flex-1">
+                                                <Input
+                                                    id="rfid_code"
+                                                    type="text"
+                                                    value={data.rfid_code}
+                                                    onChange={(e) => setData('rfid_code', e.target.value.toUpperCase())}
+                                                    placeholder="Tempel kartu RFID atau masukkan kode"
+                                                    className="flex-1"
+                                                />
+                                                {showScanSuccess && (
+                                                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
+                                                )}
+                                            </div>
                                             <Button
                                                 type="button"
-                                                variant="outline"
+                                                variant={isScanning ? "destructive" : "outline"}
                                                 onClick={handleScanRfid}
-                                                disabled={isScanning}
+                                                disabled={processing}
+                                                className="min-w-[80px]"
                                             >
                                                 {isScanning ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    <>
+                                                        <X className="h-4 w-4 mr-1" />
+                                                        Stop
+                                                    </>
                                                 ) : (
-                                                    <Scan className="h-4 w-4" />
+                                                    <>
+                                                        <Scan className="h-4 w-4 mr-1" />
+                                                        Scan
+                                                    </>
                                                 )}
                                             </Button>
                                         </div>
+                                        {isScanning && (
+                                            <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Menunggu kartu RFID... Tempelkan kartu pada reader.
+                                            </div>
+                                        )}
+                                        {showScanSuccess && (
+                                            <div className="text-sm text-green-600 bg-green-50 p-2 rounded flex items-center gap-2">
+                                                <CheckCircle className="h-4 w-4" />
+                                                RFID berhasil di-scan dan dimasukkan!
+                                            </div>
+                                        )}
+                                        {scanError && (
+                                            <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                                                Error: {scanError}
+                                            </div>
+                                        )}
                                         <p className="text-sm text-muted-foreground">
                                             {aslab.rfid_code ? `RFID saat ini: ${aslab.rfid_code}. Masukkan kode baru untuk mengubah.` : 'Belum ada RFID terdaftar. Masukkan kode untuk mendaftarkan.'}
                                         </p>
