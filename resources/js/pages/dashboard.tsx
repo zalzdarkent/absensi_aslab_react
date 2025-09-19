@@ -86,7 +86,7 @@ export default function Dashboard({
     <AppLayout>
       <Head title="Dashboard" />
 
-      <div className="space-y-6">
+      <div className="space-y-6 py-4">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -273,7 +273,7 @@ export default function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Tren Kehadiran 7 Hari Terakhir
+              Grafik Kehadiran 7 Hari Terakhir
             </CardTitle>
             <CardDescription className="flex items-center justify-between">
               <span>Pola kehadiran aslab dalam seminggu terakhir</span>
@@ -289,14 +289,12 @@ export default function Dashboard({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig}>
+            <ChartContainer config={chartConfig} className="aspect-auto h-[200px] w-full">
               <BarChart
                 accessibilityLayer
                 data={chartData}
                 margin={{
-                  top: 20,
                   right: 12,
-                  bottom: 12,
                   left: 12,
                 }}
               >
@@ -317,9 +315,9 @@ export default function Dashboard({
                   cursor={false}
                   content={<ChartTooltipContent hideLabel />}
                 />
-                <Bar 
-                  dataKey="count" 
-                  fill="var(--color-count)" 
+                <Bar
+                  dataKey="count"
+                  fill="var(--color-count)"
                   radius={[4, 4, 0, 0]}
                   className="hover:opacity-80 transition-opacity"
                 />

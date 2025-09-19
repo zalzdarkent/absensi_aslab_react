@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Clock, RefreshCw, Wifi, WifiOff, Radio } from 'lucide-react';
+import { Clock, RefreshCw } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
@@ -69,7 +69,7 @@ export default function AttendanceScan() {
     if (rfidIntervalRef.current) {
       clearInterval(rfidIntervalRef.current);
     }
-    
+
     rfidIntervalRef.current = setInterval(async () => {
       try {
         const response = await fetch('/api/rfid/last-scan');
@@ -78,7 +78,7 @@ export default function AttendanceScan() {
           if (data.success && data.rfid_code && data.rfid_code !== rfidDetected) {
             setRfidDetected(data.rfid_code);
             setRfidCode(data.rfid_code);
-            
+
             // Auto-process the scan
             await processRfidScan(data.rfid_code);
           }
