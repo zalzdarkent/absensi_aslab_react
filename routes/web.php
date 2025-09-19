@@ -3,7 +3,6 @@
 use App\Http\Controllers\AslabController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\RfidRegistrationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -18,10 +17,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Aslab management routes
     Route::resource('aslabs', AslabController::class);
     Route::patch('aslabs/{aslab}/toggle-status', [AslabController::class, 'toggleStatus'])->name('aslabs.toggle-status');
-
-    // RFID Registration routes
-    Route::get('/rfid-registration', [RfidRegistrationController::class, 'index'])->name('rfid.registration');
-    Route::post('/rfid-registration', [RfidRegistrationController::class, 'store'])->name('rfid.register');
 
     // RFID Attendance Scan routes
     Route::get('/attendance-scan', [AttendanceController::class, 'scanPage'])->name('attendance.scan');

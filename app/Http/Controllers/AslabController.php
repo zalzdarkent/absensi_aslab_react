@@ -63,6 +63,7 @@ class AslabController extends Controller
             'password' => 'required|string|min:8',
             'prodi' => 'required|string|max:255',
             'semester' => 'required|integer|min:1|max:14',
+            'rfid_code' => 'nullable|string|max:255|unique:users,rfid_code',
         ]);
 
         User::create([
@@ -71,6 +72,7 @@ class AslabController extends Controller
             'password' => Hash::make($request->password),
             'prodi' => $request->prodi,
             'semester' => $request->semester,
+            'rfid_code' => $request->rfid_code,
             'role' => 'aslab',
             'is_active' => true,
         ]);
@@ -124,7 +126,7 @@ class AslabController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $aslab->id,
-            'rfid_code' => 'required|string|unique:users,rfid_code,' . $aslab->id,
+            'rfid_code' => 'nullable|string|max:255|unique:users,rfid_code,' . $aslab->id,
             'prodi' => 'required|string|max:255',
             'semester' => 'required|integer|min:1|max:14',
             'is_active' => 'boolean',

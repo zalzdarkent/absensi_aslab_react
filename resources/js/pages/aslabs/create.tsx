@@ -4,8 +4,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Scan } from 'lucide-react';
 import InputError from '@/components/input-error';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 
 interface FormData {
@@ -24,6 +25,8 @@ const PRODI_OPTIONS = [
 ];
 
 export default function AslabsCreate() {
+  const [isScanning, setIsScanning] = useState(false);
+
   const { data, setData, post, processing, errors, reset } = useForm<FormData>({
     name: '',
     email: '',
@@ -39,6 +42,16 @@ export default function AslabsCreate() {
     post('/aslabs', {
       onSuccess: () => reset(),
     });
+  };
+
+  const handleScanRfid = () => {
+    setIsScanning(true);
+    // Simulate RFID scanning
+    setTimeout(() => {
+      setIsScanning(false);
+      // In real implementation, this would come from RFID reader
+      // setData('rfid_code', 'SCANNED_RFID_CODE');
+    }, 2000);
   };
 
   return (
@@ -175,6 +188,36 @@ export default function AslabsCreate() {
                     </Select>
                     <InputError message={errors.semester} />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="rfid_code">Kode RFID (Opsional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="rfid_code"
+                      type="text"
+                      value={data.rfid_code}
+                      onChange={(e) => setData('rfid_code', e.target.value.toUpperCase())}
+                      placeholder="Tempel kartu RFID atau masukkan kode"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleScanRfid}
+                      disabled={isScanning}
+                    >
+                      {isScanning ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Scan className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Tempelkan kartu RFID pada reader atau masukkan kode secara manual
+                  </p>
+                  <InputError message={errors.rfid_code} />
                 </div>
               </div>
 

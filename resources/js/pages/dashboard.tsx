@@ -293,18 +293,18 @@ export default function Dashboard({
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-16">
-            <Link href="/rfid-registration">
-              <div className="text-center">
-                <Activity className="h-6 w-6 mx-auto mb-1" />
-                <div className="text-sm font-medium">Daftar RFID</div>
-              </div>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="h-16">
             <Link href="/attendance-scan">
               <div className="text-center">
                 <UserCheck className="h-6 w-6 mx-auto mb-1" />
                 <div className="text-sm font-medium">Scan Absensi</div>
+              </div>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="h-16">
+            <Link href="/attendance-history">
+              <div className="text-center">
+                <Activity className="h-6 w-6 mx-auto mb-1" />
+                <div className="text-sm font-medium">Riwayat Absensi</div>
               </div>
             </Link>
           </Button>
