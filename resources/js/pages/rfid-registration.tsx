@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Loader2, Save, Scan, CheckCircle, XCircle } from 'lucide-react';
 import InputError from '@/components/input-error';
 import AppLayout from '@/layouts/app-layout';
+import { BreadcrumbItem } from '@/types';
+import { DataTable } from '@/components/ui/data-table';
+import { createRegisteredUsersColumns } from '@/components/tables/registered-users-columns';
 
 interface User {
   id: number;
@@ -29,9 +31,16 @@ interface FormData {
   user_id: string;
 }
 
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Pendaftaran RFID',
+    }
+]
+
 export default function RfidRegistration({ users }: Props) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const columns = createRegisteredUsersColumns();
 
   const { data, setData, post, processing, errors, reset } = useForm<FormData>({
     rfid_code: '',
@@ -68,10 +77,10 @@ export default function RfidRegistration({ users }: Props) {
   const registeredUsers = users.filter(user => user.rfid_code);
 
   return (
-    <AppLayout>
+    <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Pendaftaran RFID" />
 
-      <div className="space-y-6">
+      <div className="space-y-6 py-4">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Pendaftaran RFID</h1>
@@ -80,15 +89,16 @@ export default function RfidRegistration({ users }: Props) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Registration Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Daftarkan RFID Baru</CardTitle>
-              <CardDescription>
-                Pilih aslab dan scan/masukkan kode RFID
-              </CardDescription>
-            </CardHeader>
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Daftarkan RFID Baru</CardTitle>
+                <CardDescription>
+                  Pilih aslab dan scan/masukkan kode RFID
+                </CardDescription>
+              </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* User Selection */}
@@ -199,95 +209,69 @@ export default function RfidRegistration({ users }: Props) {
               </form>
             </CardContent>
           </Card>
+          </div>
 
-          {/* Registered Users List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Aslab Terdaftar ({registeredUsers.length})</CardTitle>
-              <CardDescription>
-                Daftar aslab yang sudah memiliki RFID terdaftar
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {registeredUsers.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Belum ada aslab yang terdaftar RFID
-                  </p>
-                ) : (
-                  registeredUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {user.prodi} • Sem {user.semester}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="text-xs">
-                          {user.rfid_code}
-                        </Badge>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {user.is_active ? 'Aktif' : 'Nonaktif'}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Stats Cards - Vertical Layout */}
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Aslab</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{users.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Aslab terdaftar di sistem
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">RFID Terdaftar</CardTitle>
+                <Scan className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{registeredUsers.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Sudah memiliki RFID
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Belum Daftar</CardTitle>
+                <XCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{availableUsers.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Belum terdaftar RFID
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Aslab</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{users.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Aslab terdaftar di sistem
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">RFID Terdaftar</CardTitle>
-              <Scan className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{registeredUsers.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Sudah memiliki RFID
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Belum Daftar</CardTitle>
-              <XCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{availableUsers.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Belum terdaftar RFID
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Registered Users DataTable */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Aslab Terdaftar ({registeredUsers.length})</CardTitle>
+            <CardDescription>
+              Daftar aslab yang sudah memiliki RFID terdaftar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={columns}
+              data={registeredUsers}
+              searchPlaceholder="Cari nama, email, atau RFID..."
+              filename="aslab-terdaftar-rfid"
+              enableRowSelection={false}
+            />
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

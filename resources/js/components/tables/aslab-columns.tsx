@@ -68,11 +68,13 @@ export const createAslabColumns = (): ColumnDef<User>[] => [
     cell: ({ row }) => {
       const rfidCode = row.getValue("rfid_code") as string | null;
       return rfidCode ? (
-        <code className="bg-muted px-2 py-1 rounded text-sm">
+        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
           {rfidCode}
-        </code>
+        </Badge>
       ) : (
-        <span className="text-muted-foreground">Belum terdaftar</span>
+        <Badge variant="secondary" className="text-muted-foreground">
+          Belum terdaftar
+        </Badge>
       );
     },
   },

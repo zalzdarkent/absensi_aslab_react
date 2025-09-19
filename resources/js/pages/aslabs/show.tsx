@@ -2,8 +2,10 @@ import { Head, Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit, Calendar, Clock, Activity } from 'lucide-react';
+import { ArrowLeft, Edit, Clock, Activity } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
+import { DataTable } from '@/components/ui/data-table';
+import { createRecentAttendanceColumns } from '@/components/tables/recent-attendance-columns';
 
 interface User {
   id: number;
@@ -33,33 +35,35 @@ interface Props {
 }
 
 export default function AslabsShow({ aslab, stats, recent_attendances }: Props) {
+  const columns = createRecentAttendanceColumns();
+
   return (
     <AppLayout>
       <Head title={`Detail ${aslab.name}`} />
 
-      <div className="space-y-6">
+      <div className="space-y-6 pt-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/aslabs">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
-            </Button>
+        <div className="space-y-4">
+          <Button variant="ghost" size="sm" asChild className="w-fit">
+            <Link href="/aslabs">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Kembali
+            </Link>
+          </Button>
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{aslab.name}</h1>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mt-2">
                 Detail informasi asisten laboratorium
               </p>
             </div>
+            <Button asChild>
+              <Link href={`/aslabs/${aslab.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </Button>
           </div>
-          <Button asChild>
-            <Link href={`/aslabs/${aslab.id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -74,39 +78,41 @@ export default function AslabsShow({ aslab, stats, recent_attendances }: Props) 
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
                       <Label>Nama Lengkap</Label>
                       <p className="text-lg font-medium">{aslab.name}</p>
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label>Email</Label>
                       <p className="text-lg">{aslab.email}</p>
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label>Program Studi</Label>
                       <p className="text-lg">{aslab.prodi}</p>
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
                       <Label>Semester</Label>
                       <p className="text-lg">Semester {aslab.semester}</p>
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label>Kode RFID</Label>
                       {aslab.rfid_code ? (
-                        <code className="bg-muted px-3 py-1 rounded text-lg">
+                        <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-base px-3 py-1">
                           {aslab.rfid_code}
-                        </code>
+                        </Badge>
                       ) : (
-                        <p className="text-muted-foreground">Belum terdaftar</p>
+                        <Badge variant="secondary" className="text-base px-3 py-1">
+                          Belum terdaftar
+                        </Badge>
                       )}
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label>Status</Label>
-                      <div className="mt-1">
-                        <Badge variant={aslab.is_active ? 'default' : 'secondary'} className="text-sm">
+                      <div>
+                        <Badge variant={aslab.is_active ? 'default' : 'secondary'} className="text-base px-3 py-1">
                           {aslab.is_active ? 'Aktif' : 'Nonaktif'}
                         </Badge>
                       </div>
@@ -152,57 +158,13 @@ export default function AslabsShow({ aslab, stats, recent_attendances }: Props) 
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-medium">Tanggal</th>
-                    <th className="text-left p-4 font-medium">Tipe</th>
-                    <th className="text-left p-4 font-medium">Waktu</th>
-                    <th className="text-left p-4 font-medium">Catatan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent_attendances.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="text-center p-8 text-muted-foreground">
-                        Belum ada data absensi
-                      </td>
-                    </tr>
-                  ) : (
-                    recent_attendances.map((attendance) => (
-                      <tr key={attendance.id} className="border-b hover:bg-muted/50">
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {new Date(attendance.date).toLocaleDateString('id-ID', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <Badge variant={attendance.type === 'check_in' ? 'default' : 'secondary'}>
-                            {attendance.type === 'check_in' ? 'Check In' : 'Check Out'}
-                          </Badge>
-                        </td>
-                        <td className="p-4">
-                          {new Date(attendance.timestamp).toLocaleTimeString('id-ID', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </td>
-                        <td className="p-4 text-muted-foreground">
-                          {attendance.notes || '-'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={recent_attendances}
+              searchPlaceholder="Cari tanggal atau tipe absensi..."
+              filename="riwayat-absensi-aslab"
+              enableRowSelection={false}
+            />
           </CardContent>
         </Card>
       </div>

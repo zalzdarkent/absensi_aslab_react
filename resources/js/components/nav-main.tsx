@@ -16,6 +16,20 @@ export function NavMain({ groups = [] }: NavMainProps) {
     const page = usePage();
     const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
 
+    // Check if any child is active for a parent menu
+    const hasActiveChild = (item: NavGroupItem) => {
+        if (!item.children) return false;
+        return item.children.some(child => {
+            const url = typeof child.href === 'string' ? child.href : child.href.url;
+            return page.url === url;
+        });
+    };
+
+    // Check if menu should be expanded (either manually expanded or has active child)
+    const isMenuExpanded = (menuTitle: string, item: NavGroupItem) => {
+        return expandedMenus.has(menuTitle) || hasActiveChild(item);
+    };
+
     const toggleMenu = (menuTitle: string) => {
         setExpandedMenus(prev => {
             const newExpanded = new Set(prev);
@@ -51,11 +65,11 @@ export function NavMain({ groups = [] }: NavMainProps) {
                                             <span>{item.title}</span>
                                             <ChevronRight
                                                 className={`ml-auto h-4 w-4 transition-transform duration-200 ${
-                                                    expandedMenus.has(item.title) ? 'rotate-90' : ''
+                                                    isMenuExpanded(item.title, item) ? 'rotate-90' : ''
                                                 }`}
                                             />
                                         </SidebarMenuButton>
-                                        {expandedMenus.has(item.title) && (
+                                        {isMenuExpanded(item.title, item) && (
                                             <SidebarMenuSub>
                                                 {item.children.map((child) => (
                                                     <SidebarMenuSubItem key={child.title}>
