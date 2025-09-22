@@ -32,7 +32,7 @@ const RfidModeToggleMini: React.FC<RfidModeToggleMiniProps> = ({ className }) =>
   const setMode = async (mode: RfidMode) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/rfid/set-mode', {
         method: 'POST',
@@ -72,7 +72,7 @@ const RfidModeToggleMini: React.FC<RfidModeToggleMiniProps> = ({ className }) =>
   // Fetch current mode on component mount
   useEffect(() => {
     fetchCurrentMode();
-    
+
     // Refresh mode every 10 seconds
     const interval = setInterval(fetchCurrentMode, 10000);
     return () => clearInterval(interval);
@@ -131,8 +131,8 @@ const RfidModeToggleMini: React.FC<RfidModeToggleMiniProps> = ({ className }) =>
       </div>
 
       {/* Current Mode Status */}
-      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-        <span className="text-xs font-medium text-gray-600">Status:</span>
+      <div className="flex items-center justify-between p-2 bg-muted rounded">
+        <span className="text-xs font-medium text-muted-foreground">Status:</span>
         <Badge variant="outline" className="text-xs">
           <div className={cn("w-2 h-2 rounded-full mr-2", getModeColor(currentMode))} />
           {getModeLabel(currentMode)}
@@ -140,7 +140,7 @@ const RfidModeToggleMini: React.FC<RfidModeToggleMiniProps> = ({ className }) =>
       </div>
 
       {/* Mode Description */}
-      <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
+      <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
         {getModeDescription(currentMode)}
       </div>
 
@@ -150,14 +150,14 @@ const RfidModeToggleMini: React.FC<RfidModeToggleMiniProps> = ({ className }) =>
           Mode Utama
         </Label>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-600">Registrasi</span>
+          <span className="text-xs text-muted-foreground">Registrasi</span>
           <Switch
             id="mode-toggle-mini"
             checked={isAttendanceMode}
             onCheckedChange={handleToggle}
             disabled={isLoading}
           />
-          <span className="text-xs text-gray-600">Absensi</span>
+          <span className="text-xs text-muted-foreground">Absensi</span>
         </div>
       </div>
 
@@ -168,30 +168,30 @@ const RfidModeToggleMini: React.FC<RfidModeToggleMiniProps> = ({ className }) =>
             Jenis Absensi
           </Label>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Check-In</span>
+            <span className="text-xs text-muted-foreground">Check-In</span>
             <Switch
               id="attendance-toggle-mini"
               checked={currentMode === 'check_out'}
               onCheckedChange={handleAttendanceModeToggle}
               disabled={isLoading}
             />
-            <span className="text-xs text-gray-600">Check-Out</span>
+            <span className="text-xs text-muted-foreground">Check-Out</span>
           </div>
         </div>
       )}
 
       {/* Error message */}
       {error && (
-        <div className="text-xs text-red-500 bg-red-50 p-2 rounded">
+        <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
           {error}
         </div>
       )}
 
       {/* Success indicator */}
       {!isLoading && !error && (
-        <div className="flex items-center gap-2 text-xs text-green-600">
+        <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
           <CheckCircle className="h-3 w-3" />
-          Terhubung dengan Arduino
+          Terhubung dengan perangkat RFID
         </div>
       )}
     </div>

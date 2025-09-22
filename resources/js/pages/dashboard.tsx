@@ -1,11 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
+import { DataTable } from '@/components/ui/data-table';
+import { createTodayAttendanceColumns } from '@/components/tables/today-attendance-columns';
 
 interface User {
   id: number;
@@ -53,16 +54,7 @@ export default function Dashboard({
   weekly_chart_data,
   current_date
 }: Props) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Sedang di Lab':
-        return <Badge variant="default">Di Lab</Badge>;
-      case 'Sudah Pulang':
-        return <Badge variant="secondary">Pulang</Badge>;
-      default:
-        return <Badge variant="outline">Belum Datang</Badge>;
-    }
-  };
+  const columns = createTodayAttendanceColumns();
 
   // Chart configuration dengan tema amber
   const chartConfig = {
@@ -97,53 +89,53 @@ export default function Dashboard({
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Aslab</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-blue-50">Total Aslab</CardTitle>
+              <Users className="h-4 w-4 text-blue-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total_aslabs}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-white">{stats.total_aslabs}</div>
+              <p className="text-xs text-blue-100">
                 Aslab aktif terdaftar
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Check-in Hari Ini</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-green-50">Check-in Hari Ini</CardTitle>
+              <UserCheck className="h-4 w-4 text-green-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.today_checkins}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-white">{stats.today_checkins}</div>
+              <p className="text-xs text-green-100">
                 Aslab yang sudah datang
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Check-out Hari Ini</CardTitle>
-              <UserX className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-orange-50">Check-out Hari Ini</CardTitle>
+              <UserX className="h-4 w-4 text-orange-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.today_checkouts}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-white">{stats.today_checkouts}</div>
+              <p className="text-xs text-orange-100">
                 Aslab yang sudah pulang
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sedang di Lab</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-purple-50">Sedang di Lab</CardTitle>
+              <Activity className="h-4 w-4 text-purple-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.active_today}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-white">{stats.active_today}</div>
+              <p className="text-xs text-purple-100">
                 Aslab yang sedang aktif
               </p>
             </CardContent>
@@ -169,57 +161,13 @@ export default function Dashboard({
                 </Button>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2 font-medium">Nama</th>
-                        <th className="text-left p-2 font-medium">Prodi</th>
-                        <th className="text-left p-2 font-medium">Check-in</th>
-                        <th className="text-left p-2 font-medium">Check-out</th>
-                        <th className="text-left p-2 font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {today_attendances.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="text-center p-8 text-muted-foreground">
-                            Belum ada absensi hari ini
-                          </td>
-                        </tr>
-                      ) : (
-                        today_attendances.slice(0, 10).map((attendance, index) => (
-                          <tr key={index} className="border-b hover:bg-muted/50">
-                            <td className="p-2">
-                              <div className="font-medium">{attendance.user.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                Sem {attendance.user.semester}
-                              </div>
-                            </td>
-                            <td className="p-2 text-sm">{attendance.user.prodi}</td>
-                            <td className="p-2">
-                              {attendance.check_in ? (
-                                <span className="text-sm">{attendance.check_in}</span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">-</span>
-                              )}
-                            </td>
-                            <td className="p-2">
-                              {attendance.check_out ? (
-                                <span className="text-sm">{attendance.check_out}</span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">-</span>
-                              )}
-                            </td>
-                            <td className="p-2">
-                              {getStatusBadge(attendance.status)}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={columns}
+                  data={today_attendances}
+                  searchPlaceholder="Cari nama, prodi..."
+                  filename="absensi-hari-ini"
+                  enableRowSelection={false}
+                />
               </CardContent>
             </Card>
           </div>
