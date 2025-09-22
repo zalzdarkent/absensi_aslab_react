@@ -12,11 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('rfid_code')->unique()->nullable()->after('email');
-            $table->string('prodi')->nullable()->after('rfid_code');
-            $table->integer('semester')->nullable()->after('prodi');
-            $table->enum('role', ['admin', 'aslab'])->default('aslab')->after('semester');
-            $table->boolean('is_active')->default(true)->after('role');
+            if (!Schema::hasColumn('users', 'rfid_code')) {
+                $table->string('rfid_code')->unique()->nullable()->after('email');
+            }
+            if (!Schema::hasColumn('users', 'prodi')) {
+                $table->string('prodi')->nullable()->after('rfid_code');
+            }
+            if (!Schema::hasColumn('users', 'semester')) {
+                $table->integer('semester')->nullable()->after('prodi');
+            }
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->enum('role', ['admin', 'aslab'])->default('aslab')->after('semester');
+            }
+            if (!Schema::hasColumn('users', 'is_active')) {
+                $table->boolean('is_active')->default(true)->after('role');
+            }
         });
     }
 

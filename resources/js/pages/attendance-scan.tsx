@@ -41,7 +41,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function AttendanceScan() {
   const [rfidCode, setRfidCode] = useState('');
-  const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [todayAttendances, setTodayAttendances] = useState<TodayAttendance[]>([]);
   const [isLoadingAttendances, setIsLoadingAttendances] = useState(false);
@@ -51,44 +50,6 @@ export default function AttendanceScan() {
   const columns = createAttendanceColumns();
 
   // Load today's attendance on component mount
-  useEffect(() => {
-    loadTodayAttendances();
-    startRfidDetection();
-
-    // Cleanup intervals on unmount
-    return () => {
-      if (rfidIntervalRef.current) {
-        clearInterval(rfidIntervalRef.current);
-      }
-    };
-  }, []);
-
-  // Remove auto-refresh, only update on RFID events
-  // Real-time RFID detection for automatic scanning
-  const startRfidDetection = () => {
-    if (rfidIntervalRef.current) {
-      clearInterval(rfidIntervalRef.current);
-    }
-
-    rfidIntervalRef.current = setInterval(async () => {
-      try {
-        const response = await fetch('/api/rfid/last-scan');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.rfid_code && data.rfid_code !== rfidDetected) {
-            setRfidDetected(data.rfid_code);
-            setRfidCode(data.rfid_code);
-
-            // Auto-process the scan
-            await processRfidScan(data.rfid_code);
-          }
-        }
-      } catch (error) {
-        console.error('Error detecting RFID:', error);
-      }
-    }, 2000); // Check every 2 seconds only for RFID detection
-  };
-
   const loadTodayAttendances = useCallback(async () => {
     setIsLoadingAttendances(true);
     try {
@@ -105,10 +66,9 @@ export default function AttendanceScan() {
     }
   }, []);
 
-  const processRfidScan = async (rfid: string) => {
+  const processRfidScan = useCallback(async (rfid: string) => {
     if (!rfid.trim()) return;
 
-    setIsScanning(true);
     setScanResult(null);
 
     try {
@@ -144,15 +104,45 @@ export default function AttendanceScan() {
         user: { name: '', prodi: '', semester: 0 },
         time: '',
       });
-    } finally {
-      setIsScanning(false);
     }
-  };
+  }, [loadTodayAttendances]);
 
-  const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await processRfidScan(rfidCode);
-  };
+  // Real-time RFID detection for automatic scanning
+  const startRfidDetection = useCallback(() => {
+    if (rfidIntervalRef.current) {
+      clearInterval(rfidIntervalRef.current);
+    }
+
+    rfidIntervalRef.current = setInterval(async () => {
+      try {
+        const response = await fetch('/api/rfid/last-scan');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.rfid_code && data.rfid_code !== rfidDetected) {
+            setRfidDetected(data.rfid_code);
+            setRfidCode(data.rfid_code);
+
+            // Auto-process the scan
+            await processRfidScan(data.rfid_code);
+          }
+        }
+      } catch (error) {
+        console.error('Error detecting RFID:', error);
+      }
+    }, 2000); // Check every 2 seconds only for RFID detection
+  }, [rfidDetected, processRfidScan]);
+
+  useEffect(() => {
+    loadTodayAttendances();
+    startRfidDetection();
+
+    // Cleanup intervals on unmount
+    return () => {
+      if (rfidIntervalRef.current) {
+        clearInterval(rfidIntervalRef.current);
+      }
+    };
+  }, [loadTodayAttendances, startRfidDetection]);
 
   // Function untuk refresh manual jika diperlukan
   const handleManualRefresh = () => {

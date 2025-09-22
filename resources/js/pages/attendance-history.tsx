@@ -79,59 +79,59 @@ export default function AttendanceHistory({ attendances }: Props) {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Record</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-blue-50">Total Record</CardTitle>
+              <Activity className="h-4 w-4 text-blue-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{attendances.total}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-white">{attendances.total}</div>
+              <p className="text-xs text-blue-100">
                 Data absensi tercatat
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Hadir</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-green-50">Hadir</CardTitle>
+              <User className="h-4 w-4 text-green-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-white">
                 {attendances.data.filter(a => a.status === 'present').length}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-green-100">
                 Halaman ini
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Terlambat</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-orange-50">Terlambat</CardTitle>
+              <Clock className="h-4 w-4 text-orange-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-white">
                 {attendances.data.filter(a => a.status === 'late').length}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-orange-100">
                 Halaman ini
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-red-500 to-red-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tidak Hadir</CardTitle>
-              <X className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-red-50">Tidak Hadir</CardTitle>
+              <X className="h-4 w-4 text-red-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-white">
                 {attendances.data.filter(a => a.status === 'absent').length}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-red-100">
                 Halaman ini
               </p>
             </CardContent>

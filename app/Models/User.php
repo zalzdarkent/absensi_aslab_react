@@ -26,6 +26,7 @@ class User extends Authenticatable
         'semester',
         'role',
         'is_active',
+        'piket_day',
     ];
 
     /**

@@ -1,8 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp } from 'lucide-react';
+import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
 import { DataTable } from '@/components/ui/data-table';
@@ -49,12 +50,80 @@ interface Props {
 
 export default function Dashboard({
   stats,
-  today_attendances,
+  today_attendances: initialAttendances,
   most_active_aslabs,
   weekly_chart_data,
   current_date
 }: Props) {
   const columns = createTodayAttendanceColumns();
+
+  // State untuk event-driven updates
+  const [todayAttendances, setTodayAttendances] = useState(initialAttendances);
+  const [isLoadingAttendances, setIsLoadingAttendances] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [rfidDetected, setRfidDetected] = useState<string | null>(null);
+  const rfidIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Start RFID detection untuk auto-refresh
+  // Load today's attendance data
+  const loadTodayAttendances = useCallback(async () => {
+    setIsLoadingAttendances(true);
+    try {
+      const response = await fetch('/attendance-today');
+      const data = await response.json();
+      if (data.success) {
+        setTodayAttendances(data.data);
+        setLastUpdate(new Date());
+      }
+    } catch (error) {
+      console.error('Error loading today attendances:', error);
+    } finally {
+      setIsLoadingAttendances(false);
+    }
+  }, []);
+
+  // Start RFID detection untuk auto-refresh
+  const startRfidDetection = useCallback(() => {
+    if (rfidIntervalRef.current) {
+      clearInterval(rfidIntervalRef.current);
+    }
+
+    rfidIntervalRef.current = setInterval(async () => {
+      try {
+        const response = await fetch('/api/rfid/last-scan');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.rfid_code && data.rfid_code !== rfidDetected) {
+            setRfidDetected(data.rfid_code);
+            // Auto-refresh data saat ada aktivitas RFID
+            await loadTodayAttendances();
+            // Clear detection setelah beberapa detik
+            setTimeout(() => {
+              setRfidDetected(null);
+            }, 3000);
+          }
+        }
+      } catch (error) {
+        console.error('Error detecting RFID:', error);
+      }
+    }, 2000); // Check setiap 2 detik
+  }, [rfidDetected, loadTodayAttendances]);
+
+  useEffect(() => {
+    startRfidDetection();
+
+    // Cleanup intervals on unmount
+    return () => {
+      if (rfidIntervalRef.current) {
+        clearInterval(rfidIntervalRef.current);
+      }
+    };
+  }, [startRfidDetection]);
+
+  // Manual refresh function
+  const handleManualRefresh = () => {
+    loadTodayAttendances();
+  };
 
   // Chart configuration dengan tema amber
   const chartConfig = {
@@ -148,9 +217,36 @@ export default function Dashboard({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Absensi Hari Ini</CardTitle>
-                  <CardDescription>
-                    Daftar kehadiran aslab pada {current_date}
+                  <CardTitle className="flex items-center gap-2">
+                    Absensi Hari Ini
+                    {isLoadingAttendances && (
+                      <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
+                    )}
+                    {rfidDetected && (
+                      <div className="flex items-center gap-1 text-green-600 text-sm">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span>RFID Detected</span>
+                      </div>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="flex items-center justify-between">
+                    <span>Daftar kehadiran aslab pada {current_date}</span>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1 text-blue-600">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span>Event-Driven</span>
+                      </div>
+                      <span className="text-muted-foreground">
+                        Update: {lastUpdate.toLocaleTimeString()}
+                      </span>
+                      <button
+                        onClick={handleManualRefresh}
+                        disabled={isLoadingAttendances}
+                        className="text-blue-600 hover:text-blue-800 underline disabled:opacity-50"
+                      >
+                        Refresh
+                      </button>
+                    </div>
                   </CardDescription>
                 </div>
                 <Button variant="outline" size="sm" asChild>
@@ -163,7 +259,7 @@ export default function Dashboard({
               <CardContent>
                 <DataTable
                   columns={columns}
-                  data={today_attendances}
+                  data={todayAttendances}
                   searchPlaceholder="Cari nama, prodi..."
                   filename="absensi-hari-ini"
                   enableRowSelection={false}
