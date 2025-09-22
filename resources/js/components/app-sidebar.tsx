@@ -5,7 +5,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Users, History, ScanLine } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Users, History, ScanLine, CalendarDaysIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 interface NavGroupItem extends NavItem {
@@ -50,7 +50,12 @@ const navGroups: { label: string; items: NavGroupItem[] }[] = [
                         title: 'Riwayat Absensi',
                         href: '/attendance-history',
                         icon: History,
-                    }
+                    },
+                    {
+                        title: 'Jadwal Piket',
+                        href: '/',
+                        icon: CalendarDaysIcon,
+                    },
                 ],
             },
         ],
