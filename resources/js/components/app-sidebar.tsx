@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon } from 'lucide-react';
+import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon, ClipboardList, PackageIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 interface NavGroupItem extends NavItem {
@@ -19,16 +19,6 @@ const navGroups: { label: string; items: NavGroupItem[] }[] = [
                 title: 'Dashboard',
                 href: dashboard(),
                 icon: LayoutGrid,
-            },
-        ],
-    },
-    {
-        label: 'Management',
-        items: [
-            {
-                title: 'Data Aslab',
-                href: '/aslabs',
-                icon: Users,
             },
         ],
     },
@@ -57,6 +47,26 @@ const navGroups: { label: string; items: NavGroupItem[] }[] = [
                     },
                 ],
             },
+        ],
+    },
+    {
+        label: 'Management',
+        items: [
+            {
+                title: 'Data Aslab',
+                href: '/aslabs',
+                icon: Users,
+            },
+            {
+                title: 'Pendataan Aset Aslab',
+                href: '#',
+                icon: ClipboardList,
+            },
+            {
+                title: 'Peminjaman Barang',
+                href: '#',
+                icon: PackageIcon,
+            }
         ],
     },
 ];

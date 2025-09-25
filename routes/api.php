@@ -1,13 +1,30 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RfidController;
 use App\Http\Controllers\Api\RfidRegistrationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Public Authentication Routes (tanpa middleware auth)
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// Protected Authentication Routes (dengan auth:sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/update-profile', [AuthController::class, 'updateProfile']);
+
+    // User info endpoint
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+});
 
 // RFID API Routes (tanpa auth untuk hardware RFID)
 Route::prefix('rfid')->group(function () {
