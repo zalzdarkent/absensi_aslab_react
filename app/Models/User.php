@@ -100,4 +100,20 @@ class User extends Authenticatable
     {
         return $this->todayCheckOut() !== null;
     }
+
+    /**
+     * Get peminjaman asets for this user
+     */
+    public function peminjamanAsets()
+    {
+        return $this->hasMany(PeminjamanAset::class);
+    }
+
+    /**
+     * Get penggunaan bahans for this user
+     */
+    public function penggunaanBahans()
+    {
+        return $this->hasMany(PenggunaanBahan::class);
+    }
 }

@@ -1,5 +1,6 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import RfidModeToggleMini from '@/components/rfid-mode-toggle-mini';
+import AppearanceToggleTab from '@/components/appearance-tabs';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -13,9 +14,11 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
-            
-            {/* RFID Mode Toggle - Right Side */}
-            <div className="ml-auto">
+
+            {/* Right side controls: appearance toggle + RFID Mode Toggle */}
+            <div className="ml-auto flex items-center gap-2">
+                <AppearanceToggleTab />
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">

@@ -1,34 +1,42 @@
-import { Appearance, useAppearance } from '@/hooks/use-appearance';
-import { cn } from '@/lib/utils';
-import { LucideIcon, Monitor, Moon, Sun } from 'lucide-react';
-import { HTMLAttributes } from 'react';
+import { useAppearance } from '@/hooks/use-appearance';
+import { Monitor, Moon, Sun, Check } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
-export default function AppearanceToggleTab({ className = '', ...props }: HTMLAttributes<HTMLDivElement>) {
+export default function AppearanceToggleTab() {
     const { appearance, updateAppearance } = useAppearance();
 
-    const tabs: { value: Appearance; icon: LucideIcon; label: string }[] = [
-        { value: 'light', icon: Sun, label: 'Light' },
-        { value: 'dark', icon: Moon, label: 'Dark' },
-        { value: 'system', icon: Monitor, label: 'System' },
-    ];
-
     return (
-        <div className={cn('inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800', className)} {...props}>
-            {tabs.map(({ value, icon: Icon, label }) => (
-                <button
-                    key={value}
-                    onClick={() => updateAppearance(value)}
-                    className={cn(
-                        'flex items-center rounded-md px-3.5 py-1.5 transition-colors',
-                        appearance === value
-                            ? 'bg-white shadow-xs dark:bg-neutral-700 dark:text-neutral-100'
-                            : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
-                    )}
-                >
-                    <Icon className="-ml-1 h-4 w-4" />
-                    <span className="ml-1.5 text-sm">{label}</span>
-                </button>
-            ))}
+        <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground hidden md:block">Tampilan:</span>
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Tampilan">
+                        <Monitor className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem onClick={() => updateAppearance('light')}>
+                        <Sun className="mr-2 h-4 w-4" />
+                        <span className="flex-1">Light</span>
+                        {appearance === 'light' && <Check className="ml-2 h-4 w-4 text-green-500" />}
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem onClick={() => updateAppearance('dark')}>
+                        <Moon className="mr-2 h-4 w-4" />
+                        <span className="flex-1">Dark</span>
+                        {appearance === 'dark' && <Check className="ml-2 h-4 w-4 text-green-500" />}
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem onClick={() => updateAppearance('system')}>
+                        <Monitor className="mr-2 h-4 w-4" />
+                        <span className="flex-1">System</span>
+                        {appearance === 'system' && <Check className="ml-2 h-4 w-4 text-green-500" />}
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
     );
 }

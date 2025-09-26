@@ -59,12 +59,12 @@ const navGroups: { label: string; items: NavGroupItem[] }[] = [
             },
             {
                 title: 'Pendataan Aset Aslab',
-                href: '#',
+                href: '/aset-aslab',
                 icon: ClipboardList,
             },
             {
                 title: 'Peminjaman Barang',
-                href: '#',
+                href: '/peminjaman-barang',
                 icon: PackageIcon,
             }
         ],

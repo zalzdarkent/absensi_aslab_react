@@ -4,6 +4,9 @@ use App\Http\Controllers\AslabController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JadwalPiketController;
+use App\Http\Controllers\AsetAslabController;
+use App\Http\Controllers\JenisAsetAslabController;
+use App\Http\Controllers\PinjamBarangController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -30,6 +33,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/attendance-scan', [AttendanceController::class, 'scanPage'])->name('attendance.scan');
     Route::post('/attendance-scan', [AttendanceController::class, 'processRfidScan'])->name('attendance.process');
     Route::get('/attendance-today', [AttendanceController::class, 'todaySummary'])->name('attendance.today');
+
+    // Aset Aslab routes
+    Route::get('aset-aslab/generate-kode', [AsetAslabController::class, 'generateKode'])->name('aset-aslab.generate-kode');
+    Route::resource('aset-aslab', AsetAslabController::class);
+
+    // Jenis Aset Aslab routes
+    Route::post('jenis-aset-aslab', [JenisAsetAslabController::class, 'store'])->name('jenis-aset-aslab.store');
+
+    // Peminjaman Barang routes
+    Route::resource('peminjaman-barang', PinjamBarangController::class);
+    Route::post('/peminjaman-barang/{id}/return', [PinjamBarangController::class, 'returnItem'])->name('peminjaman-barang.return');
 });
 
 require __DIR__.'/settings.php';
