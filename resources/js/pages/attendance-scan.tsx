@@ -49,9 +49,9 @@ export default function AttendanceScan() {
   const rfidIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const columns = createAttendanceColumns();
 
-  // Load today's attendance on component mount
-  const loadTodayAttendances = useCallback(async () => {
-    setIsLoadingAttendances(true);
+  // Load today's attendance - lighter version for real-time updates
+  const loadTodayAttendances = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoadingAttendances(true);
     try {
       const response = await fetch('/attendance-today');
       const data = await response.json();
@@ -62,7 +62,7 @@ export default function AttendanceScan() {
     } catch (error) {
       console.error('Error loading today attendances:', error);
     } finally {
-      setIsLoadingAttendances(false);
+      if (showLoading) setIsLoadingAttendances(false);
     }
   }, []);
 
@@ -107,34 +107,41 @@ export default function AttendanceScan() {
     }
   }, [loadTodayAttendances]);
 
-  // Real-time RFID detection for automatic scanning
-  const startRfidDetection = useCallback(() => {
+  // Real-time RFID detection and data refresh - Simple approach
+  const startRealTimeUpdates = useCallback(() => {
     if (rfidIntervalRef.current) {
       clearInterval(rfidIntervalRef.current);
     }
 
     rfidIntervalRef.current = setInterval(async () => {
       try {
-        const response = await fetch('/api/rfid/last-scan');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.rfid_code && data.rfid_code !== rfidDetected) {
-            setRfidDetected(data.rfid_code);
-            setRfidCode(data.rfid_code);
+        // Always refresh attendance data every second for real-time feel (no loading spinner)
+        await loadTodayAttendances(false);
+
+        // Also check for new RFID scans
+        const rfidResponse = await fetch('/api/rfid/last-scan');
+
+        if (rfidResponse.ok) {
+          const rfidData = await rfidResponse.json();
+
+          if (rfidData.success && rfidData.data && rfidData.data.rfid_code && rfidData.data.rfid_code !== rfidDetected) {
+            console.log('New RFID detected:', rfidData.data.rfid_code);
+            setRfidDetected(rfidData.data.rfid_code);
+            setRfidCode(rfidData.data.rfid_code);
 
             // Auto-process the scan
-            await processRfidScan(data.rfid_code);
+            await processRfidScan(rfidData.data.rfid_code);
           }
         }
       } catch (error) {
-        console.error('Error detecting RFID:', error);
+        console.error('Error in real-time updates:', error);
       }
-    }, 2000); // Check every 2 seconds only for RFID detection
-  }, [rfidDetected, processRfidScan]);
+    }, 1000); // Check every 1 second for real-time feel
+  }, [rfidDetected, processRfidScan, loadTodayAttendances]);
 
   useEffect(() => {
-    loadTodayAttendances();
-    startRfidDetection();
+    loadTodayAttendances(true); // Show loading for initial load
+    startRealTimeUpdates();
 
     // Cleanup intervals on unmount
     return () => {
@@ -142,11 +149,11 @@ export default function AttendanceScan() {
         clearInterval(rfidIntervalRef.current);
       }
     };
-  }, [loadTodayAttendances, startRfidDetection]);
+  }, [loadTodayAttendances, startRealTimeUpdates]);
 
   // Function untuk refresh manual jika diperlukan
   const handleManualRefresh = () => {
-    loadTodayAttendances();
+    loadTodayAttendances(true); // Show loading for manual refresh
   };
 
   return (
@@ -160,11 +167,12 @@ export default function AttendanceScan() {
           <p className="text-muted-foreground">
             Tempelkan kartu RFID untuk melakukan check-in atau check-out
           </p>
-          {/* <div className="mt-2 flex justify-center">
-            <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-              📡 Mode deteksi otomatis aktif - Data diperbarui setiap ada aktivitas RFID
+          <div className="mt-2 flex justify-center">
+            <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              � Real-time aktif - Data diperbarui setiap detik
             </div>
-          </div> */}
+          </div>
         </div>
 
         {/* RFID Detection Status */}
@@ -210,9 +218,9 @@ export default function AttendanceScan() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span className="text-sm text-gray-600">
-                    Event-Driven Updates
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-sm text-green-600">
+                    Real-time Updates
                   </span>
                 </div>
                 <button
@@ -220,12 +228,12 @@ export default function AttendanceScan() {
                   disabled={isLoadingAttendances}
                   className="text-sm text-blue-600 hover:text-blue-800 underline disabled:opacity-50"
                 >
-                  Refresh
+                  Refresh Manual
                 </button>
               </div>
             </CardTitle>
             <CardDescription>
-              Data diperbarui otomatis saat ada aktivitas RFID • Update terakhir: {lastUpdate.toLocaleTimeString()}
+              Data diperbarui otomatis setiap detik • Update terakhir: {lastUpdate.toLocaleTimeString()}
             </CardDescription>
           </CardHeader>
           <CardContent>

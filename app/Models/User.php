@@ -116,4 +116,84 @@ class User extends Authenticatable
     {
         return $this->hasMany(PenggunaanBahan::class);
     }
+
+    /**
+     * Check if user has specific role
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Check if user has any of the given roles
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles);
+    }
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Check if user is aslab
+     */
+    public function isAslab(): bool
+    {
+        return $this->hasRole('aslab');
+    }
+
+    /**
+     * Check if user is mahasiswa
+     */
+    public function isMahasiswa(): bool
+    {
+        return $this->hasRole('mahasiswa');
+    }
+
+    /**
+     * Check if user is dosen
+     */
+    public function isDosen(): bool
+    {
+        return $this->hasRole('dosen');
+    }
+
+    /**
+     * Check if user can access admin features
+     */
+    public function canAccessAdmin(): bool
+    {
+        return $this->isAdmin();
+    }
+
+    /**
+     * Check if user can access management features (Admin & Aslab)
+     */
+    public function canAccessManagement(): bool
+    {
+        return $this->hasAnyRole(['admin', 'aslab']);
+    }
+
+    /**
+     * Check if user can access attendance features (Admin & Aslab)
+     */
+    public function canAccessAttendance(): bool
+    {
+        return $this->hasAnyRole(['admin', 'aslab']);
+    }
+
+    /**
+     * Check if user can access peminjaman features (All users)
+     */
+    public function canAccessPeminjaman(): bool
+    {
+        return $this->hasAnyRole(['admin', 'aslab', 'mahasiswa', 'dosen']);
+    }
 }

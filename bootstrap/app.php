@@ -22,6 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // Register custom middleware aliases
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminOnly::class,
+            'admin.aslab' => \App\Http\Middleware\AdminAslabOnly::class,
+            'auth.user' => \App\Http\Middleware\AuthenticatedUser::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

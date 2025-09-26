@@ -230,23 +230,7 @@ export default function Dashboard({
                     )}
                   </CardTitle>
                   <CardDescription className="flex items-center justify-between">
-                    <span>Daftar kehadiran aslab pada {current_date}</span>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1 text-blue-600">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span>Event-Driven</span>
-                      </div>
-                      <span className="text-muted-foreground">
-                        Update: {lastUpdate.toLocaleTimeString()}
-                      </span>
-                      <button
-                        onClick={handleManualRefresh}
-                        disabled={isLoadingAttendances}
-                        className="text-blue-600 hover:text-blue-800 underline disabled:opacity-50"
-                      >
-                        Refresh
-                      </button>
-                    </div>
+                    <span>Daftar kehadiran aslab pada {current_date} </span>
                   </CardDescription>
                 </div>
                 <Button variant="outline" size="sm" asChild>

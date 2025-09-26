@@ -30,6 +30,9 @@ class AttendanceController extends Controller
 
         $rfidCode = strtoupper($request->input('rfid_code'));
 
+        // Store in cache for web interface real-time detection (expires in 1 minute)
+        cache(['last_rfid_scan' => $rfidCode], now()->addMinutes(1));
+
         // Find user by RFID
         $user = User::where('rfid_code', $rfidCode)
                    ->where('role', 'aslab')
