@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ import {
   Save
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, User as AuthUser } from '@/types';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -84,6 +84,8 @@ const dayIcons = {
 
 export default function JadwalPiketIndex({ jadwalPiket, allAslabs, stats }: Props) {
   const { post, processing } = useForm();
+  const { auth } = usePage<{ auth: { user: AuthUser } }>().props;
+  const currentUser = auth.user;
   const swapForm = useForm({
     user_id: '',
     new_piket_day: '',
@@ -198,24 +200,27 @@ export default function JadwalPiketIndex({ jadwalPiket, allAslabs, stats }: Prop
               Kelola jadwal piket asisten laboratorium
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              disabled={processing}
-            >
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Reset
-            </Button>
-            <Button
-              onClick={handleGenerateAuto}
-              disabled={processing}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate Otomatis
-            </Button>
-          </div>
+          {/* Only show buttons for admin */}
+          {currentUser.role === 'admin' && (
+            <div className="flex gap-2">
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                disabled={processing}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset
+              </Button>
+              <Button
+                onClick={handleGenerateAuto}
+                disabled={processing}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate Otomatis
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Statistics Cards */}
@@ -266,55 +271,120 @@ export default function JadwalPiketIndex({ jadwalPiket, allAslabs, stats }: Prop
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {Object.entries(jadwalPiket).map(([day, aslabs]) => (
-                <Card key={day} className={`bg-gradient-to-br ${dayColors[day as keyof typeof dayColors]} border-0 text-white min-h-[200px]`}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-bold text-center text-white flex items-center justify-center gap-2">
-                      <span className="text-xl">{dayIcons[day as keyof typeof dayIcons]}</span>
-                      {dayNames[day as keyof typeof dayNames]}
-                    </CardTitle>
-                    <Badge variant="secondary" className="w-fit mx-auto bg-white/20 text-white border-0">
-                      {aslabs.length} Aslab
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      {aslabs.length === 0 ? (
-                        <div className="text-center py-4">
-                          <p className="text-white/70 text-sm">Belum ada aslab</p>
-                        </div>
-                      ) : (
-                        aslabs.map((aslab: User) => (
-                          <div key={aslab.id} className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="text-xs bg-white/20 text-white">
-                                {getInitials(aslab.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white text-sm truncate">
-                                {aslab.name}
-                              </p>
-                              <p className="text-white/70 text-xs">
-                                {aslab.prodi} • Sem {aslab.semester}
-                              </p>
+            <div className="space-y-4">
+              {/* First Row: Senin - Rabu */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(jadwalPiket)
+                  .filter(([day]) => ['senin', 'selasa', 'rabu'].includes(day))
+                  .map(([day, aslabs]) => (
+                    <Card key={day} className={`bg-gradient-to-br ${dayColors[day as keyof typeof dayColors]} border-0 text-white min-h-[200px]`}>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg font-bold text-center text-white flex items-center justify-center gap-2">
+                          <span className="text-xl">{dayIcons[day as keyof typeof dayIcons]}</span>
+                          {dayNames[day as keyof typeof dayNames]}
+                        </CardTitle>
+                        <Badge variant="secondary" className="w-fit mx-auto bg-white/20 text-white border-0">
+                          {aslabs.length} Aslab
+                        </Badge>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          {aslabs.length === 0 ? (
+                            <div className="text-center py-4">
+                              <p className="text-white/70 text-sm">Belum ada aslab</p>
                             </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
-                              onClick={() => handleSwapSchedule(aslab)}
-                            >
-                              <Edit3 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                          ) : (
+                            aslabs.map((aslab: User) => (
+                              <div key={aslab.id} className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs bg-white/20 text-white">
+                                    {getInitials(aslab.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-white text-sm truncate">
+                                    {aslab.name}
+                                  </p>
+                                  <p className="text-white/70 text-xs">
+                                    {aslab.prodi} • Sem {aslab.semester}
+                                  </p>
+                                </div>
+                                {/* Only show edit button for admin */}
+                                {currentUser.role === 'admin' && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
+                                    onClick={() => handleSwapSchedule(aslab)}
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+
+              {/* Second Row: Kamis - Jumat */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(jadwalPiket)
+                  .filter(([day]) => ['kamis', 'jumat'].includes(day))
+                  .map(([day, aslabs]) => (
+                    <Card key={day} className={`bg-gradient-to-br ${dayColors[day as keyof typeof dayColors]} border-0 text-white min-h-[200px]`}>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg font-bold text-center text-white flex items-center justify-center gap-2">
+                          <span className="text-xl">{dayIcons[day as keyof typeof dayIcons]}</span>
+                          {dayNames[day as keyof typeof dayNames]}
+                        </CardTitle>
+                        <Badge variant="secondary" className="w-fit mx-auto bg-white/20 text-white border-0">
+                          {aslabs.length} Aslab
+                        </Badge>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          {aslabs.length === 0 ? (
+                            <div className="text-center py-4">
+                              <p className="text-white/70 text-sm">Belum ada aslab</p>
+                            </div>
+                          ) : (
+                            aslabs.map((aslab: User) => (
+                              <div key={aslab.id} className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs bg-white/20 text-white">
+                                    {getInitials(aslab.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-white text-sm truncate">
+                                    {aslab.name}
+                                  </p>
+                                  <p className="text-white/70 text-xs">
+                                    {aslab.prodi} • Sem {aslab.semester}
+                                  </p>
+                                </div>
+                                {/* Only show edit button for admin */}
+                                {currentUser.role === 'admin' && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
+                                    onClick={() => handleSwapSchedule(aslab)}
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
             </div>
           </CardContent>
         </Card>

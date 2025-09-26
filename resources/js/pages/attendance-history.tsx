@@ -1,7 +1,6 @@
 import { Head } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Clock, User, Activity, X } from 'lucide-react';
+import { Clock, User, Activity, X } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
@@ -50,14 +49,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function AttendanceHistory({ attendances }: Props) {
   const columns = createAttendanceHistoryColumns();
 
-  const handleExport = () => {
-    // In real implementation, this would trigger CSV/Excel export
-    const params = new URLSearchParams({
-      export: 'true',
-    });
-    window.open(`/attendance-history?${params}`, '_blank');
-  };
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Riwayat Absensi" />
@@ -71,10 +62,6 @@ export default function AttendanceHistory({ attendances }: Props) {
               Lihat dan kelola data riwayat absensi asisten laboratorium
             </p>
           </div>
-          <Button onClick={handleExport} variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
         </div>
 
         {/* Statistics */}

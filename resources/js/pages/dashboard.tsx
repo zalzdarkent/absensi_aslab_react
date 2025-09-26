@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
 import { DataTable } from '@/components/ui/data-table';
 import { createTodayAttendanceColumns } from '@/components/tables/today-attendance-columns';
+import { User as AuthUser } from '@/types';
 
 interface User {
   id: number;
@@ -56,6 +57,8 @@ export default function Dashboard({
   current_date
 }: Props) {
   const columns = createTodayAttendanceColumns();
+  const { auth } = usePage<{ auth: { user: AuthUser } }>().props;
+  const currentUser = auth.user;
 
   // State untuk event-driven updates
   const [todayAttendances, setTodayAttendances] = useState(initialAttendances);
@@ -354,33 +357,35 @@ export default function Dashboard({
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button asChild variant="outline" className="h-16">
-            <Link href="/aslabs">
-              <div className="text-center">
-                <Users className="h-6 w-6 mx-auto mb-1" />
-                <div className="text-sm font-medium">Kelola Aslab</div>
-              </div>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="h-16">
-            <Link href="/attendance-scan">
-              <div className="text-center">
-                <UserCheck className="h-6 w-6 mx-auto mb-1" />
-                <div className="text-sm font-medium">Scan Absensi</div>
-              </div>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="h-16">
-            <Link href="/attendance-history">
-              <div className="text-center">
-                <Activity className="h-6 w-6 mx-auto mb-1" />
-                <div className="text-sm font-medium">Riwayat Absensi</div>
-              </div>
-            </Link>
-          </Button>
-        </div>
+        {/* Quick Actions - Only visible for admin */}
+        {currentUser.role === 'admin' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button asChild variant="outline" className="h-16">
+              <Link href="/aslabs">
+                <div className="text-center">
+                  <Users className="h-6 w-6 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Kelola Aslab</div>
+                </div>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-16">
+              <Link href="/attendance-scan">
+                <div className="text-center">
+                  <UserCheck className="h-6 w-6 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Scan Absensi</div>
+                </div>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-16">
+              <Link href="/attendance-history">
+                <div className="text-center">
+                  <Activity className="h-6 w-6 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Riwayat Absensi</div>
+                </div>
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
