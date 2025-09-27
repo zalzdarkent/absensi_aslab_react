@@ -115,20 +115,39 @@ class PeminjamanBarangController extends Controller
         // Debug log
         Log::info('Peminjaman items:', $items);
 
-        DB::beginTransaction();
-
         try {
+            // Set transaction isolation level BEFORE starting transaction
+            DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+
+            // Begin transaction manually for better control
+            DB::beginTransaction();
+
+            $createdRecords = [];
+            $lockedItems = [];
+
             foreach ($items as $item) {
                 $validated = $this->validateItem($item);
 
                 if ($validated['type'] === 'aset') {
-                    $aset = AsetAslab::find($validated['item_id']);
-                    if (!$aset || $aset->stok < $validated['quantity']) {
-                        $itemName = $aset ? $aset->nama_aset : 'aset';
-                        throw new \Exception("Stock tidak mencukupi untuk {$itemName}");
+                    // Use SELECT FOR UPDATE to lock the row and prevent race conditions
+                    $aset = AsetAslab::where('id', $validated['item_id'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$aset) {
+                        throw new \Exception("Aset dengan ID {$validated['item_id']} tidak ditemukan");
                     }
 
-                    PeminjamanAset::create([
+                    // Double-check stock after acquiring lock
+                    if ($aset->stok < $validated['quantity']) {
+                        throw new \Exception("Stock tidak mencukupi untuk {$aset->nama_aset}. Stock tersedia: {$aset->stok}, diminta: {$validated['quantity']}");
+                    }
+
+                    // Reserve the stock by decrementing it immediately
+                    $aset->decrement('stok', $validated['quantity']);
+                    $lockedItems[] = ['type' => 'aset', 'id' => $aset->id, 'quantity' => $validated['quantity']];
+
+                    $record = PeminjamanAset::create([
                         'aset_id' => $validated['item_id'],
                         'bahan_id' => null,
                         'user_id' => Auth::id(),
@@ -140,14 +159,30 @@ class PeminjamanBarangController extends Controller
                         'agreement_accepted' => $request->agreement_accepted,
                     ]);
 
+                    $createdRecords[] = $record;
+
+                    Log::info("Stock reserved for aset {$aset->nama_aset}: {$validated['quantity']} units");
+
                 } elseif ($validated['type'] === 'bahan') {
-                    $bahan = Bahan::find($validated['item_id']);
-                    if (!$bahan || $bahan->stok < $validated['quantity']) {
-                        $itemName = $bahan ? $bahan->nama : 'bahan';
-                        throw new \Exception("Stock tidak mencukupi untuk {$itemName}");
+                    // Use SELECT FOR UPDATE to lock the row and prevent race conditions
+                    $bahan = Bahan::where('id', $validated['item_id'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$bahan) {
+                        throw new \Exception("Bahan dengan ID {$validated['item_id']} tidak ditemukan");
                     }
 
-                    PeminjamanAset::create([
+                    // Double-check stock after acquiring lock
+                    if ($bahan->stok < $validated['quantity']) {
+                        throw new \Exception("Stock tidak mencukupi untuk {$bahan->nama}. Stock tersedia: {$bahan->stok}, diminta: {$validated['quantity']}");
+                    }
+
+                    // Reserve the stock by decrementing it immediately
+                    $bahan->decrement('stok', $validated['quantity']);
+                    $lockedItems[] = ['type' => 'bahan', 'id' => $bahan->id, 'quantity' => $validated['quantity']];
+
+                    $record = PeminjamanAset::create([
                         'aset_id' => null,
                         'bahan_id' => $validated['item_id'],
                         'user_id' => Auth::id(),
@@ -158,17 +193,37 @@ class PeminjamanBarangController extends Controller
                         'keterangan' => $validated['note'],
                         'agreement_accepted' => $request->agreement_accepted,
                     ]);
+
+                    $createdRecords[] = $record;
+
+                    Log::info("Stock reserved for bahan {$bahan->nama}: {$validated['quantity']} units");
                 }
             }
 
+            // Commit transaction
             DB::commit();
 
+            // Log successful transaction
+            Log::info("Peminjaman transaction completed successfully", [
+                'user_id' => Auth::id(),
+                'items_count' => count($createdRecords),
+                'locked_items' => $lockedItems
+            ]);
+
             return redirect()->route('peminjaman-barang.index')
-                ->with('success', 'Permintaan peminjaman berhasil dikirim. Menunggu persetujuan admin/aslab.');
+                ->with('success', 'Permintaan peminjaman berhasil dikirim. Stock telah direservasi dan menunggu persetujuan admin/aslab.');
 
         } catch (\Exception $e) {
+            // Rollback transaction on any error
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+
+            Log::error('Peminjaman transaction failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'items' => $items
+            ]);
+
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
 
@@ -207,7 +262,7 @@ class PeminjamanBarangController extends Controller
             abort(403);
         }
 
-        $peminjaman = PeminjamanAset::with(['asetAslab'])->findOrFail($id);
+        $peminjaman = PeminjamanAset::with(['asetAslab', 'bahan'])->findOrFail($id);
 
         if ($peminjaman->status !== PeminjamanAset::STATUS_PENDING) {
             return back()->withErrors(['error' => 'Permintaan ini sudah diproses']);
@@ -216,16 +271,14 @@ class PeminjamanBarangController extends Controller
         $action = $request->action; // 'approve' or 'reject'
         $note = $request->approval_note;
 
-        DB::beginTransaction();
-
         try {
-            if ($action === 'approve') {
-                // Check stock availability
-                if ($peminjaman->asetAslab->stok < $peminjaman->stok) {
-                    throw new \Exception('Stock tidak mencukupi');
-                }
+            // Set transaction isolation level for consistency
+            DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+            DB::beginTransaction();
 
-                // Update peminjaman status
+            if ($action === 'approve') {
+                // Update peminjaman status to approved
+                // Note: Stock was already reserved during store() method
                 $peminjaman->update([
                     'status' => PeminjamanAset::STATUS_APPROVED,
                     'approved_by' => Auth::id(),
@@ -233,13 +286,39 @@ class PeminjamanBarangController extends Controller
                     'approval_note' => $note,
                 ]);
 
-                // Reduce stock
-                $peminjaman->asetAslab->decrement('stok', $peminjaman->stok);
-
                 $message = 'Permintaan peminjaman disetujui';
 
+                Log::info("Peminjaman approved", [
+                    'peminjaman_id' => $peminjaman->id,
+                    'user_id' => $peminjaman->user_id,
+                    'approved_by' => Auth::id(),
+                    'quantity' => $peminjaman->stok
+                ]);
+
             } else {
-                // Reject
+                // Reject - need to restore the reserved stock
+                if ($peminjaman->aset_id) {
+                    // Restore aset stock
+                    $aset = AsetAslab::where('id', $peminjaman->aset_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($aset) {
+                        $aset->increment('stok', $peminjaman->stok);
+                        Log::info("Stock restored for aset {$aset->nama_aset}: {$peminjaman->stok} units");
+                    }
+                } elseif ($peminjaman->bahan_id) {
+                    // Restore bahan stock
+                    $bahan = Bahan::where('id', $peminjaman->bahan_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($bahan) {
+                        $bahan->increment('stok', $peminjaman->stok);
+                        Log::info("Stock restored for bahan {$bahan->nama}: {$peminjaman->stok} units");
+                    }
+                }
+
                 $peminjaman->update([
                     'status' => PeminjamanAset::STATUS_REJECTED,
                     'approved_by' => Auth::id(),
@@ -247,16 +326,27 @@ class PeminjamanBarangController extends Controller
                     'approval_note' => $note,
                 ]);
 
-                $message = 'Permintaan peminjaman ditolak';
+                $message = 'Permintaan peminjaman ditolak dan stock dikembalikan';
+
+                Log::info("Peminjaman rejected and stock restored", [
+                    'peminjaman_id' => $peminjaman->id,
+                    'user_id' => $peminjaman->user_id,
+                    'rejected_by' => Auth::id(),
+                    'quantity_restored' => $peminjaman->stok
+                ]);
             }
 
             DB::commit();
-
             return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            Log::error('Approval transaction failed', [
+                'error' => $e->getMessage(),
+                'peminjaman_id' => $id,
+                'action' => $action
+            ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
 
@@ -339,5 +429,68 @@ class PeminjamanBarangController extends Controller
         $items = $asets->concat($bahans)->take(20);
 
         return response()->json(['items' => $items]);
+    }
+
+    public function return(Request $request, $id)
+    {
+        if (!in_array(Auth::user()->role, ['admin', 'aslab'])) {
+            abort(403);
+        }
+
+        $peminjaman = PeminjamanAset::with(['asetAslab', 'bahan'])->findOrFail($id);
+
+        if ($peminjaman->status !== PeminjamanAset::STATUS_APPROVED) {
+            return back()->withErrors(['error' => 'Barang ini belum dalam status dipinjam']);
+        }
+
+        try {
+            // Set transaction isolation level for consistency
+            DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+            DB::beginTransaction();
+
+            // Return the stock
+            if ($peminjaman->aset_id) {
+                $aset = AsetAslab::where('id', $peminjaman->aset_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($aset) {
+                    $aset->increment('stok', $peminjaman->stok);
+                    Log::info("Stock returned for aset {$aset->nama_aset}: {$peminjaman->stok} units");
+                }
+            } elseif ($peminjaman->bahan_id) {
+                $bahan = Bahan::where('id', $peminjaman->bahan_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($bahan) {
+                    $bahan->increment('stok', $peminjaman->stok);
+                    Log::info("Stock returned for bahan {$bahan->nama}: {$peminjaman->stok} units");
+                }
+            }
+
+            // Update peminjaman status
+            $peminjaman->update([
+                'status' => PeminjamanAset::STATUS_RETURNED,
+                'tanggal_kembali' => now(),
+            ]);
+
+            Log::info("Item returned successfully", [
+                'peminjaman_id' => $peminjaman->id,
+                'returned_by' => Auth::id(),
+                'quantity_returned' => $peminjaman->stok
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Barang berhasil dikembalikan dan stock sudah diupdate');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Return transaction failed', [
+                'error' => $e->getMessage(),
+                'peminjaman_id' => $id
+            ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
     }
 }

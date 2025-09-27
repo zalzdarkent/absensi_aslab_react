@@ -54,7 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/peminjaman-barang/search-items', [PeminjamanBarangController::class, 'searchItems'])->name('peminjaman-barang.search-items');
         Route::resource('peminjaman-barang', PeminjamanBarangController::class);
         Route::post('/peminjaman-barang/{id}/approve', [PeminjamanBarangController::class, 'approve'])->name('peminjaman-barang.approve');
-        Route::post('/peminjaman-barang/{id}/return', [PeminjamanBarangController::class, 'returnItem'])->name('peminjaman-barang.return');
+        Route::post('/peminjaman-barang/{id}/return', [PeminjamanBarangController::class, 'return'])->name('peminjaman-barang.return');
     });
 });
 
