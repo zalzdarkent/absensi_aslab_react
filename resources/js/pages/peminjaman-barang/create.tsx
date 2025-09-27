@@ -9,6 +9,7 @@ import { Link } from '@inertiajs/react';
 import { ProductCard } from '@/components/ui/product-card';
 import { ProductCardSkeleton } from '@/components/ui/product-card-skeleton';
 import { CartDrawer } from '@/components/ui/cart-drawer';
+import { ProductDetailModal } from '@/components/ui/product-detail-modal';
 import { AutoComplete } from '@/components/ui/auto-complete';
 import { useVirtualizedData, useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useCartStorage, CartItem } from '@/hooks/useCartStorage';
@@ -51,6 +52,8 @@ export default function PeminjamanBarangCreate({ asets, bahans }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [filterType, setFilterType] = useState<'all' | 'aset' | 'bahan'>('all');
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     // Combine all products
     const allProducts: Product[] = useMemo(() => [
@@ -135,11 +138,9 @@ export default function PeminjamanBarangCreate({ asets, bahans }: Props) {
         });
     };
 
-    const handleViewDetail = () => {
-        // TODO: Implement product detail modal or page
-        toast.info('Fitur detail produk', {
-            description: 'Akan dikembangkan selanjutnya'
-        });
+    const handleViewDetail = (product: Product) => {
+        setSelectedProduct(product);
+        setIsDetailModalOpen(true);
     };
 
     const getTomorrowDate = () => {
@@ -507,6 +508,14 @@ export default function PeminjamanBarangCreate({ asets, bahans }: Props) {
                     </div>
                 </div>
             </div>
+
+            {/* Product Detail Modal */}
+            <ProductDetailModal
+                product={selectedProduct}
+                isOpen={isDetailModalOpen}
+                onOpenChange={setIsDetailModalOpen}
+                onAddToCart={handleAddToCart}
+            />
         </AppLayout>
     );
 }

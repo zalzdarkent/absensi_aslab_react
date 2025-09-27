@@ -20,7 +20,7 @@ class PeminjamanBarangController extends Controller
         $user = Auth::user();
 
         // Get all borrowing records (for admin/aslab) or only user's records
-        $query = PeminjamanAset::with(['asetAslab', 'user', 'approvedBy']);
+        $query = PeminjamanAset::with(['asetAslab', 'bahan', 'user', 'approvedBy']);
 
         if (!in_array($user->role, ['admin', 'aslab'])) {
             $query->where('user_id', $user->id);
@@ -28,29 +28,41 @@ class PeminjamanBarangController extends Controller
 
         $peminjamanBarangs = $query->latest()->get()->map(function ($peminjaman) {
             $namaBarang = 'N/A';
+            $kodeBarang = 'N/A';
+            $tipeBarang = 'unknown';
 
             // Check if it's from aset_aslabs table
             if ($peminjaman->asetAslab) {
                 $namaBarang = $peminjaman->asetAslab->nama_aset ?? 'N/A';
+                $kodeBarang = $peminjaman->asetAslab->kode_aset ?? 'N/A';
+                $tipeBarang = 'aset';
             }
-            // If it's from bahan table (you might need to add bahan relationship)
-            // elseif ($peminjaman->bahan) {
-            //     $namaBarang = $peminjaman->bahan->nama ?? 'N/A';
-            // }
+            // Check if it's from bahan table
+            elseif ($peminjaman->bahan) {
+                $namaBarang = $peminjaman->bahan->nama ?? 'N/A';
+                $kodeBarang = $peminjaman->bahan->kode ?? 'N/A';
+                $tipeBarang = 'bahan';
+            }
 
             return [
                 'id' => $peminjaman->id,
                 'nama_peminjam' => $peminjaman->user->name,
-                'nama_aset' => $peminjaman->asetAslab ? $peminjaman->asetAslab->nama_aset : 'N/A',
-                'nama_barang' => $namaBarang, // This will be used for bahan
+                'nama_aset' => $peminjaman->asetAslab ? $peminjaman->asetAslab->nama_aset : null,
+                'nama_barang' => $namaBarang,
+                'kode_barang' => $kodeBarang,
+                'tipe_barang' => $tipeBarang,
                 'jumlah' => $peminjaman->stok,
                 'tanggal_pinjam' => $peminjaman->tanggal_pinjam,
-                'tanggal_kembali' => $peminjaman->tanggal_kembali ?: $peminjaman->target_return_date, // Use target_return_date if tanggal_kembali is null
-                'target_return_date' => $peminjaman->target_return_date, // Add this field for reference
+                'tanggal_kembali' => $peminjaman->tanggal_kembali ?: $peminjaman->target_return_date,
+                'target_return_date' => $peminjaman->target_return_date,
                 'status' => $peminjaman->status_text,
+                'raw_status' => $peminjaman->status,
                 'keterangan' => $peminjaman->keterangan,
                 'approved_by' => $peminjaman->approvedBy?->name,
                 'approved_at' => $peminjaman->approved_at,
+                // Add raw item data for detail modal
+                'aset_data' => $peminjaman->asetAslab,
+                'bahan_data' => $peminjaman->bahan,
             ];
         });
 
@@ -112,12 +124,13 @@ class PeminjamanBarangController extends Controller
                 if ($validated['type'] === 'aset') {
                     $aset = AsetAslab::find($validated['item_id']);
                     if (!$aset || $aset->stok < $validated['quantity']) {
-                        $itemName = $aset ? $aset->nama : 'item';
+                        $itemName = $aset ? $aset->nama_aset : 'aset';
                         throw new \Exception("Stock tidak mencukupi untuk {$itemName}");
                     }
 
                     PeminjamanAset::create([
                         'aset_id' => $validated['item_id'],
+                        'bahan_id' => null,
                         'user_id' => Auth::id(),
                         'stok' => $validated['quantity'],
                         'tanggal_pinjam' => now(),
@@ -127,9 +140,25 @@ class PeminjamanBarangController extends Controller
                         'agreement_accepted' => $request->agreement_accepted,
                     ]);
 
-                    // Don't reduce stock until approved
+                } elseif ($validated['type'] === 'bahan') {
+                    $bahan = Bahan::find($validated['item_id']);
+                    if (!$bahan || $bahan->stok < $validated['quantity']) {
+                        $itemName = $bahan ? $bahan->nama : 'bahan';
+                        throw new \Exception("Stock tidak mencukupi untuk {$itemName}");
+                    }
+
+                    PeminjamanAset::create([
+                        'aset_id' => null,
+                        'bahan_id' => $validated['item_id'],
+                        'user_id' => Auth::id(),
+                        'stok' => $validated['quantity'],
+                        'tanggal_pinjam' => now(),
+                        'target_return_date' => $validated['target_return_date'],
+                        'status' => PeminjamanAset::STATUS_PENDING,
+                        'keterangan' => $validated['note'],
+                        'agreement_accepted' => $request->agreement_accepted,
+                    ]);
                 }
-                // Handle 'bahan' type if needed
             }
 
             DB::commit();

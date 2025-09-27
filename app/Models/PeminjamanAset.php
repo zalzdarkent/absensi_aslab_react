@@ -9,6 +9,7 @@ class PeminjamanAset extends Model
     protected $table = 'peminjaman_aset';
     protected $fillable = [
         'aset_id',
+        'bahan_id',
         'user_id',
         'stok',
         'tanggal_pinjam',
@@ -41,6 +42,12 @@ class PeminjamanAset extends Model
     public function asetAslab()
     {
         return $this->belongsTo(AsetAslab::class, 'aset_id');
+    }
+
+    // Relasi ke Bahan (many to one)
+    public function bahan()
+    {
+        return $this->belongsTo(Bahan::class, 'bahan_id');
     }
 
     // Relasi ke User (many to one)
@@ -87,5 +94,41 @@ class PeminjamanAset extends Model
             self::STATUS_RETURNED => 'Dikembalikan',
             default => 'Unknown'
         };
+    }
+
+    // Helper untuk mendapatkan nama item (aset atau bahan)
+    public function getItemNameAttribute()
+    {
+        if ($this->aset_id && $this->asetAslab) {
+            return $this->asetAslab->nama_aset;
+        }
+        if ($this->bahan_id && $this->bahan) {
+            return $this->bahan->nama;
+        }
+        return 'Unknown Item';
+    }
+
+    // Helper untuk mendapatkan kode item (aset atau bahan)
+    public function getItemCodeAttribute()
+    {
+        if ($this->aset_id && $this->asetAslab) {
+            return $this->asetAslab->kode_aset;
+        }
+        if ($this->bahan_id && $this->bahan) {
+            return $this->bahan->kode;
+        }
+        return 'N/A';
+    }
+
+    // Helper untuk mendapatkan tipe item
+    public function getItemTypeAttribute()
+    {
+        if ($this->aset_id) {
+            return 'aset';
+        }
+        if ($this->bahan_id) {
+            return 'bahan';
+        }
+        return 'unknown';
     }
 }

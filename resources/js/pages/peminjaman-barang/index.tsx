@@ -1,12 +1,14 @@
-import React from 'react';
-import { Head } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
+import { PeminjamanDetailModal } from '@/components/ui/peminjaman-detail-modal';
 import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
+import { toast } from 'sonner';
 
 interface PinjamBarang {
     id: number;
@@ -35,6 +37,24 @@ interface Props {
 }
 
 export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
+    const [selectedPeminjaman, setSelectedPeminjaman] = useState<PinjamBarang | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+    const handleViewDetail = (peminjaman: PinjamBarang) => {
+        setSelectedPeminjaman(peminjaman);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleReturn = (peminjamanId: number) => {
+        // Here you would typically make an API call to mark as returned
+        // For now, let's show a toast notification
+        toast.success('Barang berhasil ditandai sebagai dikembalikan', {
+            description: 'Status peminjaman telah diupdate'
+        });
+
+        // Optionally refresh the page or update the data
+        // router.reload();
+    };
     const getStatusBadge = (status: string) => {
         let variant = "";
         let icon = null;
@@ -157,10 +177,12 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
                 const status = row.getValue("status") as string;
                 return (
                     <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href={`/peminjaman-barang/${row.original.id}`}>
-                                Detail
-                            </Link>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetail(row.original)}
+                        >
+                            Detail
                         </Button>
                         {status?.toLowerCase() === 'sedang dipinjam' && (
                             <Button variant="outline" size="sm" asChild>
@@ -274,6 +296,14 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Peminjaman Detail Modal */}
+            <PeminjamanDetailModal
+                peminjaman={selectedPeminjaman}
+                isOpen={isDetailModalOpen}
+                onOpenChange={setIsDetailModalOpen}
+                onReturn={handleReturn}
+            />
         </AppLayout>
     );
 }
