@@ -77,6 +77,12 @@ class PeminjamanBarangController extends Controller
         return Inertia::render('peminjaman-barang/index', [
             'pinjamBarangs' => $peminjamanBarangs,
             'stats' => $stats,
+            'auth' => [
+                'user' => [
+                    'id' => $user->id,
+                    'role' => $user->role,
+                ]
+            ]
         ]);
     }
 

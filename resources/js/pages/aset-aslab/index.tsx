@@ -18,6 +18,7 @@ interface AsetAslab {
     status: string;
     gambar: string;
     created_at: string;
+    type: 'aset' | 'bahan'; // Add type field
 }
 
 interface Stats {
@@ -25,6 +26,9 @@ interface Stats {
     aset_baik: number;
     aset_kurang_baik: number;
     aset_tidak_baik: number;
+    total_bahan: number;
+    bahan_tersedia: number;
+    bahan_habis: number;
 }
 
 interface Props {
@@ -33,9 +37,12 @@ interface Props {
 }
 
 export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
-    const handleDelete = (id: number, namaAset: string) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus aset "${namaAset}"?`)) {
-            router.delete(`/aset-aslab/${id}`, {
+    const handleDelete = (id: number, namaAset: string, type: 'aset' | 'bahan') => {
+        const itemType = type === 'aset' ? 'aset' : 'bahan';
+        const route = type === 'aset' ? `/aset-aslab/${id}` : `/bahan/${id}`;
+
+        if (confirm(`Apakah Anda yakin ingin menghapus ${itemType} "${namaAset}"?`)) {
+            router.delete(route, {
                 onSuccess: () => {
                     // Success message akan ditangani oleh flash message
                 },
@@ -78,7 +85,17 @@ export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
             },
             cell: ({ row }) => (
                 <div>
-                    <div className="font-medium">{row.getValue("nama_aset")}</div>
+                    <div className="font-medium">
+                        {row.getValue("nama_aset")}
+                        {/* Add type badge */}
+                        <span className={`ml-2 px-2 py-1 text-xs rounded-full font-medium ${
+                            row.original.type === 'aset'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-purple-100 text-purple-800'
+                        }`}>
+                            {row.original.type === 'aset' ? 'ASET' : 'BAHAN'}
+                        </span>
+                    </div>
                     <div className="text-sm text-gray-500">{row.original.jenis_aset}</div>
                 </div>
             ),
@@ -163,19 +180,19 @@ export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
                 return (
                     <div className="flex space-x-2">
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/aset-aslab/${row.original.id}`}>
+                            <Link href={`/${row.original.type === 'aset' ? 'aset-aslab' : 'bahan'}/${row.original.id}`}>
                                 <Eye className="h-4 w-4" />
                             </Link>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/aset-aslab/${row.original.id}/edit`}>
+                            <Link href={`/${row.original.type === 'aset' ? 'aset-aslab' : 'bahan'}/${row.original.id}/edit`}>
                                 <Edit className="h-4 w-4" />
                             </Link>
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(row.original.id, row.original.nama_aset)}
+                            onClick={() => handleDelete(row.original.id, row.original.nama_aset, row.original.type)}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                             <Trash2 className="h-4 w-4" />
@@ -188,25 +205,33 @@ export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
 
     return (
         <AppLayout>
-            <Head title="Data Aset Aslab" />
+            <Head title="Data Aset & Bahan" />
 
             <div className="p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Data Aset Aslab</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">Kelola inventaris aset laboratorium</p>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Data Aset & Bahan</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">Kelola inventaris aset dan bahan laboratorium</p>
                     </div>
-                    <Button asChild>
-                        <Link href="/aset-aslab/create">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Aset
-                        </Link>
-                    </Button>
+                    <div className="flex space-x-3">
+                        <Button variant="outline" asChild>
+                            <Link href="/test-bahan">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Bahan (TEST)
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href="/aset-aslab/create">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Aset
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
                     <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium opacity-90">
@@ -266,21 +291,67 @@ export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
                             </p>
                         </CardContent>
                     </Card>
+
+                    {/* Bahan Stats */}
+                    <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium opacity-90">
+                                Total Bahan
+                            </CardTitle>
+                            <Package className="h-4 w-4 opacity-90" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.total_bahan}</div>
+                            <p className="text-xs opacity-90">
+                                Seluruh bahan
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-r from-teal-500 to-teal-600 text-white">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium opacity-90">
+                                Bahan Tersedia
+                            </CardTitle>
+                            <CheckCircle className="h-4 w-4 opacity-90" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.bahan_tersedia}</div>
+                            <p className="text-xs opacity-90">
+                                Siap digunakan
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium opacity-90">
+                                Bahan Habis
+                            </CardTitle>
+                            <XCircle className="h-4 w-4 opacity-90" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.bahan_habis}</div>
+                            <p className="text-xs opacity-90">
+                                Perlu restok
+                            </p>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Data Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Daftar Aset</CardTitle>
+                        <CardTitle>Daftar Aset & Bahan</CardTitle>
                         <CardDescription>
-                            Semua aset yang terdaftar dalam sistem
+                            Semua aset dan bahan yang terdaftar dalam sistem
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <DataTable
                             columns={columns}
                             data={asetAslabs}
-                            searchPlaceholder="Cari nama aset..."
+                            searchPlaceholder="Cari nama aset atau bahan..."
                         />
                     </CardContent>
                 </Card>

@@ -7,6 +7,7 @@ use App\Http\Controllers\JadwalPiketController;
 use App\Http\Controllers\AsetAslabController;
 use App\Http\Controllers\JenisAsetAslabController;
 use App\Http\Controllers\PeminjamanBarangController;
+use App\Http\Controllers\BahanController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,6 +18,9 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard - accessible to all logged-in users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // TEMPORARY TEST ROUTE - REMOVE AFTER TESTING
+    Route::get('/test-bahan', [BahanController::class, 'create'])->name('test-bahan');
 
     // Admin only routes
     Route::middleware(['role:admin'])->group(function () {
@@ -46,6 +50,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Jenis Aset Aslab routes
         Route::post('jenis-aset-aslab', [JenisAsetAslabController::class, 'store'])->name('jenis-aset-aslab.store');
+
+        // Bahan routes - Admin and Aslab can manage bahan
+        Route::get('bahan/create', [BahanController::class, 'create'])->name('bahan.create');
+        Route::post('bahan', [BahanController::class, 'store'])->name('bahan.store');
+        Route::get('bahan/{bahan}', [BahanController::class, 'show'])->name('bahan.show');
+        Route::get('bahan/{bahan}/edit', [BahanController::class, 'edit'])->name('bahan.edit');
+        Route::put('bahan/{bahan}', [BahanController::class, 'update'])->name('bahan.update');
+        Route::delete('bahan/{bahan}', [BahanController::class, 'destroy'])->name('bahan.destroy');
     });
 
     // All authenticated users can access peminjaman barang
