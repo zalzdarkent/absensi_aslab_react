@@ -15,7 +15,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
         return (
             <div className="flex min-h-screen w-full flex-col">
                 {children}
-                <Toaster />
+                <Toaster richColors position="top-center" />
             </div>
         );
     }
@@ -23,7 +23,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
     return (
         <SidebarProvider defaultOpen={isOpen}>
             {children}
-            <Toaster />
+            <Toaster richColors position="top-center" />
         </SidebarProvider>
     );
 }

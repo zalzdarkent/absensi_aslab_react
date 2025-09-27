@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -44,7 +45,8 @@ class PeminjamanBarangController extends Controller
                 'nama_barang' => $namaBarang, // This will be used for bahan
                 'jumlah' => $peminjaman->stok,
                 'tanggal_pinjam' => $peminjaman->tanggal_pinjam,
-                'tanggal_kembali' => $peminjaman->tanggal_kembali,
+                'tanggal_kembali' => $peminjaman->tanggal_kembali ?: $peminjaman->target_return_date, // Use target_return_date if tanggal_kembali is null
+                'target_return_date' => $peminjaman->target_return_date, // Add this field for reference
                 'status' => $peminjaman->status_text,
                 'keterangan' => $peminjaman->keterangan,
                 'approved_by' => $peminjaman->approvedBy?->name,
@@ -97,6 +99,9 @@ class PeminjamanBarangController extends Controller
         if (!is_array($items) || empty($items)) {
             return back()->withErrors(['items' => 'No items selected']);
         }
+
+        // Debug log
+        Log::info('Peminjaman items:', $items);
 
         DB::beginTransaction();
 

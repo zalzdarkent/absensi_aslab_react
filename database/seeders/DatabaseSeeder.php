@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AslabSeeder::class,
             AttendanceSeeder::class,
+            JenisAsetAslabSeeder::class,
+            AsetAslabSeeder::class,
+            BahanSeeder::class,
         ]);
     }
 }
