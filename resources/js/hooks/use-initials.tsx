@@ -2,6 +2,11 @@ import { useCallback } from 'react';
 
 export function useInitials() {
     return useCallback((fullName: string): string => {
+        // Handle undefined, null, or empty string cases
+        if (!fullName || typeof fullName !== 'string') {
+            return 'U'; // Default initials for "Unknown"
+        }
+
         const names = fullName.trim().split(' ');
 
         if (names.length === 0) return '';

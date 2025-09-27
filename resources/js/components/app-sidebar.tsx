@@ -87,7 +87,7 @@ export function AppSidebar() {
         managementItems.push({
             title: 'Peminjaman Barang',
             href: '/peminjaman-barang',
-            icon: PackageIcon,
+        icon: PackageIcon,
         });
 
         // Add Management group if there are any items

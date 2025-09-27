@@ -46,8 +46,8 @@ class PeminjamanBarangController extends Controller
 
             return [
                 'id' => $peminjaman->id,
-                'nama_peminjam' => $peminjaman->user->name,
-                'nama_aset' => $peminjaman->asetAslab ? $peminjaman->asetAslab->nama_aset : null,
+                'nama_peminjam' => $peminjaman->user->name ?? 'Unknown User',
+                'nama_aset' => $peminjaman->asetAslab ? ($peminjaman->asetAslab->nama_aset ?? 'N/A') : null,
                 'nama_barang' => $namaBarang,
                 'kode_barang' => $kodeBarang,
                 'tipe_barang' => $tipeBarang,
@@ -58,7 +58,7 @@ class PeminjamanBarangController extends Controller
                 'status' => $peminjaman->status_text,
                 'raw_status' => $peminjaman->status,
                 'keterangan' => $peminjaman->keterangan,
-                'approved_by' => $peminjaman->approvedBy?->name,
+                'approved_by' => $peminjaman->approvedBy?->name ?? null,
                 'approved_at' => $peminjaman->approved_at,
                 // Add raw item data for detail modal
                 'aset_data' => $peminjaman->asetAslab,
@@ -80,11 +80,18 @@ class PeminjamanBarangController extends Controller
             'auth' => [
                 'user' => [
                     'id' => $user->id,
+                    'name' => $user->name ?? 'Unknown User',
+                    'email' => $user->email ?? 'no-email@example.com',
                     'role' => $user->role,
                 ]
             ]
         ]);
     }
+
+    // public function index(){
+    //     return Inertia::render('peminjaman-barang/contoh');
+    //     return "Hello World";
+    // }
 
     public function create()
     {
