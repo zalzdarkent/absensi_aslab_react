@@ -4,19 +4,22 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
-import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 
 interface PinjamBarang {
     id: number;
     nama_peminjam: string;
-    nama_barang: string;
+    nama_aset: string;
+    nama_barang?: string; // untuk bahan
     jumlah: number;
     tanggal_pinjam: string;
     tanggal_kembali: string;
     status: string;
     keterangan?: string;
+    approved_by?: string;
+    approved_at?: string;
 }
 
 interface Stats {
@@ -32,14 +35,68 @@ interface Props {
 }
 
 export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
+    const getStatusBadge = (status: string) => {
+        let variant = "";
+        let icon = null;
+
+        switch (status?.toLowerCase()) {
+            case "menunggu persetujuan":
+                variant = "text-orange-600 bg-orange-100";
+                icon = <FileClock className="h-3 w-3 mr-1" />;
+                break;
+            case "disetujui":
+                variant = "text-blue-600 bg-blue-100";
+                icon = <FileCheck className="h-3 w-3 mr-1" />;
+                break;
+            case "ditolak":
+                variant = "text-red-600 bg-red-100";
+                icon = <X className="h-3 w-3 mr-1" />;
+                break;
+            case "sedang dipinjam":
+                variant = "text-yellow-600 bg-yellow-100";
+                icon = <Clock className="h-3 w-3 mr-1" />;
+                break;
+            case "dikembalikan":
+                variant = "text-green-600 bg-green-100";
+                icon = <CheckCircle className="h-3 w-3 mr-1" />;
+                break;
+            case "terlambat":
+                variant = "text-red-600 bg-red-100";
+                icon = <AlertTriangle className="h-3 w-3 mr-1" />;
+                break;
+            default:
+                variant = "text-gray-600 bg-gray-100";
+        }
+
+        return (
+            <span className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${variant}`}>
+                {icon}
+                {status}
+            </span>
+        );
+    };
+
     const columns: ColumnDef<PinjamBarang>[] = [
         {
             accessorKey: "nama_peminjam",
             header: "Nama Peminjam",
         },
         {
-            accessorKey: "nama_barang",
+            accessorKey: "nama_aset",
             header: "Nama Barang",
+            cell: ({ row }) => {
+                const namaAset = row.getValue("nama_aset") as string;
+                const namaBarang = row.original.nama_barang;
+
+                // Prioritaskan nama_aset, jika N/A atau kosong, gunakan nama_barang (untuk bahan)
+                if (namaAset && namaAset !== 'N/A') {
+                    return namaAset;
+                } else if (namaBarang && namaBarang !== 'N/A') {
+                    return namaBarang;
+                } else {
+                    return '-';
+                }
+            },
         },
         {
             accessorKey: "jumlah",
@@ -66,25 +123,31 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
             header: "Status",
             cell: ({ row }) => {
                 const status = row.getValue("status") as string;
-                let variant = "";
-                switch (status?.toLowerCase()) {
-                    case "dipinjam":
-                        variant = "text-yellow-600 bg-yellow-100";
-                        break;
-                    case "dikembalikan":
-                        variant = "text-green-600 bg-green-100";
-                        break;
-                    case "terlambat":
-                        variant = "text-red-600 bg-red-100";
-                        break;
-                    default:
-                        variant = "text-gray-600 bg-gray-100";
+                return getStatusBadge(status);
+            },
+        },
+        {
+            id: "approved_info",
+            header: "Persetujuan",
+            cell: ({ row }) => {
+                const approvedBy = row.original.approved_by;
+                const approvedAt = row.original.approved_at;
+                const status = row.getValue("status") as string;
+
+                if (status?.toLowerCase() === 'menunggu persetujuan') {
+                    return <span className="text-gray-400 text-xs">Belum diproses</span>;
                 }
-                return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${variant}`}>
-                        {status}
-                    </span>
-                );
+
+                if (approvedBy && approvedAt) {
+                    return (
+                        <div className="text-xs">
+                            <div className="font-medium">{approvedBy}</div>
+                            <div className="text-gray-500">{new Date(approvedAt).toLocaleDateString('id-ID')}</div>
+                        </div>
+                    );
+                }
+
+                return '-';
             },
         },
         {
@@ -99,18 +162,13 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
                                 Detail
                             </Link>
                         </Button>
-                        {status?.toLowerCase() === 'dipinjam' && (
+                        {status?.toLowerCase() === 'sedang dipinjam' && (
                             <Button variant="outline" size="sm" asChild>
                                 <Link href={`/peminjaman-barang/${row.original.id}/return`}>
                                     Kembalikan
                                 </Link>
                             </Button>
                         )}
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href={`/peminjaman-barang/${row.original.id}/edit`}>
-                                Edit
-                            </Link>
-                        </Button>
                     </div>
                 );
             },
@@ -120,18 +178,18 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
     return (
         <AppLayout>
             <Head title="Peminjaman Barang" />
-            
+
             <div className="p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Peminjaman Barang</h1>
-                        <p className="text-gray-600 mt-2">Kelola peminjaman barang laboratorium assistant</p>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Peminjaman Barang</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">Kelola peminjaman barang laboratorium assistant</p>
                     </div>
                     <Button asChild>
                         <Link href="/peminjaman-barang/create">
                             <Plus className="mr-2 h-4 w-4" />
-                            Tambah Peminjaman
+                            Ajukan Peminjaman
                         </Link>
                     </Button>
                 </div>
@@ -204,7 +262,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats }: Props) {
                     <CardHeader>
                         <CardTitle>Daftar Peminjaman</CardTitle>
                         <CardDescription>
-                            Semua transaksi peminjaman yang terdaftar dalam sistem
+                            Riwayat dan status peminjaman barang dalam sistem
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

@@ -6,7 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JadwalPiketController;
 use App\Http\Controllers\AsetAslabController;
 use App\Http\Controllers\JenisAsetAslabController;
-use App\Http\Controllers\PinjamBarangController;
+use App\Http\Controllers\PeminjamanBarangController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -51,8 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // All authenticated users can access peminjaman barang
     Route::middleware(['role:admin,aslab,mahasiswa,dosen'])->group(function () {
         // Peminjaman Barang routes - accessible to all user types
-        Route::resource('peminjaman-barang', PinjamBarangController::class);
-        Route::post('/peminjaman-barang/{id}/return', [PinjamBarangController::class, 'returnItem'])->name('peminjaman-barang.return');
+        Route::get('/peminjaman-barang/search-items', [PeminjamanBarangController::class, 'searchItems'])->name('peminjaman-barang.search-items');
+        Route::resource('peminjaman-barang', PeminjamanBarangController::class);
+        Route::post('/peminjaman-barang/{id}/approve', [PeminjamanBarangController::class, 'approve'])->name('peminjaman-barang.approve');
+        Route::post('/peminjaman-barang/{id}/return', [PeminjamanBarangController::class, 'returnItem'])->name('peminjaman-barang.return');
     });
 });
 

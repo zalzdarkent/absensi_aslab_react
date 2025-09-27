@@ -82,25 +82,22 @@ export default function AsetAslabShow({ aset }: Props) {
         <AppLayout>
             <Head title={`Detail Aset - ${aset.nama_aset}`} />
 
-            <div className="p-6">
-                <div className="max-w-6xl mx-auto">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href="/aset-aslab">
-                                    <ArrowLeft className="h-4 w-4 mr-2" />
-                                    Kembali
-                                </Link>
-                            </Button>
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{aset.nama_aset}</h1>
-                                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                                    {aset.jenis_aset.nama_jenis_aset} • {aset.kode_aset}
-                                </p>
-                            </div>
+            <div className="space-y-6 pt-4">
+                {/* Header */}
+                <div className="space-y-4">
+                    <Button variant="ghost" size="sm" asChild className="w-fit">
+                        <Link href="/aset-aslab">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Kembali
+                        </Link>
+                    </Button>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{aset.nama_aset}</h1>
+                            <p className="text-gray-600 dark:text-gray-400 mt-1">
+                                {aset.jenis_aset.nama_jenis_aset} • {aset.kode_aset}
+                            </p>
                         </div>
-
                         <div className="flex gap-3">
                             <Button variant="outline" asChild>
                                 <Link href={`/aset-aslab/${aset.id}/edit`}>
@@ -114,6 +111,7 @@ export default function AsetAslabShow({ aset }: Props) {
                             </Button>
                         </div>
                     </div>
+                </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Main Information */}
@@ -293,7 +291,6 @@ export default function AsetAslabShow({ aset }: Props) {
                         </div>
                     </div>
                 </div>
-            </div>
         </AppLayout>
     );
 }

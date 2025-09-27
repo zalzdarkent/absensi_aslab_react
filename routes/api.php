@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RfidController;
 use App\Http\Controllers\Api\RfidRegistrationController;
+use App\Http\Controllers\Api\ItemSearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    // Item Search API Routes
+    Route::get('/items/search', [ItemSearchController::class, 'search']);
 });
 
 // RFID API Routes (tanpa auth untuk hardware RFID)
