@@ -8,6 +8,7 @@ use App\Http\Controllers\AsetAslabController;
 use App\Http\Controllers\JenisAsetAslabController;
 use App\Http\Controllers\PeminjamanBarangController;
 use App\Http\Controllers\BahanController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -27,6 +28,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Aslab management routes - only admin can manage aslabs
         Route::resource('aslabs', AslabController::class);
         Route::patch('aslabs/{aslab}/toggle-status', [AslabController::class, 'toggleStatus'])->name('aslabs.toggle-status');
+
+        // User management routes - only admin can manage all users
+        Route::resource('kelola-user', UserController::class);
+        Route::patch('kelola-user/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('kelola-user.toggle-status');
     });
 
     // Admin and Aslab routes

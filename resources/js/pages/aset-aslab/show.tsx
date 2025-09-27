@@ -4,8 +4,23 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { DataTable } from '@/components/ui/data-table';
+import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle, Clock } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { ColumnDef } from "@tanstack/react-table";
+
+interface Peminjaman {
+    id: number;
+    tanggal_pinjam: string;
+    tanggal_kembali: string;
+    stok: number;
+    persetujuan: string;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+    };
+}
 
 interface Aset {
     id: number;
@@ -23,18 +38,7 @@ interface Aset {
         id: number;
         nama_jenis_aset: string;
     };
-    peminjaman_asets: Array<{
-        id: number;
-        tanggal_pinjam: string;
-        tanggal_kembali: string;
-        stok: number;
-        persetujuan: string;
-        user: {
-            id: number;
-            name: string;
-            email: string;
-        };
-    }>;
+    peminjaman_asets: Peminjaman[];
 }
 
 interface Props {
@@ -51,6 +55,78 @@ export default function AsetAslabShow({ aset }: Props) {
             });
         }
     };
+
+    // Define columns for peminjaman DataTable
+    const peminjamanColumns: ColumnDef<Peminjaman>[] = [
+        {
+            accessorKey: "user.name",
+            header: "Peminjam",
+            cell: ({ row }) => (
+                <div>
+                    <div className="font-medium">{row.original.user.name}</div>
+                    <div className="text-sm text-gray-500">{row.original.user.email}</div>
+                </div>
+            ),
+        },
+        {
+            accessorKey: "stok",
+            header: "Jumlah",
+            cell: ({ row }) => (
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    {row.getValue("stok")} unit
+                </span>
+            ),
+        },
+        {
+            accessorKey: "tanggal_pinjam",
+            header: "Tanggal Pinjam",
+            cell: ({ row }) => {
+                const tanggal = row.getValue("tanggal_pinjam") as string;
+                return new Date(tanggal).toLocaleDateString('id-ID');
+            },
+        },
+        {
+            accessorKey: "tanggal_kembali",
+            header: "Tanggal Kembali",
+            cell: ({ row }) => {
+                const tanggal = row.getValue("tanggal_kembali") as string;
+                return tanggal ? new Date(tanggal).toLocaleDateString('id-ID') : '-';
+            },
+        },
+        {
+            accessorKey: "persetujuan",
+            header: "Status",
+            cell: ({ row }) => {
+                const status = row.getValue("persetujuan") as string;
+                let variant = "";
+                let icon = null;
+
+                switch (status?.toLowerCase()) {
+                    case "disetujui":
+                        variant = "text-green-700 bg-green-100 border-green-200";
+                        icon = <CheckCircle className="h-3 w-3" />;
+                        break;
+                    case "menunggu":
+                        variant = "text-yellow-700 bg-yellow-100 border-yellow-200";
+                        icon = <Clock className="h-3 w-3" />;
+                        break;
+                    case "ditolak":
+                        variant = "text-red-700 bg-red-100 border-red-200";
+                        icon = <XCircle className="h-3 w-3" />;
+                        break;
+                    default:
+                        variant = "text-gray-600 bg-gray-100 border-gray-200";
+                }
+
+                return (
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${variant}`}>
+                        {icon}
+                        {status}
+                    </span>
+                );
+            },
+        },
+    ];
 
     const getStatusIcon = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -208,32 +284,11 @@ export default function AsetAslabShow({ aset }: Props) {
                                 </CardHeader>
                                 <CardContent>
                                     {aset.peminjaman_asets && aset.peminjaman_asets.length > 0 ? (
-                                        <div className="space-y-4">
-                                            {aset.peminjaman_asets.map((peminjaman) => (
-                                                <div key={peminjaman.id} className="border rounded-lg p-4">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <p className="font-medium">{peminjaman.user.name}</p>
-                                                            <p className="text-sm text-gray-500">{peminjaman.user.email}</p>
-                                                            <p className="text-sm text-gray-600 mt-1">
-                                                                Jumlah: {peminjaman.stok} unit
-                                                            </p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <Badge variant="outline">
-                                                                {peminjaman.persetujuan}
-                                                            </Badge>
-                                                            <p className="text-xs text-gray-500 mt-1">
-                                                                {new Date(peminjaman.tanggal_pinjam).toLocaleDateString('id-ID')}
-                                                                {peminjaman.tanggal_kembali &&
-                                                                    ` - ${new Date(peminjaman.tanggal_kembali).toLocaleDateString('id-ID')}`
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                        <DataTable
+                                            columns={peminjamanColumns}
+                                            data={aset.peminjaman_asets}
+                                            searchPlaceholder="Cari nama peminjam..."
+                                        />
                                     ) : (
                                         <div className="text-center py-8">
                                             <Package className="mx-auto h-12 w-12 text-gray-400" />

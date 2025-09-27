@@ -65,15 +65,6 @@ export function AppSidebar() {
         // Management - different access levels
         const managementItems = [];
 
-        // Data Aslab - only Admin can access
-        if (user.role === 'admin') {
-            managementItems.push({
-                title: 'Data Aslab',
-                href: '/aslabs',
-                icon: Users,
-            });
-        }
-
         // Pendataan Aset Aslab - Admin and Aslab can access
         if (user.role === 'admin' || user.role === 'aslab') {
             managementItems.push({
@@ -95,6 +86,25 @@ export function AppSidebar() {
             groups.push({
                 label: 'Management',
                 items: managementItems,
+            });
+        }
+
+        // Administration - only for Admin (most sensitive operations)
+        if (user.role === 'admin') {
+            groups.push({
+                label: 'Administration',
+                items: [
+                    {
+                        title: 'Data Aslab',
+                        href: '/aslabs',
+                        icon: Users,
+                    },
+                    {
+                        title: 'Kelola User',
+                        href: '/kelola-user',
+                        icon: Users,
+                    },
+                ],
             });
         }
 
