@@ -271,8 +271,8 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
 
                         {/* Return button */}
                         {isBorrowed && (
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleReturn(row.original.id)}
                             >
