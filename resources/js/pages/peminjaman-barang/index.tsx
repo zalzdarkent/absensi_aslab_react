@@ -101,15 +101,18 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         });
     };
 
-    const handleReturn = () => {
-        // Here you would typically make an API call to mark as returned
-        // For now, let's show a toast notification
-        toast.success('Barang berhasil ditandai sebagai dikembalikan', {
-            description: 'Status peminjaman telah diupdate'
+    const handleReturn = (id: number) => {
+        router.post(`/peminjaman-barang/${id}/return`, {}, {
+            onSuccess: () => {
+                toast.success('Barang berhasil ditandai sebagai dikembalikan', {
+                    description: 'Status peminjaman telah diupdate'
+                });
+            },
+            onError: (errors) => {
+                console.error('Return error:', errors);
+                toast.error('Terjadi kesalahan saat memproses pengembalian');
+            }
         });
-
-        // Optionally refresh the page or update the data
-        // router.reload();
     };
     const getStatusBadge = (status: string) => {
         let variant = "";
@@ -268,10 +271,12 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
 
                         {/* Return button */}
                         {isBorrowed && (
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href={`/peminjaman-barang/${row.original.id}/return`}>
-                                    Kembalikan
-                                </Link>
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleReturn(row.original.id)}
+                            >
+                                Kembalikan
                             </Button>
                         )}
                     </div>
