@@ -22,11 +22,14 @@ class PeminjamanBarangController extends Controller
         // Get all borrowing records (for admin/aslab) or only user's records
         $query = PeminjamanAset::with(['asetAslab', 'bahan', 'user', 'approvedBy']);
 
+        // Filter data based on user role
         if (!in_array($user->role, ['admin', 'aslab'])) {
             $query->where('user_id', $user->id);
         }
 
-        $peminjamanBarangs = $query->latest()->get()->map(function ($peminjaman) {
+        $peminjamanRecords = $query->latest()->get();
+
+        $peminjamanBarangs = $peminjamanRecords->map(function ($peminjaman) {
             $namaBarang = 'N/A';
             $kodeBarang = 'N/A';
             $tipeBarang = 'unknown';
@@ -66,12 +69,20 @@ class PeminjamanBarangController extends Controller
             ];
         });
 
-        // Calculate stats
+        // Calculate stats using raw database status values and filtered records
         $stats = [
-            'total_peminjaman' => $peminjamanBarangs->count(),
-            'sedang_dipinjam' => $peminjamanBarangs->where('status', 'Sedang Dipinjam')->count(),
-            'sudah_kembali' => $peminjamanBarangs->where('status', 'Dikembalikan')->count(),
-            'terlambat_kembali' => $peminjamanBarangs->where('status', 'Terlambat')->count(),
+            'total_peminjaman' => $peminjamanRecords->count(),
+            'sedang_dipinjam' => $peminjamanRecords->whereIn('status', [
+                PeminjamanAset::STATUS_APPROVED,
+                PeminjamanAset::STATUS_BORROWED
+            ])->count(),
+            'sudah_kembali' => $peminjamanRecords->where('status', PeminjamanAset::STATUS_RETURNED)->count(),
+            'terlambat_kembali' => $peminjamanRecords->filter(function ($peminjaman) {
+                // Check if the item is overdue: approved/borrowed and past target return date
+                $isActive = in_array($peminjaman->status, [PeminjamanAset::STATUS_APPROVED, PeminjamanAset::STATUS_BORROWED]);
+                $isOverdue = $peminjaman->target_return_date && Carbon::parse($peminjaman->target_return_date)->isPast();
+                return $isActive && $isOverdue;
+            })->count(),
         ];
 
         return Inertia::render('peminjaman-barang/index', [

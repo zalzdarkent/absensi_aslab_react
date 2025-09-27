@@ -121,8 +121,8 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                 icon = <FileClock className="h-3 w-3 mr-1" />;
                 break;
             case "disetujui":
-                variant = "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20";
-                icon = <FileCheck className="h-3 w-3 mr-1" />;
+                variant = "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20";
+                icon = <Clock className="h-3 w-3 mr-1" />;
                 break;
             case "ditolak":
                 variant = "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
@@ -232,7 +232,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
             cell: ({ row }) => {
                 const status = row.getValue("status") as string;
                 const isPending = status?.toLowerCase() === 'menunggu persetujuan';
-                const isBorrowed = status?.toLowerCase() === 'sedang dipinjam';
+                const isBorrowed = status?.toLowerCase() === 'sedang dipinjam' || status?.toLowerCase() === 'disetujui';
 
                 return (
                     <div className="flex space-x-2">

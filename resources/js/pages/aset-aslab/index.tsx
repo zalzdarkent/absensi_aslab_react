@@ -218,7 +218,7 @@ export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
                         <Button variant="outline" asChild>
                             <Link href="/test-bahan">
                                 <Plus className="mr-2 h-4 w-4" />
-                                Tambah Bahan (TEST)
+                                Tambah Bahan
                             </Link>
                         </Button>
                         <Button asChild>

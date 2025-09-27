@@ -146,7 +146,7 @@ export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onRetu
 
                 <div className="space-y-6 pt-4">
                     {/* Status Section */}
-                    <div className={cn("rounded-lg p-4 border", statusConfig.bgColor)}>
+                    <div className={cn("rounded-lg p-4 border")}>
                         <div className="flex items-center gap-3 mb-3">
                             {statusConfig.icon}
                             <div className="flex-1">
