@@ -15,80 +15,87 @@ class BahanSeeder extends Seeder
     {
         $faker = Faker::create('id_ID');
 
-        $bahanData = [
-            // Bahan Elektronika
-            ['nama' => 'Resistor 1K Ohm', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Resistor 10K Ohm', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Resistor 100K Ohm', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Capacitor 100uF', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Capacitor 1000uF', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'LED Merah 5mm', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'LED Hijau 5mm', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'LED Biru 5mm', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Transistor NPN 2N2222', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Transistor PNP BC557', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'IC 555 Timer', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'IC Op-Amp LM358', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Diode 1N4007', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Breadboard 400 Point', 'jenis_bahan' => 'Elektronika'],
-            ['nama' => 'Jumper Wire Male-Male', 'jenis_bahan' => 'Elektronika'],
-
-            // Bahan Kimia Lab
-            ['nama' => 'Alkohol 70%', 'jenis_bahan' => 'Kimia'],
-            ['nama' => 'Aseton', 'jenis_bahan' => 'Kimia'],
-            ['nama' => 'Flux Solder', 'jenis_bahan' => 'Kimia'],
-            ['nama' => 'Thinner', 'jenis_bahan' => 'Kimia'],
-            ['nama' => 'Contact Cleaner', 'jenis_bahan' => 'Kimia'],
-
-            // Bahan Logam
-            ['nama' => 'Timah Solder 0.8mm', 'jenis_bahan' => 'Logam'],
-            ['nama' => 'Timah Solder 1.0mm', 'jenis_bahan' => 'Logam'],
-            ['nama' => 'Kawat Tembaga 0.5mm', 'jenis_bahan' => 'Logam'],
-            ['nama' => 'Kawat Tembaga 1.0mm', 'jenis_bahan' => 'Logam'],
-            ['nama' => 'Plat PCB Lubang', 'jenis_bahan' => 'Logam'],
-
-            // Bahan Plastik
-            ['nama' => 'Heat Shrink 2mm', 'jenis_bahan' => 'Plastik'],
-            ['nama' => 'Heat Shrink 5mm', 'jenis_bahan' => 'Plastik'],
-            ['nama' => 'Cable Tie 15cm', 'jenis_bahan' => 'Plastik'],
-            ['nama' => 'Cable Tie 25cm', 'jenis_bahan' => 'Plastik'],
-            ['nama' => 'Box Plastik Kecil', 'jenis_bahan' => 'Plastik'],
-
-            // Bahan Kertas & ATK
-            ['nama' => 'Kertas A4 80gsm', 'jenis_bahan' => 'ATK'],
-            ['nama' => 'Kertas Label', 'jenis_bahan' => 'ATK'],
-            ['nama' => 'Double Tape', 'jenis_bahan' => 'ATK'],
-            ['nama' => 'Isolasi Listrik', 'jenis_bahan' => 'ATK'],
-            ['nama' => 'Spidol Permanen', 'jenis_bahan' => 'ATK'],
-
-            // Bahan Pembersih
-            ['nama' => 'Tissue Pembersih', 'jenis_bahan' => 'Pembersih'],
-            ['nama' => 'Cotton Bud', 'jenis_bahan' => 'Pembersih'],
-            ['nama' => 'Sikat Kecil', 'jenis_bahan' => 'Pembersih'],
-            ['nama' => 'Kain Lap Microfiber', 'jenis_bahan' => 'Pembersih'],
-            ['nama' => 'Vacuum Oil', 'jenis_bahan' => 'Pembersih'],
-
-            // Bahan Lainnya
-            ['nama' => 'Baterai AA Alkaline', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Baterai 9V', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Fuse 1A', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Fuse 5A', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Switch Push Button', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Potentiometer 10K', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Relay 12V', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Connector Terminal', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Kabel Serabut Merah', 'jenis_bahan' => 'Lainnya'],
-            ['nama' => 'Kabel Serabut Hitam', 'jenis_bahan' => 'Lainnya']
+        // Base material names for generating variations
+        $baseMaterials = [
+            'Resistor', 'Capacitor', 'LED', 'Transistor', 'IC', 'Diode', 'Inductor', 'Relay',
+            'Switch', 'Potentiometer', 'Sensor', 'Crystal', 'Fuse', 'Connector', 'Socket',
+            'Header Pin', 'Jumper Wire', 'Breadboard', 'PCB', 'Heat Sink', 'Screw', 'Nut',
+            'Bolt', 'Washer', 'Spring', 'Cable', 'Wire', 'Solder', 'Flux', 'Paste',
+            'Adhesive', 'Tape', 'Tube', 'Sheet', 'Rod', 'Bar', 'Plate', 'Film',
+            'Paper', 'Cloth', 'Foam', 'Rubber', 'Plastic', 'Metal', 'Glass', 'Ceramic',
+            'Battery', 'Cell', 'Charger', 'Adapter', 'Converter', 'Regulator', 'Filter'
         ];
 
-        foreach ($bahanData as $index => $bahan) {
+        $specifications = [
+            // Electronic values
+            '1K', '2.2K', '4.7K', '10K', '22K', '47K', '100K', '220K', '470K', '1M',
+            '1uF', '10uF', '100uF', '220uF', '470uF', '1000uF', '2200uF',
+            '3mm', '5mm', '8mm', '10mm', '12mm', '15mm', '20mm', '25mm',
+            '0.5W', '1W', '2W', '5W', '10W', '25W', '50W',
+            '3.3V', '5V', '9V', '12V', '24V', '48V', '110V', '220V',
+            '1A', '2A', '5A', '10A', '15A', '20A', '30A',
+            // Physical measurements
+            '0.5mm', '0.8mm', '1.0mm', '1.5mm', '2.0mm', '2.5mm', '3.0mm',
+            '10cm', '15cm', '20cm', '25cm', '30cm', '50cm', '100cm',
+            'Small', 'Medium', 'Large', 'XL', 'Mini', 'Micro', 'Nano'
+        ];
+
+        $colors = [
+            'Merah', 'Hijau', 'Biru', 'Kuning', 'Putih', 'Hitam', 'Orange', 'Ungu',
+            'Pink', 'Abu-abu', 'Coklat', 'Emas', 'Silver', 'Transparan', 'Clear'
+        ];
+
+        $materials = [
+            'Aluminium', 'Tembaga', 'Besi', 'Stainless Steel', 'Plastik', 'Karet',
+            'Silikon', 'Keramik', 'Fiberglass', 'Carbon', 'Titanium', 'Nikel'
+        ];
+
+        $types = [
+            'Elektronika', 'Kimia', 'Logam', 'Plastik', 'ATK', 'Pembersih',
+            'Mekanik', 'Optik', 'Magnetic', 'Thermal', 'Acoustic', 'Lainnya'
+        ];
+
+        $this->command->info('Generating 1000 material records...');
+
+        for ($i = 0; $i < 1000; $i++) {
+            $baseMaterial = $faker->randomElement($baseMaterials);
+            $jenisBahan = $faker->randomElement($types);
+
+            // Create varied material names
+            $nama = $baseMaterial;
+
+            // Add specifications (70% chance)
+            if ($faker->boolean(70)) {
+                $spec = $faker->randomElement($specifications);
+                $nama .= ' ' . $spec;
+            }
+
+            // Add color (30% chance)
+            if ($faker->boolean(30)) {
+                $color = $faker->randomElement($colors);
+                $nama .= ' ' . $color;
+            }
+
+            // Add material type (20% chance)
+            if ($faker->boolean(20)) {
+                $material = $faker->randomElement($materials);
+                $nama .= ' ' . $material;
+            }
+
             Bahan::create([
-                'nama' => $bahan['nama'],
-                'jenis_bahan' => $bahan['jenis_bahan'],
-                'stok' => $faker->numberBetween(10, 500),
-                'catatan' => $faker->optional(0.5)->sentence(8),
+                'nama' => $nama,
+                'jenis_bahan' => $jenisBahan,
+                'stok' => $faker->numberBetween(0, 1000), // Some might be out of stock
+                'catatan' => $faker->optional(0.4)->sentence(8),
                 'gambar' => 'materials/default-material.jpg'
             ]);
+
+            // Show progress every 100 records
+            if (($i + 1) % 100 == 0) {
+                $this->command->info('Created ' . ($i + 1) . ' material records...');
+            }
         }
+
+        $this->command->info('Successfully created 1000 material records!');
     }
 }

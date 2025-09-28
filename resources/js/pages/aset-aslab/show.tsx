@@ -100,28 +100,34 @@ export default function AsetAslabShow({ aset }: Props) {
                 const status = row.getValue("persetujuan") as string;
                 let variant = "";
                 let icon = null;
+                let statusText = "";
 
                 switch (status?.toLowerCase()) {
                     case "disetujui":
                         variant = "text-green-700 bg-green-100 border-green-200";
                         icon = <CheckCircle className="h-3 w-3" />;
+                        statusText = "Disetujui";
                         break;
                     case "menunggu":
+                    case "menunggu persetujuan":
                         variant = "text-yellow-700 bg-yellow-100 border-yellow-200";
                         icon = <Clock className="h-3 w-3" />;
+                        statusText = "Menunggu Persetujuan";
                         break;
                     case "ditolak":
                         variant = "text-red-700 bg-red-100 border-red-200";
                         icon = <XCircle className="h-3 w-3" />;
+                        statusText = "Ditolak";
                         break;
                     default:
                         variant = "text-gray-600 bg-gray-100 border-gray-200";
+                        statusText = status?.replace(/_/g, ' ') || 'Tidak Diketahui';
                 }
 
                 return (
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${variant}`}>
                         {icon}
-                        {status}
+                        {statusText}
                     </span>
                 );
             },
@@ -136,21 +142,46 @@ export default function AsetAslabShow({ aset }: Props) {
                 return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
             case "tidak_baik":
                 return <XCircle className="h-4 w-4 text-red-600" />;
+            case "tersedia":
+                return <CheckCircle className="h-4 w-4 text-green-600" />;
+            case "habis":
+                return <XCircle className="h-4 w-4 text-red-600" />;
             default:
-                return null;
+                return <AlertTriangle className="h-4 w-4 text-gray-400" />;
         }
     };
 
     const getStatusBadge = (status: string) => {
         switch (status?.toLowerCase()) {
             case "baik":
-                return <Badge className="bg-green-100 text-green-800">Baik</Badge>;
+                return <Badge className="bg-green-100 text-green-800 border-green-200">Baik</Badge>;
             case "kurang_baik":
-                return <Badge className="bg-yellow-100 text-yellow-800">Kurang Baik</Badge>;
+                return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Kurang Baik</Badge>;
             case "tidak_baik":
-                return <Badge className="bg-red-100 text-red-800">Tidak Baik</Badge>;
+                return <Badge className="bg-red-100 text-red-800 border-red-200">Tidak Baik</Badge>;
+            case "tersedia":
+                return <Badge className="bg-green-100 text-green-800 border-green-200">Tersedia</Badge>;
+            case "habis":
+                return <Badge className="bg-red-100 text-red-800 border-red-200">Habis</Badge>;
             default:
-                return <Badge variant="secondary">{status}</Badge>;
+                return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status || 'Tidak Diketahui'}</Badge>;
+        }
+    };
+
+    const getStatusText = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case "baik":
+                return "Baik";
+            case "kurang_baik":
+                return "Kurang Baik";
+            case "tidak_baik":
+                return "Tidak Baik";
+            case "tersedia":
+                return "Tersedia";
+            case "habis":
+                return "Habis";
+            default:
+                return status?.replace(/_/g, ' ') || 'Tidak Diketahui';
         }
     };
 
@@ -232,7 +263,7 @@ export default function AsetAslabShow({ aset }: Props) {
                                             <div className="flex items-center gap-3">
                                                 {getStatusIcon(aset.status)}
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Status</p>
+                                                    <p className="text-sm text-gray-500">Status Kondisi</p>
                                                     {getStatusBadge(aset.status)}
                                                 </div>
                                             </div>
@@ -339,7 +370,7 @@ export default function AsetAslabShow({ aset }: Props) {
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-500">Status</span>
-                                        <span className="font-medium">{aset.status.replace('_', ' ')}</span>
+                                        <span className="font-medium">{getStatusText(aset.status)}</span>
                                     </div>
                                 </CardContent>
                             </Card>

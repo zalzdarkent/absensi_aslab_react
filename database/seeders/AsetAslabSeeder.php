@@ -24,27 +24,56 @@ class AsetAslabSeeder extends Seeder
             return;
         }
 
-        $assetNames = [
-            'Laptop Dell Inspiron', 'Laptop Asus VivoBook', 'Laptop Lenovo ThinkPad', 'Laptop HP Pavilion',
-            'PC Desktop Intel i5', 'PC Desktop AMD Ryzen', 'Monitor Samsung 24"', 'Monitor LG 27"',
-            'Switch TP-Link 8 Port', 'Router Cisco', 'Access Point Ubiquiti', 'Kabel UTP Cat6',
-            'Projector Epson', 'Projector BenQ', 'Speaker Aktif Logitech', 'Microphone Wireless',
-            'Webcam Logitech C920', 'Headset Gaming', 'Keyboard Mechanical', 'Mouse Wireless',
-            'Meja Lab Kayu', 'Kursi Putar', 'Rak Server', 'Lemari Penyimpanan',
-            'UPS APC 1000VA', 'Stabilizer', 'Extension Socket', 'Kabel HDMI',
-            'Multimeter Digital', 'Osciloscope', 'Function Generator', 'Power Supply',
-            'Hard Disk External 1TB', 'SSD Samsung 500GB', 'RAM DDR4 16GB', 'Processor Intel i7',
-            'CCTV Camera Indoor', 'CCTV Camera Outdoor', 'DVR 8 Channel', 'Alarm System',
-            'Printer Canon Pixma', 'Scanner Epson', 'Shredder Kertas', 'Laminator A4',
-            'Vacuum Cleaner', 'Blower', 'Tool Set Screwdriver', 'Solder Station',
-            'Whiteboard Magnetic', 'Flipchart Stand', 'Papan Tulis', 'Penghapus Whiteboard'
+        // Base asset names for generating variations
+        $baseAssetNames = [
+            'Laptop', 'Desktop PC', 'Monitor', 'Keyboard', 'Mouse', 'Printer', 'Scanner', 'Projector',
+            'Speaker', 'Headset', 'Webcam', 'Microphone', 'Router', 'Switch', 'Access Point',
+            'UPS', 'Stabilizer', 'Hard Disk', 'SSD', 'RAM', 'Processor', 'Motherboard',
+            'VGA Card', 'Power Supply', 'Case PC', 'Cooling Fan', 'CCTV Camera', 'DVR',
+            'Alarm System', 'Fire Extinguisher', 'Multimeter', 'Osciloscope', 'Function Generator',
+            'Soldering Station', 'Hot Air Gun', 'Power Drill', 'Screwdriver Set', 'Pliers',
+            'Wire Stripper', 'Digital Caliper', 'Meja Kerja', 'Kursi Lab', 'Lemari', 'Rak',
+            'Whiteboard', 'Flipchart', 'Extension Cable', 'Network Cable', 'HDMI Cable',
+            'USB Cable', 'Power Cable', 'Adapter', 'Converter', 'Hub USB'
         ];
 
-        $statuses = ['baik', 'kurang_baik', 'tidak_baik', 'dipinjam', 'sudah_dikembalikan'];
+        $brands = [
+            'Dell', 'HP', 'Asus', 'Lenovo', 'Acer', 'Samsung', 'LG', 'Sony', 'Canon', 'Epson',
+            'Logitech', 'Razer', 'Corsair', 'TP-Link', 'D-Link', 'Cisco', 'Ubiquiti', 'APC',
+            'Schneider', 'Western Digital', 'Seagate', 'Kingston', 'Corsair', 'G.Skill',
+            'Intel', 'AMD', 'NVIDIA', 'MSI', 'Gigabyte', 'ASUS ROG', 'Cooler Master',
+            'Thermaltake', 'Seasonic', 'Antec', 'Fluke', 'Keysight', 'Rigol', 'Hakko',
+            'Weller', 'Bosch', 'Makita', 'DeWalt', 'Stanley', 'Mitutoyo', 'IKEA', 'Olympic'
+        ];
 
-        for ($i = 0; $i < 50; $i++) {
+        $models = [
+            'Pro', 'Ultra', 'Max', 'Elite', 'Premium', 'Standard', 'Basic', 'Advanced',
+            'Professional', 'Enterprise', 'Home', 'Office', 'Gaming', 'Creator', 'Business',
+            'V1', 'V2', 'V3', 'Gen1', 'Gen2', 'Gen3', 'Series A', 'Series B', 'Series X',
+            'Plus', 'Lite', 'Mini', 'Compact', 'Full Size', 'Wireless', 'Bluetooth', 'USB'
+        ];
+
+        $statuses = ['baik', 'kurang_baik', 'tidak_baik'];
+
+        $this->command->info('Generating 1000 asset records...');
+
+        for ($i = 0; $i < 1000; $i++) {
             $jenisId = $jenisAsets->random()->id;
-            $namaAset = $assetNames[$i];
+            $baseName = $faker->randomElement($baseAssetNames);
+            $brand = $faker->randomElement($brands);
+            $model = $faker->randomElement($models);
+
+            // Create varied asset names
+            $namaAset = $brand . ' ' . $baseName . ' ' . $model;
+
+            // Add some variation with numbers/specifications
+            if ($faker->boolean(30)) {
+                $specs = $faker->randomElement([
+                    '24"', '27"', '32"', '1TB', '2TB', '500GB', '16GB', '32GB', '8GB',
+                    '1000VA', '1500VA', '2000VA', 'i3', 'i5', 'i7', 'i9', 'Ryzen 5', 'Ryzen 7'
+                ]);
+                $namaAset .= ' ' . $specs;
+            }
 
             AsetAslab::create([
                 'nama_aset' => $namaAset,
@@ -56,6 +85,13 @@ class AsetAslabSeeder extends Seeder
                 'catatan' => $faker->optional(0.6)->sentence(10),
                 'gambar' => 'assets/default-asset.jpg'
             ]);
+
+            // Show progress every 100 records
+            if (($i + 1) % 100 == 0) {
+                $this->command->info('Created ' . ($i + 1) . ' asset records...');
+            }
         }
+
+        $this->command->info('Successfully created 1000 asset records!');
     }
 }

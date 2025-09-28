@@ -8,7 +8,7 @@ import { PeminjamanDetailModal } from '@/components/ui/peminjaman-detail-modal';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock, ThumbsUp, ThumbsDown, Eye } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from 'sonner';
@@ -243,8 +243,9 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewDetail(row.original)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950"
                         >
-                            Detail
+                            <Eye className="h-4 w-4" />
                         </Button>
 
                         {/* Approval buttons - only show for admin/aslab and pending status */}
@@ -254,7 +255,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleApprovalAction(row.original, 'approve')}
-                                    className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950"
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950 border-green-200 dark:border-green-800"
                                 >
                                     <ThumbsUp className="h-4 w-4" />
                                 </Button>
@@ -262,7 +263,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleApprovalAction(row.original, 'reject')}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
                                 >
                                     <ThumbsDown className="h-4 w-4" />
                                 </Button>
@@ -275,7 +276,9 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleReturn(row.original.id)}
+                                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-950 border-purple-200 dark:border-purple-800"
                             >
+                                <CheckCircle className="h-4 w-4 mr-1" />
                                 Kembalikan
                             </Button>
                         )}

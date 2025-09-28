@@ -14,11 +14,14 @@ class PenggunaanBahan extends Model
         'tanggal_penggunaan',
         'jumlah_digunakan',
         'keperluan',
-        'catatan'
+        'catatan',
+        'approved_by',
+        'approved_at'
     ];
 
     protected $casts = [
-        'tanggal_penggunaan' => 'date'
+        'tanggal_penggunaan' => 'date',
+        'approved_at' => 'datetime'
     ];
 
     // Relasi ke Bahan (many to one)
@@ -31,5 +34,11 @@ class PenggunaanBahan extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Relasi ke User yang approve (many to one)
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }
