@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { dashboard } from '@/routes';
 import { type NavItem, type User } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon, ClipboardList, PackageIcon } from 'lucide-react';
+import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon, ClipboardList, PackageIcon, UserSquare2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 interface NavGroupItem extends NavItem {
@@ -41,11 +41,11 @@ export function AppSidebar() {
                         href: '#',
                         icon: ScanLine,
                         children: [
-                            {
-                                title: 'Scan Absensi',
-                                href: '/attendance-scan',
-                                icon: ScanLine,
-                            },
+                            // {
+                            //     title: 'Scan Absensi',
+                            //     href: '/attendance-scan',
+                            //     icon: ScanLine,
+                            // },
                             {
                                 title: 'Riwayat Absensi',
                                 href: '/attendance-history',
@@ -102,7 +102,7 @@ export function AppSidebar() {
                     {
                         title: 'Kelola User',
                         href: '/kelola-user',
-                        icon: Users,
+                        icon: UserSquare2,
                     },
                 ],
             });
