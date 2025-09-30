@@ -94,6 +94,9 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
 
         post('/aset-aslab', {
             forceFormData: true,
+            onSuccess: () => {
+                toast.success('Aset berhasil ditambahkan!');
+            },
         });
     };
 

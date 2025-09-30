@@ -47,6 +47,9 @@ export default function BahanCreate({ success }: Props) {
 
         post('/bahan', {
             forceFormData: true,
+            onSuccess: () => {
+                toast.success('Bahan berhasil ditambahkan!');
+            },
         });
     };
 

@@ -8,7 +8,7 @@ import { PeminjamanDetailModal } from '@/components/ui/peminjaman-detail-modal';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock, ThumbsUp, ThumbsDown, Eye } from 'lucide-react';
+import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock, ThumbsUp, ThumbsDown, Eye, Trash2 } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from 'sonner';
@@ -49,6 +49,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
     const [selectedPeminjaman, setSelectedPeminjaman] = useState<PinjamBarang | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
     const [approvalNote, setApprovalNote] = useState('');
     const [processing, setProcessing] = useState(false);
@@ -65,6 +66,31 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         setApprovalAction(action);
         setApprovalNote('');
         setIsApprovalModalOpen(true);
+    };
+
+    const handleDeleteAction = (peminjaman: PinjamBarang) => {
+        setSelectedPeminjaman(peminjaman);
+        setIsDeleteModalOpen(true);
+    };
+
+    const submitDelete = () => {
+        if (!selectedPeminjaman) return;
+
+        setProcessing(true);
+
+        router.delete(`/peminjaman-barang/${selectedPeminjaman.id}`, {
+            onSuccess: () => {
+                setIsDeleteModalOpen(false);
+                toast.success('Data peminjaman berhasil dihapus!');
+            },
+            onError: (errors) => {
+                console.error('Delete error:', errors);
+                toast.error('Terjadi kesalahan saat menghapus data');
+            },
+            onFinish: () => {
+                setProcessing(false);
+            }
+        });
     };
 
     const submitApproval = () => {
@@ -124,7 +150,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                 icon = <FileClock className="h-3 w-3 mr-1" />;
                 break;
             case "disetujui":
-                variant = "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20";
+                variant = "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20";
                 icon = <Clock className="h-3 w-3 mr-1" />;
                 break;
             case "ditolak":
@@ -280,6 +306,18 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                             >
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Kembalikan
+                            </Button>
+                        )}
+
+                        {/* Delete button - only for admin/aslab */}
+                        {canApprove && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteAction(row.original)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                            >
+                                <Trash2 className="h-4 w-4" />
                             </Button>
                         )}
                     </div>
@@ -528,6 +566,81 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                             Tolak
                                         </>
                                     )}
+                                </span>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent className="sm:max-w-lg bg-background border-border">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                                <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <span className="text-foreground">Hapus Data Peminjaman</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Apakah Anda yakin ingin menghapus data peminjaman ini? Tindakan ini tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedPeminjaman && (
+                        <div className="space-y-4">
+                            {/* Detail Card */}
+                            <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10 p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                    <span className="text-sm font-semibold text-red-800 dark:text-red-200">Data yang akan dihapus</span>
+                                </div>
+                                <div className="space-y-2 text-sm text-foreground">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Peminjam:</span>
+                                        <span className="font-medium">{selectedPeminjaman.nama_peminjam}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Barang:</span>
+                                        <span className="font-medium">{selectedPeminjaman.nama_aset || selectedPeminjaman.nama_barang}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Jumlah:</span>
+                                        <span className="font-medium">{selectedPeminjaman.jumlah} unit</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Status:</span>
+                                        <span className="font-medium">{selectedPeminjaman.status}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter className="gap-3 pt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            disabled={processing}
+                            className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={submitDelete}
+                            disabled={processing}
+                            className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 focus:ring-red-500 text-white shadow-sm"
+                        >
+                            {processing ? (
+                                <span className="flex items-center gap-2">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                    Menghapus...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    <Trash2 className="h-4 w-4" />
+                                    Hapus Data
                                 </span>
                             )}
                         </Button>

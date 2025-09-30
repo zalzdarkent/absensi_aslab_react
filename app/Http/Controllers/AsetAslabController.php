@@ -69,6 +69,7 @@ class AsetAslabController extends Controller
         return Inertia::render('aset-aslab/index', [
             'asetAslabs' => $allItems, // Now contains both aset and bahan
             'stats' => $stats,
+            'success' => session('success'),
         ]);
     }
 

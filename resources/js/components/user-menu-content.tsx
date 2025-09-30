@@ -6,6 +6,9 @@ import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 interface UserMenuContentProps {
     user: User;
@@ -13,10 +16,21 @@ interface UserMenuContentProps {
 
 export function UserMenuContent({ user }: UserMenuContentProps) {
     const cleanup = useMobileNavigation();
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
     const handleLogout = () => {
         cleanup();
         router.flushAll();
+    };
+
+    const confirmLogout = () => {
+        router.visit(logout(), {
+            method: 'post',
+            onFinish: () => {
+                setShowLogoutDialog(false);
+                handleLogout();
+            }
+        });
     };
 
     return (
@@ -36,12 +50,33 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link className="block w-full" href={logout()} as="button" onClick={handleLogout} data-test="logout-button">
-                    <LogOut className="mr-2" />
-                    Log out
-                </Link>
-            </DropdownMenuItem>
+            <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+                <DialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => {
+                        e.preventDefault();
+                        setShowLogoutDialog(true);
+                    }}>
+                        <LogOut className="mr-2" />
+                        Log out
+                    </DropdownMenuItem>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Logout</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin keluar dari aplikasi? Anda akan perlu login kembali untuk mengakses sistem.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowLogoutDialog(false)}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={confirmLogout}>
+                            Ya, Keluar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

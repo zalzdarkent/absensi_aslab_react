@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 interface JenisAset {
     id: number;
@@ -71,6 +72,9 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
 
         post(`/aset-aslab/${aset.id}`, {
             forceFormData: true,
+            onSuccess: () => {
+                toast.success('Aset berhasil diperbarui!');
+            },
         });
     };
 

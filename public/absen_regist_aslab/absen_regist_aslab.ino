@@ -5,14 +5,17 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 // WiFi
-const char* ssid = "Asisten Laboratorium";
-const char* password = "2025Labkomp:3";
+const char *ssid = "Asisten Laboratorium";
+const char *password = "2025Labkomp:3";
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // alamat 0x27, ukuran 16x2
 
 // API Endpoints Laravel
-String registrationEndpoint = "http://192.168.10.54:8000/api/rfid/scan-for-registration";
-String attendanceEndpoint = "http://192.168.10.54:8000/api/rfid/scan";
+String registrationEndpoint = "http://192.168.10.253:8000/api/rfid/scan-for-registration";
+String attendanceEndpoint = "http://192.168.10.253:8000/api/rfid/scan";
 
 // RFID
 #define RST_PIN 22
@@ -33,7 +36,7 @@ enum SystemMode {
 SystemMode currentMode = MODE_REGISTRATION;
 QueueHandle_t rfidQueue;
 SemaphoreHandle_t wifiMutex;
-String commandEndpoint = "http://192.168.10.54:8000/api/rfid/get-mode-command";
+String commandEndpoint = "http://192.168.10.253:8000/api/rfid/get-mode-command";
 
 struct RFIDData {
   String uid;
@@ -48,6 +51,13 @@ TaskHandle_t displayTaskHandle;
 TaskHandle_t commandTaskHandle;
 
 void setup() {
+  Wire.begin(21, 22);  // SDA, SCL (ubah kalau kamu pakai pin lain)
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("RFID System Ready");
+
   Serial.begin(115200);
   delay(1000);
 
@@ -62,7 +72,7 @@ void setup() {
   updateModeIndicators();
 
   // Initialize SPI and RFID
-  SPI.begin(18, 19, 23, 21); // SCK, MISO, MOSI, SS
+  SPI.begin(18, 19, 23, 21);  // SCK, MISO, MOSI, SS
   mfrc522.PCD_Init();
 
   Serial.println("RFID reader initialized");
@@ -73,7 +83,7 @@ void setup() {
   } else {
     Serial.println("✗ RFID Reader FAILED");
   }
-  mfrc522.PCD_Init(); // Re-init after self test
+  mfrc522.PCD_Init();  // Re-init after self test
 
   // Initialize FreeRTOS components
   rfidQueue = xQueueCreate(10, sizeof(RFIDData));
@@ -84,43 +94,43 @@ void setup() {
 
   // Create FreeRTOS Tasks
   xTaskCreatePinnedToCore(
-    rfidScanTask,       // Task function
-    "RFID_Scan",        // Task name
-    4096,               // Stack size
-    NULL,               // Parameters
-    2,                  // Priority
-    &rfidTaskHandle,    // Task handle
-    1                   // Core 1
+    rfidScanTask,     // Task function
+    "RFID_Scan",      // Task name
+    4096,             // Stack size
+    NULL,             // Parameters
+    2,                // Priority
+    &rfidTaskHandle,  // Task handle
+    1                 // Core 1
   );
 
   xTaskCreatePinnedToCore(
-    networkTask,        // Task function
-    "Network_Handler",  // Task name
-    8192,               // Stack size
-    NULL,               // Parameters
-    1,                  // Priority
-    &networkTaskHandle, // Task handle
-    0                   // Core 0
+    networkTask,         // Task function
+    "Network_Handler",   // Task name
+    8192,                // Stack size
+    NULL,                // Parameters
+    1,                   // Priority
+    &networkTaskHandle,  // Task handle
+    0                    // Core 0
   );
 
   xTaskCreatePinnedToCore(
-    displayTask,        // Task function
-    "Display_Status",   // Task name
-    2048,               // Stack size
-    NULL,               // Parameters
-    1,                  // Priority
-    &displayTaskHandle, // Task handle
-    0                   // Core 0
+    displayTask,         // Task function
+    "Display_Status",    // Task name
+    2048,                // Stack size
+    NULL,                // Parameters
+    1,                   // Priority
+    &displayTaskHandle,  // Task handle
+    0                    // Core 0
   );
 
   xTaskCreatePinnedToCore(
-    commandTask,        // Task function
-    "Command_Listener", // Task name
-    4096,               // Stack size
-    NULL,               // Parameters
-    1,                  // Priority
-    &commandTaskHandle, // Task handle
-    0                   // Core 0
+    commandTask,         // Task function
+    "Command_Listener",  // Task name
+    4096,                // Stack size
+    NULL,                // Parameters
+    1,                   // Priority
+    &commandTaskHandle,  // Task handle
+    0                    // Core 0
   );
 
   Serial.println("\n=== SYSTEM READY ===");
@@ -132,10 +142,10 @@ void setup() {
 void loop() {
   // Main loop mostly empty, tasks handle everything
   delay(100);
-}// WiFi Connection Function
+}  // WiFi Connection Function
 void connectWiFi() {
   Serial.println("Connecting to WiFi...");
-  WiFi.mode(WIFI_STA); // Mode station
+  WiFi.mode(WIFI_STA);  // Mode station
   WiFi.begin(ssid, password);
 
   unsigned long startAttemptTime = millis();
@@ -188,7 +198,7 @@ void printCurrentMode() {
     Serial.println("Scan registered cards for check-out");
   }
   Serial.println("====================");
-}// FreeRTOS Task: RFID Scanning
+}  // FreeRTOS Task: RFID Scanning
 void rfidScanTask(void *pvParameters) {
   RFIDData rfidData;
 
@@ -215,8 +225,8 @@ void rfidScanTask(void *pvParameters) {
       if (xQueueSend(rfidQueue, &rfidData, pdMS_TO_TICKS(100)) == pdPASS) {
         Serial.println("\n=== KARTU TERDETEKSI ===");
         Serial.println("UID: " + uid);
-        String modeStr = (currentMode == MODE_REGISTRATION) ? "REGISTRATION" :
-                        (currentMode == MODE_CHECK_IN) ? "CHECK-IN" : "CHECK-OUT";
+        String modeStr = (currentMode == MODE_REGISTRATION) ? "REGISTRATION" : (currentMode == MODE_CHECK_IN) ? "CHECK-IN"
+                                                                                                              : "CHECK-OUT";
         Serial.println("Mode: " + modeStr);
         Serial.println("========================");
       }
@@ -225,10 +235,10 @@ void rfidScanTask(void *pvParameters) {
       mfrc522.PICC_HaltA();
       mfrc522.PCD_StopCrypto1();
 
-      vTaskDelay(pdMS_TO_TICKS(2000)); // Prevent spam scanning
+      vTaskDelay(pdMS_TO_TICKS(2000));  // Prevent spam scanning
     }
 
-    vTaskDelay(pdMS_TO_TICKS(100)); // Task delay
+    vTaskDelay(pdMS_TO_TICKS(100));  // Task delay
   }
 }
 
@@ -244,8 +254,7 @@ void networkTask(void *pvParameters) {
       if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(5000)) == pdPASS) {
 
         if (WiFi.status() == WL_CONNECTED) {
-          String endpoint = (receivedData.mode == MODE_REGISTRATION) ?
-                           registrationEndpoint : attendanceEndpoint;
+          String endpoint = (receivedData.mode == MODE_REGISTRATION) ? registrationEndpoint : attendanceEndpoint;
 
           sendRFIDData(receivedData.uid, endpoint, receivedData.mode);
         } else {
@@ -258,7 +267,7 @@ void networkTask(void *pvParameters) {
       }
     }
 
-    vTaskDelay(pdMS_TO_TICKS(100)); // Task delay
+    vTaskDelay(pdMS_TO_TICKS(100));  // Task delay
   }
 }
 
@@ -272,8 +281,8 @@ void displayTask(void *pvParameters) {
     // Status check setiap 15 detik
     if (currentTime - lastStatusTime > 15000) {
       Serial.println("\n[STATUS] System running...");
-      String modeStr = (currentMode == MODE_REGISTRATION) ? "REGISTRATION" :
-                      (currentMode == MODE_CHECK_IN) ? "CHECK-IN" : "CHECK-OUT";
+      String modeStr = (currentMode == MODE_REGISTRATION) ? "REGISTRATION" : (currentMode == MODE_CHECK_IN) ? "CHECK-IN"
+                                                                                                            : "CHECK-OUT";
       Serial.println("Mode: " + modeStr);
       Serial.println("WiFi: " + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected"));
       Serial.println("Free Heap: " + String(ESP.getFreeHeap()) + " bytes");
@@ -282,7 +291,7 @@ void displayTask(void *pvParameters) {
       lastStatusTime = currentTime;
     }
 
-    vTaskDelay(pdMS_TO_TICKS(5000)); // Check every 5 seconds
+    vTaskDelay(pdMS_TO_TICKS(5000));  // Check every 5 seconds
   }
 }
 
@@ -306,6 +315,7 @@ void sendRFIDData(String uid, String endpoint, SystemMode mode) {
 
   int httpResponseCode = http.POST(jsonData);
 
+  lcd.clear();
   if (httpResponseCode > 0) {
     String response = http.getString();
     Serial.println("Response Code: " + String(httpResponseCode));
@@ -314,21 +324,35 @@ void sendRFIDData(String uid, String endpoint, SystemMode mode) {
     if (httpResponseCode == 200) {
       if (mode == MODE_REGISTRATION) {
         Serial.println("✓ RFID tersedia untuk registrasi");
+        lcd.setCursor(0, 0);
+        lcd.print("REGISTRATION OK");
       } else if (mode == MODE_CHECK_IN) {
         Serial.println("✓ Check-in berhasil dicatat");
+        lcd.setCursor(0, 0);
+        lcd.print("CHECK-IN OK");
       } else {
         Serial.println("✓ Check-out berhasil dicatat");
+        lcd.setCursor(0, 0);
+        lcd.print("CHECK-OUT OK");
       }
     } else {
       if (mode == MODE_REGISTRATION) {
         Serial.println("✗ RFID sudah terdaftar atau error");
+        lcd.setCursor(0, 0);
+        lcd.print("REGISTRATION ERR");
       } else {
         Serial.println("✗ RFID tidak terdaftar atau error absensi");
+        lcd.setCursor(0, 0);
+        lcd.print("✗ RFID tidak terdaftar atau error absensi");
       }
     }
   } else {
     Serial.print("HTTP Error code: ");
     Serial.println(httpResponseCode);
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("HTTP ERROR");
   }
 
   http.end();
@@ -378,6 +402,6 @@ void commandTask(void *pvParameters) {
       xSemaphoreGive(wifiMutex);
     }
 
-    vTaskDelay(pdMS_TO_TICKS(3000)); // Check every 3 seconds
+    vTaskDelay(pdMS_TO_TICKS(3000));  // Check every 3 seconds
   }
 }

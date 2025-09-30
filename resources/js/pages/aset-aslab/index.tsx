@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Package, CheckCircle, AlertTriangle, XCircle, Trash2, Eye, Edit, ArrowUpDown } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
+import { toast } from 'sonner';
 
 interface AsetAslab {
     id: number;
@@ -34,20 +36,45 @@ interface Stats {
 interface Props {
     asetAslabs: AsetAslab[];
     stats: Stats;
+    success?: string;
 }
 
-export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
-    const handleDelete = (id: number, namaAset: string, type: 'aset' | 'bahan') => {
-        const itemType = type === 'aset' ? 'aset' : 'bahan';
-        const route = type === 'aset' ? `/aset-aslab/${id}` : `/bahan/${id}`;
+export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
+    const [selectedItem, setSelectedItem] = useState<{ id: number; nama: string; type: 'aset' | 'bahan' } | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [processing, setProcessing] = useState(false);
 
-        if (confirm(`Apakah Anda yakin ingin menghapus ${itemType} "${namaAset}"?`)) {
-            router.delete(route, {
-                onSuccess: () => {
-                    // Success message akan ditangani oleh flash message
-                },
-            });
+    // Show success toast for flash messages
+    useEffect(() => {
+        if (success) {
+            toast.success(success);
         }
+    }, [success]);
+
+    const handleDeleteAction = (id: number, namaAset: string, type: 'aset' | 'bahan') => {
+        setSelectedItem({ id, nama: namaAset, type });
+        setIsDeleteModalOpen(true);
+    };
+
+    const submitDelete = () => {
+        if (!selectedItem) return;
+
+        const route = selectedItem.type === 'aset' ? `/aset-aslab/${selectedItem.id}` : `/bahan/${selectedItem.id}`;
+        setProcessing(true);
+
+        router.delete(route, {
+            onSuccess: () => {
+                setIsDeleteModalOpen(false);
+                toast.success(`${selectedItem.type === 'aset' ? 'Aset' : 'Bahan'} berhasil dihapus!`);
+            },
+            onError: (errors) => {
+                console.error('Delete error:', errors);
+                toast.error('Terjadi kesalahan saat menghapus data');
+            },
+            onFinish: () => {
+                setProcessing(false);
+            }
+        });
     };
 
     const columns: ColumnDef<AsetAslab>[] = [
@@ -192,7 +219,7 @@ export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(row.original.id, row.original.nama_aset, row.original.type)}
+                            onClick={() => handleDeleteAction(row.original.id, row.original.nama_aset, row.original.type)}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                             <Trash2 className="h-4 w-4" />
@@ -356,6 +383,95 @@ export default function AsetAslabIndex({ asetAslabs, stats }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent className="sm:max-w-lg bg-background border-border">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                                <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <span className="text-foreground">
+                                Hapus {selectedItem?.type === 'aset' ? 'Aset' : 'Bahan'}
+                            </span>
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Apakah Anda yakin ingin menghapus {selectedItem?.type === 'aset' ? 'aset' : 'bahan'} ini?
+                            Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedItem && (
+                        <div className="space-y-4">
+                            {/* Detail Card */}
+                            <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10 p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                    <span className="text-sm font-semibold text-red-800 dark:text-red-200">
+                                        Data yang akan dihapus
+                                    </span>
+                                </div>
+                                <div className="space-y-2 text-sm text-foreground">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Tipe:</span>
+                                        <span className="font-medium capitalize">
+                                            {selectedItem.type === 'aset' ? 'Aset' : 'Bahan'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Nama:</span>
+                                        <span className="font-medium">{selectedItem.nama}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">ID:</span>
+                                        <span className="font-medium font-mono">#{selectedItem.id}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Warning */}
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                                <div className="flex items-start gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                                    <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                                        <p className="font-medium mb-1">Peringatan:</p>
+                                        <p>Data yang dihapus tidak dapat dipulihkan. Pastikan Anda yakin dengan tindakan ini.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter className="gap-3 pt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            disabled={processing}
+                            className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={submitDelete}
+                            disabled={processing}
+                            className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 focus:ring-red-500 text-white shadow-sm"
+                        >
+                            {processing ? (
+                                <span className="flex items-center gap-2">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                    Menghapus...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    <Trash2 className="h-4 w-4" />
+                                    Hapus {selectedItem?.type === 'aset' ? 'Aset' : 'Bahan'}
+                                </span>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }
