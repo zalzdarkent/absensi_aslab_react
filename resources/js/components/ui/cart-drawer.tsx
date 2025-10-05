@@ -29,6 +29,7 @@ interface CartDrawerProps {
     onUpdateNote: (id: number, type: 'aset' | 'bahan', note: string) => void;
     onRemoveItem: (id: number, type: 'aset' | 'bahan') => void;
     onClearCart: () => void;
+    isAnimating?: boolean;
 }
 
 export function CartDrawer({
@@ -37,7 +38,8 @@ export function CartDrawer({
     onUpdateReturnDate,
     onUpdateNote,
     onRemoveItem,
-    onClearCart
+    onClearCart,
+    isAnimating = false
 }: CartDrawerProps) {
     const [agreementAccepted, setAgreementAccepted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -141,17 +143,24 @@ export function CartDrawer({
     return (
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="relative">
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Keranjang
-                    {items.length > 0 && (
-                        <Badge
-                            className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center"
-                            variant="destructive"
-                        >
-                            {items.length}
-                        </Badge>
+                <Button
+                    className={cn(
+                        "relative h-16 w-16 rounded-full shadow-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl bg-primary hover:bg-primary/90 border-2 border-background",
+                        isAnimating && "animate-bounce"
                     )}
+                    size="lg"
+                >
+                    <div className="relative flex items-center justify-center">
+                        <ShoppingCart className="h-8 w-8 text-primary-foreground" />
+                        {items.length > 0 && (
+                            <span className={cn(
+                                "absolute -top-3 -right-3 h-6 w-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center font-bold transition-all duration-300 shadow-lg border-2 border-background",
+                                isAnimating && "animate-pulse scale-125"
+                            )}>
+                                {items.length > 99 ? '99+' : items.length}
+                            </span>
+                        )}
+                    </div>
                 </Button>
             </SheetTrigger>
             <SheetContent className="w-[400px] sm:w-[540px] flex flex-col overflow-hidden">

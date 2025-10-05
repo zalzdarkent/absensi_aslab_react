@@ -3,8 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Send, ShieldCheck, AlertTriangle, Filter, Grid3X3, List, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Filter, Grid3X3, List, RotateCcw } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ProductCard } from '@/components/ui/product-card';
 import { CartDrawer } from '@/components/ui/cart-drawer';
@@ -67,12 +66,9 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
         updateCacheItems,
         updateScrollPosition,
         clearCache,
-        shouldUseCache,
-        isExpired
+        shouldUseCache
     } = useProductCache();
 
-    const [agreementAccepted, setAgreementAccepted] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState(meta?.search || '');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [filterType, setFilterType] = useState<'all' | 'aset' | 'bahan'>((meta?.type as 'all' | 'aset' | 'bahan') || 'all');
@@ -81,6 +77,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
     const [isSearching, setIsSearching] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isUsingCache, setIsUsingCache] = useState(false);
+    const [cartAnimation, setCartAnimation] = useState(false);
 
     // Use ref to track if we're using cache to avoid loops
     const isInitialCacheLoad = React.useRef(false);
@@ -122,7 +119,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
             setAllLoadedItems(prev => [...prev, ...(items || [])]);
             setCurrentPagination(pagination);
         }
-    }, [items, pagination.current_page]);
+    }, [items, pagination]);
 
     // Cache management - separate from state updates to avoid loops
     React.useEffect(() => {
@@ -260,6 +257,10 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
     const handleAddToCart = (product: Product) => {
         const existingItem = findCartItem(product.id, product.type);
 
+        // Trigger cart animation
+        setCartAnimation(true);
+        setTimeout(() => setCartAnimation(false), 600);
+
         if (existingItem) {
             if (existingItem.quantity < product.stok) {
                 updateQuantity(product.id, product.type, existingItem.quantity + 1);
@@ -311,66 +312,6 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
         toast.success('Barang dihapus dari keranjang');
     };
 
-    const handleSubmit = async () => {
-        if (getTotalItems() === 0) {
-            toast.error('Keranjang kosong', {
-                description: 'Pilih minimal satu barang untuk dipinjam/digunakan'
-            });
-            return;
-        }
-
-        if (!agreementAccepted) {
-            toast.error('Persetujuan diperlukan', {
-                description: 'Anda harus menyetujui syarat dan ketentuan'
-            });
-            return;
-        }
-
-        // Check return dates only for aset items
-        const today = new Date().toISOString().split('T')[0];
-        const asetItems = cartItems.filter(item => item.type === 'aset');
-        const invalidAsetItems = asetItems.filter(item => item.targetReturnDate <= today);
-
-        if (invalidAsetItems.length > 0) {
-            toast.error('Tanggal pengembalian tidak valid', {
-                description: 'Tanggal pengembalian aset harus setelah hari ini'
-            });
-            return;
-        }
-
-        setIsSubmitting(true);
-
-        router.post('/peminjaman-barang', {
-            items: JSON.stringify(cartItems.map(item => ({
-                item_id: item.id,
-                item_type: item.type,
-                quantity: item.quantity,
-                target_return_date: item.type === 'aset' ? item.targetReturnDate : null, // Only for aset
-                note: item.note || ''
-            }))),
-            agreement_accepted: agreementAccepted ? 1 : 0
-        }, {
-            onSuccess: () => {
-                toast.success('Permintaan berhasil dikirim', {
-                    description: 'Semua permintaan menunggu persetujuan admin/aslab'
-                });
-                // Clear cart after successful submission
-                clearCart();
-                setAgreementAccepted(false);
-            },
-            onError: () => {
-                toast.error('Gagal mengirim permintaan', {
-                    description: 'Silakan coba lagi'
-                });
-            },
-            onFinish: () => {
-                setIsSubmitting(false);
-            }
-        });
-    };
-
-    const canSubmit = getTotalItems() > 0 && agreementAccepted && !isSubmitting;
-
     return (
         <AppLayout>
             <Head title="Ajukan Peminjaman Barang" />
@@ -390,16 +331,6 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                 <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Katalog Peminjaman</h1>
                                 <p className="text-muted-foreground mt-1 text-sm lg:text-base">Pilih barang yang ingin dipinjam</p>
                             </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                            <CartDrawer
-                                items={cartItems}
-                                onUpdateQuantity={updateQuantity}
-                                onUpdateReturnDate={updateReturnDate}
-                                onUpdateNote={updateNote}
-                                onRemoveItem={handleRemoveFromCart}
-                                onClearCart={handleClearCart}
-                            />
                         </div>
                     </div>
 
@@ -626,73 +557,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                 </CardContent>
                             </Card>
 
-                            {/* Agreement */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-destructive text-base lg:text-lg">
-                                        <ShieldCheck className="h-4 w-4 lg:h-5 lg:w-5" />
-                                        Syarat & Ketentuan
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3 lg:space-y-4">
-                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 lg:p-4">
-                                        <div className="flex items-start gap-2">
-                                            <AlertTriangle className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                                            <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                                <p className="font-medium mb-2">Dengan menggunakan sistem ini, saya berjanji:</p>
-                                                <ul className="list-disc list-inside space-y-1 text-xs">
-                                                    <li><strong>Aset (alat):</strong> Dipinjam dan harus dikembalikan sesuai jadwal</li>
-                                                    <li><strong>Bahan:</strong> Digunakan/dikonsumsi dan tidak perlu dikembalikan</li>
-                                                    <li>Mengganti rugi jika terjadi kerusakan atau kehilangan</li>
-                                                    <li>Menggunakan hanya untuk keperluan akademik/praktikum</li>
-                                                    <li>Mematuhi semua peraturan laboratorium yang berlaku</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="agreement"
-                                            checked={agreementAccepted}
-                                            onCheckedChange={(checked) => setAgreementAccepted(checked as boolean)}
-                                        />
-                                        <label
-                                            htmlFor="agreement"
-                                            className="text-sm font-medium text-foreground cursor-pointer"
-                                        >
-                                            Saya menyetujui syarat dan ketentuan di atas *
-                                        </label>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Submit Button */}
-                            <Card>
-                                <CardContent className="pt-4 lg:pt-6">
-                                    <Button
-                                        onClick={handleSubmit}
-                                        disabled={!canSubmit}
-                                        className="w-full"
-                                        size="lg"
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                                                Mengirim...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Send className="mr-2 h-4 w-4" />
-                                                Ajukan Permintaan ({getTotalItems()})
-                                            </>
-                                        )}
-                                    </Button>
-                                    <p className="text-center text-xs text-muted-foreground mt-2">
-                                        Semua permintaan dikirim ke admin/aslab untuk persetujuan
-                                    </p>
-                                </CardContent>
-                            </Card>
                         </div>
                     </div>
                 </div>
@@ -705,6 +570,19 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                 onOpenChange={setIsDetailModalOpen}
                 onAddToCart={handleAddToCart}
             />
+
+            {/* Floating Cart Button */}
+            <div className="fixed bottom-6 right-6 z-50">
+                <CartDrawer
+                    items={cartItems}
+                    onUpdateQuantity={updateQuantity}
+                    onUpdateReturnDate={updateReturnDate}
+                    onUpdateNote={updateNote}
+                    onRemoveItem={handleRemoveFromCart}
+                    onClearCart={handleClearCart}
+                    isAnimating={cartAnimation}
+                />
+            </div>
         </AppLayout>
     );
 }
