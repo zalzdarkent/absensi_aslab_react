@@ -5,13 +5,10 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
 
 // WiFi
 const char *ssid = "Asisten Laboratorium";
 const char *password = "2025Labkomp:3";
-LiquidCrystal_I2C lcd(0x27, 16, 2);  // alamat 0x27, ukuran 16x2
 
 // API Endpoints Laravel
 String registrationEndpoint = "http://192.168.10.253:8000/api/rfid/scan-for-registration";
@@ -51,13 +48,6 @@ TaskHandle_t displayTaskHandle;
 TaskHandle_t commandTaskHandle;
 
 void setup() {
-  Wire.begin(21, 22);  // SDA, SCL (ubah kalau kamu pakai pin lain)
-  lcd.init();
-  lcd.backlight();
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("RFID System Ready");
-
   Serial.begin(115200);
   delay(1000);
 
@@ -142,7 +132,9 @@ void setup() {
 void loop() {
   // Main loop mostly empty, tasks handle everything
   delay(100);
-}  // WiFi Connection Function
+}
+
+// WiFi Connection Function
 void connectWiFi() {
   Serial.println("Connecting to WiFi...");
   WiFi.mode(WIFI_STA);  // Mode station
@@ -198,7 +190,9 @@ void printCurrentMode() {
     Serial.println("Scan registered cards for check-out");
   }
   Serial.println("====================");
-}  // FreeRTOS Task: RFID Scanning
+}
+
+// FreeRTOS Task: RFID Scanning
 void rfidScanTask(void *pvParameters) {
   RFIDData rfidData;
 
@@ -315,7 +309,6 @@ void sendRFIDData(String uid, String endpoint, SystemMode mode) {
 
   int httpResponseCode = http.POST(jsonData);
 
-  lcd.clear();
   if (httpResponseCode > 0) {
     String response = http.getString();
     Serial.println("Response Code: " + String(httpResponseCode));
@@ -324,35 +317,21 @@ void sendRFIDData(String uid, String endpoint, SystemMode mode) {
     if (httpResponseCode == 200) {
       if (mode == MODE_REGISTRATION) {
         Serial.println("✓ RFID tersedia untuk registrasi");
-        lcd.setCursor(0, 0);
-        lcd.print("REGISTRATION OK");
       } else if (mode == MODE_CHECK_IN) {
         Serial.println("✓ Check-in berhasil dicatat");
-        lcd.setCursor(0, 0);
-        lcd.print("CHECK-IN OK");
       } else {
         Serial.println("✓ Check-out berhasil dicatat");
-        lcd.setCursor(0, 0);
-        lcd.print("CHECK-OUT OK");
       }
     } else {
       if (mode == MODE_REGISTRATION) {
         Serial.println("✗ RFID sudah terdaftar atau error");
-        lcd.setCursor(0, 0);
-        lcd.print("REGISTRATION ERR");
       } else {
         Serial.println("✗ RFID tidak terdaftar atau error absensi");
-        lcd.setCursor(0, 0);
-        lcd.print("✗ RFID tidak terdaftar atau error absensi");
       }
     }
   } else {
     Serial.print("HTTP Error code: ");
     Serial.println(httpResponseCode);
-
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("HTTP ERROR");
   }
 
   http.end();

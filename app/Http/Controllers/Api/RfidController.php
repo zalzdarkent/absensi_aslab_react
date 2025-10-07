@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\User;
+use App\Events\AttendanceUpdated;
+use App\Services\DashboardService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -68,6 +70,10 @@ class RfidController extends Controller
 
                 DB::commit();
 
+                // Broadcast real-time update
+                $attendance->load('user'); // Load user relationship
+                $this->broadcastAttendanceUpdate($attendance);
+
                 return response()->json([
                     'success' => true,
                     'message' => "Selamat datang, {$user->name}! Check-in berhasil.",
@@ -96,6 +102,10 @@ class RfidController extends Controller
                 ]);
 
                 DB::commit();
+
+                // Broadcast real-time update
+                $attendance->load('user'); // Load user relationship
+                $this->broadcastAttendanceUpdate($attendance);
 
                 return response()->json([
                     'success' => true,
@@ -363,5 +373,91 @@ class RfidController extends Controller
             'mode' => $mode,
             'message' => "Mode set to {$mode}"
         ]);
+    }
+
+    /**
+     * Broadcast attendance update event
+     */
+    private function broadcastAttendanceUpdate($attendance)
+    {
+        try {
+            Log::info('Broadcasting attendance update for user: ' . $attendance->user_id, [
+                'attendance_id' => $attendance->id,
+                'attendance_type' => $attendance->type,
+                'timestamp' => $attendance->timestamp
+            ]);
+
+            $dashboardService = new DashboardService();
+            $dashboardData = $dashboardService->getAllDashboardData();
+
+            Log::info('Dashboard data prepared for broadcast', [
+                'stats' => $dashboardData['stats'],
+                'attendance_count' => count($dashboardData['todayAttendances']),
+                'chart_data_count' => count($dashboardData['weeklyChartData'])
+            ]);
+
+            // Fire the event with updated data
+            AttendanceUpdated::dispatch(
+                $attendance,
+                $dashboardData['stats'],
+                $dashboardData['todayAttendances'],
+                $dashboardData['weeklyChartData']
+            );
+
+            Log::info('AttendanceUpdated event dispatched successfully', [
+                'event_class' => AttendanceUpdated::class,
+                'channel' => 'dashboard'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Broadcast attendance update error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+        }
+    }
+
+    /**
+     * Test broadcast event
+     */
+    public function testBroadcast()
+    {
+        try {
+            Log::info('Test broadcast initiated');
+            
+            // Create dummy attendance for testing
+            $user = User::first();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No users found for testing'
+                ], 404);
+            }
+
+            // Create a dummy attendance record
+            $attendance = new Attendance([
+                'id' => 999,
+                'user_id' => $user->id,
+                'type' => 'check_in',
+                'timestamp' => now(),
+                'date' => now()->toDateString(),
+                'notes' => 'Test broadcast'
+            ]);
+            
+            // Set the user relationship manually
+            $attendance->setRelation('user', $user);
+
+            // Broadcast the test event
+            $this->broadcastAttendanceUpdate($attendance);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test broadcast sent successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Test broadcast error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Test broadcast failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

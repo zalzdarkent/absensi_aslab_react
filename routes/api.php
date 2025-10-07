@@ -49,4 +49,7 @@ Route::prefix('rfid')->group(function () {
     // RFID Mode Command Routes
     Route::get('/get-mode-command', [RfidController::class, 'getModeCommand']);
     Route::post('/set-mode', [RfidController::class, 'setMode']);
+    
+    // Test broadcast endpoint
+    Route::post('/test-broadcast', [RfidController::class, 'testBroadcast']);
 });

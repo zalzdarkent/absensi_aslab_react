@@ -19,6 +19,10 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard - accessible to all logged-in users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/attendance-today', [DashboardController::class, 'attendanceToday'])->name('attendance.today');
+
+    // Test broadcast route (for development only)
+    Route::get('/test-broadcast', [App\Http\Controllers\TestController::class, 'testBroadcast'])->name('test.broadcast');
 
     // TEMPORARY TEST ROUTE - REMOVE AFTER TESTING
     Route::get('/test-bahan', [BahanController::class, 'create'])->name('test-bahan');

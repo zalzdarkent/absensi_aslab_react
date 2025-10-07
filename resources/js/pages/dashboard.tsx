@@ -1,9 +1,9 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
+import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
 import { DataTable } from '@/components/ui/data-table';
@@ -50,83 +50,144 @@ interface Props {
 }
 
 export default function Dashboard({
-  stats,
+  stats: initialStats,
   today_attendances: initialAttendances,
-  most_active_aslabs,
-  weekly_chart_data,
+  most_active_aslabs: initialMostActiveAslabs,
+  weekly_chart_data: initialWeeklyChartData,
   current_date
 }: Props) {
   const columns = createTodayAttendanceColumns();
   const { auth } = usePage<{ auth: { user: AuthUser } }>().props;
   const currentUser = auth.user;
 
-  // State untuk event-driven updates
+  // State untuk real-time updates
+  const [stats, setStats] = useState(initialStats);
   const [todayAttendances, setTodayAttendances] = useState(initialAttendances);
-  const [isLoadingAttendances, setIsLoadingAttendances] = useState(false);
+  const [mostActiveAslabs, setMostActiveAslabs] = useState(initialMostActiveAslabs);
+  const [weeklyChartData, setWeeklyChartData] = useState(initialWeeklyChartData);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [rfidDetected, setRfidDetected] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const rfidIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Start RFID detection untuk auto-refresh
-  // Load today's attendance data
-  const loadTodayAttendances = useCallback(async () => {
-    setIsLoadingAttendances(true);
-    try {
-      const response = await fetch('/attendance-today');
-      const data = await response.json();
-      if (data.success) {
-        setTodayAttendances(data.data);
-        setLastUpdate(new Date());
-      }
-    } catch (error) {
-      console.error('Error loading today attendances:', error);
-    } finally {
-      setIsLoadingAttendances(false);
-    }
-  }, []);
-
-  // Start RFID detection untuk auto-refresh
-  const startRfidDetection = useCallback(() => {
-    if (rfidIntervalRef.current) {
-      clearInterval(rfidIntervalRef.current);
-    }
-
-    rfidIntervalRef.current = setInterval(async () => {
-      try {
-        const response = await fetch('/api/rfid/last-scan');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.rfid_code && data.rfid_code !== rfidDetected) {
-            setRfidDetected(data.rfid_code);
-            // Auto-refresh data saat ada aktivitas RFID
-            await loadTodayAttendances();
-            // Clear detection setelah beberapa detik
-            setTimeout(() => {
-              setRfidDetected(null);
-            }, 3000);
-          }
-        }
-      } catch (error) {
-        console.error('Error detecting RFID:', error);
-      }
-    }, 2000); // Check setiap 2 detik
-  }, [rfidDetected, loadTodayAttendances]);
-
+  // Setup real-time WebSocket connection
   useEffect(() => {
-    startRfidDetection();
+    console.log('Dashboard: Setting up WebSocket connection...');
+    console.log('window.Echo available:', !!window.Echo);
 
-    // Cleanup intervals on unmount
+    if (!window.Echo) {
+      console.error('Dashboard: Echo not available on window object');
+      return;
+    }
+
+    // Function to update dashboard data
+    function updateDashboardData(data: unknown) {
+      if (data && typeof data === 'object' && 'stats' in data) {
+        const eventData = data as {
+          stats: typeof initialStats;
+          todayAttendances: TodayAttendance[];
+          mostActiveAslabs: MostActiveAslab[];
+          weeklyChartData: WeeklyChartData[];
+          attendance?: { user?: { name?: string } };
+        };
+
+        console.log('Dashboard: Updating state with new data:', {
+          newStats: eventData.stats,
+          newAttendances: eventData.todayAttendances.length,
+          newMostActive: eventData.mostActiveAslabs?.length || 0,
+          mostActiveData: eventData.mostActiveAslabs
+        });
+
+        setStats(eventData.stats);
+        setTodayAttendances(eventData.todayAttendances);
+        
+        // Update mostActiveAslabs dengan fallback yang aman
+        if (eventData.mostActiveAslabs && Array.isArray(eventData.mostActiveAslabs)) {
+          console.log('Dashboard: Updating mostActiveAslabs:', eventData.mostActiveAslabs);
+          setMostActiveAslabs(eventData.mostActiveAslabs);
+        } else {
+          console.log('Dashboard: mostActiveAslabs not found or invalid, keeping current data');
+        }
+        
+        setWeeklyChartData(eventData.weeklyChartData);
+        setLastUpdate(new Date());
+
+        // Show RFID detected indicator
+        if (eventData.attendance && eventData.attendance.user?.name) {
+          setRfidDetected(eventData.attendance.user.name);
+          setTimeout(() => {
+            setRfidDetected(null);
+          }, 3000);
+        }
+
+        console.log('Dashboard: State updated successfully');
+      } else {
+        console.log('Dashboard: Invalid event data structure:', data);
+      }
+    }
+
+    // Setup Echo connection status
+    window.Echo.connector.pusher.connection.bind('connected', () => {
+      setIsConnected(true);
+      console.log('Dashboard: Connected to WebSocket');
+    });
+
+    window.Echo.connector.pusher.connection.bind('disconnected', () => {
+      setIsConnected(false);
+      console.log('Dashboard: Disconnected from WebSocket');
+    });
+
+    window.Echo.connector.pusher.connection.bind('connecting', () => {
+      console.log('Dashboard: Connecting to WebSocket...');
+    });
+
+    window.Echo.connector.pusher.connection.bind('failed', () => {
+      console.error('Dashboard: WebSocket connection failed');
+    });
+
+    // Listen for attendance updates
+    const channel = window.Echo.channel('dashboard');
+
+    console.log('Dashboard: Listening to dashboard channel');
+    console.log('Dashboard: Channel object:', channel);
+
+    // Test dengan multiple event listeners
+    channel.listen('attendance.updated', (data: unknown) => {
+      console.log('Dashboard: Received attendance.updated event:', data);
+      updateDashboardData(data);
+    });
+
+    // Listen untuk semua kemungkinan variasi event name  
+    channel.listen('.attendance.updated', (data: unknown) => {
+      console.log('Dashboard: Received .attendance.updated event (with dot):', data);
+      updateDashboardData(data);
+    });
+
+    channel.listen('AttendanceUpdated', (data: unknown) => {
+      console.log('Dashboard: Received AttendanceUpdated event (class name):', data);
+      updateDashboardData(data);
+    });
+
+    // Cleanup on unmount
     return () => {
-      if (rfidIntervalRef.current) {
-        clearInterval(rfidIntervalRef.current);
+      console.log('Dashboard: Cleaning up WebSocket listeners');
+      channel.stopListening('attendance.updated');
+      channel.stopListening('.attendance.updated');
+      channel.stopListening('AttendanceUpdated');
+      window.Echo.leaveChannel('dashboard');
+    };
+  }, [initialMostActiveAslabs]);
+
+  // Remove RFID polling - not needed anymore with real-time updates
+  useEffect(() => {
+    // Cleanup any existing intervals
+    const currentInterval = rfidIntervalRef.current;
+    return () => {
+      if (currentInterval) {
+        clearInterval(currentInterval);
       }
     };
-  }, [startRfidDetection]);
-
-  // Manual refresh function
-  const handleManualRefresh = () => {
-    loadTodayAttendances();
-  };
+  }, []);
 
   // Chart configuration dengan tema amber
   const chartConfig = {
@@ -137,14 +198,19 @@ export default function Dashboard({
   };
 
   // Format data untuk bar chart
-  const chartData = weekly_chart_data.map(item => ({
+  const chartData = weeklyChartData.map((item: WeeklyChartData) => ({
     date: item.date,
     count: item.count,
   }));
 
   // Hitung statistik
-  const maxAttendance = Math.max(...weekly_chart_data.map(d => d.count));
-  const avgAttendance = Math.round(weekly_chart_data.reduce((sum, d) => sum + d.count, 0) / weekly_chart_data.length);
+  const maxAttendance = Math.max(...weeklyChartData.map((d: WeeklyChartData) => d.count));
+  const avgAttendance = Math.round(weeklyChartData.reduce((sum: number, d: WeeklyChartData) => sum + d.count, 0) / weeklyChartData.length);
+
+  // Debug: Log current state values
+  console.log('Dashboard render - Current stats:', stats);
+  console.log('Dashboard render - Current attendances count:', todayAttendances.length);
+  console.log('Dashboard render - Current mostActiveAslabs:', mostActiveAslabs);
 
   return (
     <AppLayout>
@@ -222,13 +288,16 @@ export default function Dashboard({
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     Absensi Hari Ini
-                    {isLoadingAttendances && (
-                      <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
-                    )}
                     {rfidDetected && (
                       <div className="flex items-center gap-1 text-green-600 text-sm">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span>RFID Detected</span>
+                        <span>RFID: {rfidDetected}</span>
+                      </div>
+                    )}
+                    {isConnected && (
+                      <div className="flex items-center gap-1 text-green-600 text-xs">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span>Real-time</span>
                       </div>
                     )}
                   </CardTitle>
@@ -266,13 +335,13 @@ export default function Dashboard({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {most_active_aslabs.length === 0 ? (
+                  {mostActiveAslabs.length === 0 ? (
                     <p className="text-center text-muted-foreground py-4">
                       Belum ada data
                     </p>
                   ) : (
-                    most_active_aslabs.map((aslab, index) => (
-                      <div key={index} className="flex items-center justify-between">
+                    mostActiveAslabs.map((aslab: MostActiveAslab, index: number) => (
+                      <div key={`${aslab.name}-${aslab.total_attendance}-${lastUpdate.getTime()}`} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                             <span className="text-sm font-medium text-primary">
