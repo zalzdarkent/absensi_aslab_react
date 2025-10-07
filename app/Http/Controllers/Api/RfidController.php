@@ -421,7 +421,7 @@ class RfidController extends Controller
     {
         try {
             Log::info('Test broadcast initiated');
-            
+
             // Create dummy attendance for testing
             $user = User::first();
             if (!$user) {
@@ -440,7 +440,7 @@ class RfidController extends Controller
                 'date' => now()->toDateString(),
                 'notes' => 'Test broadcast'
             ]);
-            
+
             // Set the user relationship manually
             $attendance->setRelation('user', $user);
 
@@ -453,7 +453,7 @@ class RfidController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Test broadcast error: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Test broadcast failed: ' . $e->getMessage()

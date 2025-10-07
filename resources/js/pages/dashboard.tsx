@@ -100,7 +100,7 @@ export default function Dashboard({
 
         setStats(eventData.stats);
         setTodayAttendances(eventData.todayAttendances);
-        
+
         // Update mostActiveAslabs dengan fallback yang aman
         if (eventData.mostActiveAslabs && Array.isArray(eventData.mostActiveAslabs)) {
           console.log('Dashboard: Updating mostActiveAslabs:', eventData.mostActiveAslabs);
@@ -108,7 +108,7 @@ export default function Dashboard({
         } else {
           console.log('Dashboard: mostActiveAslabs not found or invalid, keeping current data');
         }
-        
+
         setWeeklyChartData(eventData.weeklyChartData);
         setLastUpdate(new Date());
 
@@ -157,7 +157,7 @@ export default function Dashboard({
       updateDashboardData(data);
     });
 
-    // Listen untuk semua kemungkinan variasi event name  
+    // Listen untuk semua kemungkinan variasi event name
     channel.listen('.attendance.updated', (data: unknown) => {
       console.log('Dashboard: Received .attendance.updated event (with dot):', data);
       updateDashboardData(data);
