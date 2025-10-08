@@ -19,10 +19,12 @@ interface TodayAttendance {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case 'Sedang di Lab':
-      return <Badge variant="default">Di Lab</Badge>;
-    case 'Sudah Pulang':
-      return <Badge variant="secondary">Pulang</Badge>;
+    case 'Sedang di lab':
+      return <Badge variant="default">Sedang di Lab</Badge>;
+    case 'Sudah pulang':
+      return <Badge variant="secondary">Sudah Pulang</Badge>;
+    case 'Belum datang':
+      return <Badge variant="outline">Belum Datang</Badge>;
     default:
       return <Badge variant="outline">Belum Datang</Badge>;
   }

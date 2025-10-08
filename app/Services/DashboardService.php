@@ -41,6 +41,15 @@ class DashboardService
                 $checkIn = $userAttendances->where('type', 'check_in')->first();
                 $checkOut = $userAttendances->where('type', 'check_out')->first();
 
+                Log::info('User attendance debug', [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'check_in_exists' => $checkIn ? true : false,
+                    'check_out_exists' => $checkOut ? true : false,
+                    'check_in_time' => $checkIn ? $checkIn->timestamp->format('H:i:s') : null,
+                    'check_out_time' => $checkOut ? $checkOut->timestamp->format('H:i:s') : null,
+                ]);
+
                 return [
                     'user' => [
                         'id' => $user->id,
@@ -138,7 +147,7 @@ class DashboardService
     private function getAttendanceStatus($checkIn, $checkOut)
     {
         if (!$checkIn) {
-            return 'Belum datang';
+            return 'Sedang di lab';
         } elseif (!$checkOut) {
             return 'Sedang di lab';
         } else {

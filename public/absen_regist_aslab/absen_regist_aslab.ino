@@ -11,8 +11,8 @@ const char *ssid = "Asisten Laboratorium";
 const char *password = "2025Labkomp:3";
 
 // API Endpoints Laravel
-String registrationEndpoint = "http://192.168.10.253:8000/api/rfid/scan-for-registration";
-String attendanceEndpoint = "http://192.168.10.253:8000/api/rfid/scan";
+String registrationEndpoint = "http://192.168.10.95:8000/api/rfid/scan-for-registration";
+String attendanceEndpoint = "http://192.168.10.95:8000/api/rfid/scan";
 
 // RFID
 #define RST_PIN 22
@@ -33,7 +33,7 @@ enum SystemMode {
 SystemMode currentMode = MODE_REGISTRATION;
 QueueHandle_t rfidQueue;
 SemaphoreHandle_t wifiMutex;
-String commandEndpoint = "http://192.168.10.253:8000/api/rfid/get-mode-command";
+String commandEndpoint = "http://192.168.10.95:8000/api/rfid/get-mode-command";
 
 struct RFIDData {
   String uid;
