@@ -9,8 +9,6 @@ services:
     volumes:
       - .:/var/www
       - ./storage/app/public:/var/www/storage/app/public
-      - ./php-production.ini:/usr/local/etc/php/conf.d/php-production.ini
-      - ./docker/php-fpm-optimized.conf:/usr/local/etc/php-fpm.d/www.conf
     depends_on:
       - mysql
       - redis
@@ -27,7 +25,6 @@ services:
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=60
     volumes:
       - .:/var/www
-      - ./php-production.ini:/usr/local/etc/php/conf.d/php-production.ini
     depends_on:
       - app
       - mysql
@@ -45,7 +42,6 @@ services:
     command: /bin/sh -c "while true; do php artisan schedule:run; sleep 60; done"
     volumes:
       - .:/var/www
-      - ./php-production.ini:/usr/local/etc/php/conf.d/php-production.ini
     depends_on:
       - app
       - mysql
@@ -63,7 +59,6 @@ services:
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     volumes:
       - .:/var/www
-      - ./php-production.ini:/usr/local/etc/php/conf.d/php-production.ini
     depends_on:
       - app
       - mysql
@@ -108,8 +103,6 @@ services:
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: aslab2025
-    volumes:
-      - ./php-production.ini:/usr/local/etc/php/conf.d/php-production.ini
     ports:
       - "5090:80"
     networks:

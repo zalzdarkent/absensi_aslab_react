@@ -47,16 +47,7 @@ RUN chown -R www-data:www-data /var/www \
  && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 # Install npm dependencies dan build assets
-RUN npm ci --production=false \
- && npm run build \
- && npm cache clean --force
-
-# Laravel optimization commands
-RUN php artisan storage:link \
- && php artisan config:clear \
- && php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache
+RUN npm ci --production=false
 
 # Create log directory untuk PHP errors
 RUN mkdir -p /var/log && touch /var/log/php_errors.log \
