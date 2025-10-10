@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,33 @@ interface Props {
 export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Props) {
     const [selectedPeminjaman, setSelectedPeminjaman] = useState<PinjamBarang | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [highlightId, setHighlightId] = useState<number | null>(null);
+
+    // Handle highlight from URL parameter
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const highlight = urlParams.get('highlight');
+        if (highlight) {
+            const id = parseInt(highlight);
+            setHighlightId(id);
+            
+            // Auto-scroll to highlighted row after a delay
+            setTimeout(() => {
+                const element = document.querySelector(`[data-row-id="${id}"]`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
+            
+            // Remove highlight after 5 seconds
+            setTimeout(() => {
+                setHighlightId(null);
+                urlParams.delete('highlight');
+                const newUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '');
+                window.history.replaceState({}, '', newUrl);
+            }, 5000);
+        }
+    }, []);
     const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
@@ -421,6 +448,8 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                             columns={columns}
                             data={pinjamBarangs}
                             searchPlaceholder="Cari nama peminjam..."
+                            highlightId={highlightId || undefined}
+                            highlightKey="id"
                         />
                     </CardContent>
                 </Card>

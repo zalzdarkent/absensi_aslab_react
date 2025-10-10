@@ -2,13 +2,19 @@ import { useAppearance } from '@/hooks/use-appearance';
 import { Monitor, Moon, Sun, Check } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import NotificationBell from '@/components/ui/notification-bell';
+import { usePage } from '@inertiajs/react';
 
 export default function AppearanceToggleTab() {
     const { appearance, updateAppearance } = useAppearance();
+    const { auth } = usePage<{ auth: { user: { role: string } } }>().props;
 
     return (
         <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground hidden md:block">Tampilan:</span>
+            {/* Notification Bell */}
+            <NotificationBell
+                userRole={auth.user.role as 'admin' | 'aslab' | 'mahasiswa' | 'dosen'}
+            />
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

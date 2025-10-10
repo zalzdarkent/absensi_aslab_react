@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -9,6 +9,8 @@ import AppLayout from '@/layouts/app-layout';
 import { DataTable } from '@/components/ui/data-table';
 import { createTodayAttendanceColumns } from '@/components/tables/today-attendance-columns';
 import { User as AuthUser } from '@/types';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { PageTransition } from '@/components/ui/loading-animations';
 
 interface User {
   id: number;
@@ -216,6 +218,8 @@ export default function Dashboard({
     <AppLayout>
       <Head title="Dashboard" />
 
+      <PageTransition>
+
       <div className="space-y-6 py-4">
         {/* Header */}
         <div>
@@ -225,59 +229,63 @@ export default function Dashboard({
           </p>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Cards with Enhanced Design */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-50">Total Aslab</CardTitle>
-              <Users className="h-4 w-4 text-blue-200" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.total_aslabs}</div>
-              <p className="text-xs text-blue-100">
-                Aslab aktif terdaftar
-              </p>
-            </CardContent>
-          </Card>
+          <EnhancedCard
+            title="Total Aslab"
+            value={stats.total_aslabs}
+            description="Aslab aktif terdaftar"
+            icon={Users}
+            gradient="gradient-primary"
+            trend={{
+              value: 12,
+              label: "dari bulan lalu",
+              isPositive: true
+            }}
+            className="fade-in"
+          />
 
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-50">Check-in Hari Ini</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-200" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.today_checkins}</div>
-              <p className="text-xs text-green-100">
-                Aslab yang sudah datang
-              </p>
-            </CardContent>
-          </Card>
+          <EnhancedCard
+            title="Check-in Hari Ini"
+            value={stats.today_checkins}
+            description="Aslab yang sudah datang"
+            icon={UserCheck}
+            gradient="gradient-success"
+            trend={{
+              value: 8,
+              label: "dari kemarin",
+              isPositive: true
+            }}
+            className="fade-in fade-in-delay-1"
+          />
 
-          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-50">Check-out Hari Ini</CardTitle>
-              <UserX className="h-4 w-4 text-orange-200" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.today_checkouts}</div>
-              <p className="text-xs text-orange-100">
-                Aslab yang sudah pulang
-              </p>
-            </CardContent>
-          </Card>
+          <EnhancedCard
+            title="Check-out Hari Ini"
+            value={stats.today_checkouts}
+            description="Aslab yang sudah pulang"
+            icon={UserX}
+            gradient="gradient-warning"
+            trend={{
+              value: 5,
+              label: "dari kemarin",
+              isPositive: false
+            }}
+            className="fade-in fade-in-delay-2"
+          />
 
-          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 border-0 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-50">Sedang di Lab</CardTitle>
-              <Activity className="h-4 w-4 text-purple-200" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.active_today}</div>
-              <p className="text-xs text-purple-100">
-                Aslab yang sedang aktif
-              </p>
-            </CardContent>
-          </Card>
+          <EnhancedCard
+            title="Sedang di Lab"
+            value={stats.active_today}
+            description="Aslab yang sedang aktif"
+            icon={Activity}
+            gradient="gradient-elegant"
+            className="fade-in fade-in-delay-3"
+          >
+            <div className="flex items-center gap-1 mt-2">
+              <div className="w-2 h-2 rounded-full bg-green-400 pulse-soft"></div>
+              <span className="text-xs opacity-80">Live Status</span>
+            </div>
+          </EnhancedCard>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -456,6 +464,7 @@ export default function Dashboard({
           </div>
         )}
       </div>
+      </PageTransition>
     </AppLayout>
   );
 }

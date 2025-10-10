@@ -47,6 +47,8 @@ interface DataTableProps<TData, TValue> {
   enableColumnVisibility?: boolean;
   enableRowSelection?: boolean;
   onRowSelectionChange?: (selectedRows: TData[]) => void;
+  highlightId?: string | number;
+  highlightKey?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -57,6 +59,8 @@ export function DataTable<TData, TValue>({
   enableColumnVisibility = true,
   enableRowSelection = false,
   onRowSelectionChange,
+  highlightId,
+  highlightKey = "id",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -253,21 +257,28 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const rowData = row.original as Record<string, unknown>;
+                const shouldHighlight = highlightId && rowData[highlightKey] === Number(highlightId);
+                
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    data-row-id={rowData[highlightKey]}
+                    className={shouldHighlight ? "bg-yellow-100 dark:bg-yellow-900/20 animate-pulse" : ""}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell

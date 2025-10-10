@@ -753,4 +753,206 @@ class PeminjamanBarangController extends Controller
             return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
+
+    // Peminjaman Aset Methods
+    public function indexAset()
+    {
+        $user = Auth::user();
+
+        // Get all peminjaman aset records
+        $query = PeminjamanAset::with(['asetAslab', 'user', 'approvedBy'])
+            ->whereNotNull('aset_id'); // Only aset, not bahan
+
+        // Filter data based on user role
+        if (!in_array($user->role, ['admin', 'aslab'])) {
+            $query->where('user_id', $user->id);
+        }
+
+        $peminjamanList = $query->latest()->get()->map(function ($peminjaman) {
+            return [
+                'id' => $peminjaman->id,
+                'userName' => $peminjaman->user->name,
+                'userRole' => ucfirst($peminjaman->user->role),
+                'itemName' => $peminjaman->asetAslab->nama_aset ?? 'N/A',
+                'itemCode' => $peminjaman->asetAslab->kode_aset ?? 'N/A',
+                'requestDate' => $peminjaman->created_at->format('Y-m-d'),
+                'quantity' => $peminjaman->stok,
+                'status' => $peminjaman->status,
+                'notes' => $peminjaman->keterangan
+            ];
+        });
+
+        return Inertia::render('peminjaman-aset/index', [
+            'peminjamanList' => $peminjamanList,
+            'filters' => [
+                'search' => request('search'),
+                'status' => request('status'),
+                'sort' => request('sort')
+            ]
+        ]);
+    }
+
+    public function createAset()
+    {
+        // Get available aset
+        $asets = AsetAslab::where('status', 'baik')
+            ->where('stok', '>', 0)
+            ->get(['id', 'nama_aset', 'kode_aset', 'stok']);
+
+        return Inertia::render('peminjaman-aset/create', [
+            'asets' => $asets
+        ]);
+    }
+
+    public function storeAset(Request $request)
+    {
+        $request->validate([
+            'aset_id' => 'required|exists:aset_aslabs,id',
+            'stok' => 'required|integer|min:1',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Check if aset is available
+            $aset = AsetAslab::find($request->aset_id);
+            if (!$aset || $aset->stok < $request->stok) {
+                return back()->withErrors(['stok' => 'Stok tidak mencukupi']);
+            }
+
+            // Create peminjaman record
+            $peminjaman = PeminjamanAset::create([
+                'user_id' => Auth::id(),
+                'aset_id' => $request->aset_id,
+                'stok' => $request->stok,
+                'status' => 'pending',
+                'notes' => $request->notes,
+                'tanggal_pinjam' => now()
+            ]);
+
+            // Create notification for admin/aslab
+            NotificationController::createPeminjamanNotification($peminjaman, 'peminjaman_created');
+
+            DB::commit();
+            return redirect()->route('peminjaman-aset.index')
+                ->with('success', 'Permintaan peminjaman berhasil diajukan');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Aset loan request failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'aset_id' => $request->aset_id
+            ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function showAset($id)
+    {
+        $peminjaman = PeminjamanAset::with(['asetAslab', 'user', 'approvedBy'])
+            ->where('id', $id)
+            ->whereNotNull('aset_id')
+            ->firstOrFail();
+
+        return Inertia::render('peminjaman-aset/show', [
+            'peminjaman' => [
+                'id' => $peminjaman->id,
+                'userName' => $peminjaman->user->name,
+                'userRole' => ucfirst($peminjaman->user->role),
+                'itemName' => $peminjaman->asetAslab->nama_aset,
+                'itemCode' => $peminjaman->asetAslab->kode_aset,
+                'requestDate' => $peminjaman->created_at->format('Y-m-d H:i'),
+                'quantity' => $peminjaman->stok,
+                'status' => $peminjaman->status,
+                'notes' => $peminjaman->notes,
+                'approvedBy' => $peminjaman->approvedBy ? $peminjaman->approvedBy->name : null,
+                'approvedAt' => $peminjaman->approved_at ? $peminjaman->approved_at->format('Y-m-d H:i') : null
+            ]
+        ]);
+    }
+
+    public function approveAset(Request $request, $id)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $peminjaman = PeminjamanAset::findOrFail($id);
+
+            if ($peminjaman->status !== 'pending') {
+                return back()->withErrors(['error' => 'Peminjaman sudah diproses sebelumnya']);
+            }
+
+            // Check stock availability
+            $aset = $peminjaman->asetAslab;
+            if ($aset->stok < $peminjaman->stok) {
+                return back()->withErrors(['error' => 'Stok tidak mencukupi']);
+            }
+
+            // Update peminjaman status
+            $peminjaman->update([
+                'status' => 'approved',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'admin_notes' => $request->notes
+            ]);
+
+            // Reduce stock
+            $aset->decrement('stok', $peminjaman->stok);
+
+            // Create notification for user
+            NotificationController::createPeminjamanNotification($peminjaman, 'peminjaman_approved');
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Peminjaman berhasil disetujui');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Aset loan approval failed', [
+                'error' => $e->getMessage(),
+                'peminjaman_id' => $id
+            ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function rejectAset(Request $request, $id)
+    {
+        $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+
+        try {
+            $peminjaman = PeminjamanAset::findOrFail($id);
+
+            if ($peminjaman->status !== 'pending') {
+                return back()->withErrors(['error' => 'Peminjaman sudah diproses sebelumnya']);
+            }
+
+            // Update peminjaman status
+            $peminjaman->update([
+                'status' => 'rejected',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'admin_notes' => $request->notes
+            ]);
+
+            // Create notification for user
+            NotificationController::createPeminjamanNotification($peminjaman, 'peminjaman_rejected');
+
+            return redirect()->back()->with('success', 'Peminjaman berhasil ditolak');
+
+        } catch (\Exception $e) {
+            Log::error('Aset loan rejection failed', [
+                'error' => $e->getMessage(),
+                'peminjaman_id' => $id
+            ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
 }
