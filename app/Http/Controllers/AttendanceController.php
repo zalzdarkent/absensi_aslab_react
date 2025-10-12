@@ -149,4 +149,136 @@ class AttendanceController extends Controller
             'data' => $attendances
         ]);
     }
+
+    /**
+     * Show manual attendance page (Admin only)
+     */
+    public function manualAttendancePage()
+    {
+        // Get all aslabs for manual attendance
+        $aslabs = User::where('role', 'aslab')
+                     ->where('is_active', true)
+                     ->select('id', 'name', 'prodi', 'semester')
+                     ->orderBy('name')
+                     ->get();
+
+        // Get today's attendance to show current status
+        $today = Carbon::today();
+        $todayAttendances = Attendance::with('user')
+            ->where('date', $today)
+            ->get()
+            ->groupBy('user_id')
+            ->map(function ($userAttendances) {
+                $checkIn = $userAttendances->where('type', 'check_in')->first();
+                $checkOut = $userAttendances->where('type', 'check_out')->first();
+                
+                return [
+                    'check_in' => $checkIn ? $checkIn->timestamp->format('H:i') : null,
+                    'check_out' => $checkOut ? $checkOut->timestamp->format('H:i') : null,
+                    'check_in_method' => $checkIn ? $checkIn->notes : null,
+                    'check_out_method' => $checkOut ? $checkOut->notes : null,
+                ];
+            });
+
+        return Inertia::render('AbsenPiket', [
+            'aslabs' => $aslabs,
+            'todayAttendances' => $todayAttendances,
+        ]);
+    }
+
+    /**
+     * Store manual attendance (Admin only)
+     */
+    public function storeManualAttendance(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'type' => 'required|in:check_in,check_out',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $userId = $request->input('user_id');
+        $type = $request->input('type');
+        $notes = $request->input('notes', 'Manual entry by admin');
+        $today = Carbon::today();
+        $now = Carbon::now();
+
+        // Verify user is aslab
+        $user = User::where('id', $userId)
+                   ->where('role', 'aslab')
+                   ->where('is_active', true)
+                   ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan atau bukan aslab aktif'
+            ], 404);
+        }
+
+        // Check existing attendance for today
+        $existingAttendance = Attendance::where('user_id', $userId)
+                                      ->where('date', $today)
+                                      ->where('type', $type)
+                                      ->first();
+
+        if ($existingAttendance) {
+            return response()->json([
+                'success' => false,
+                'message' => "User sudah melakukan {$type} hari ini"
+            ], 400);
+        }
+
+        // For check_out, ensure check_in exists
+        if ($type === 'check_out') {
+            $checkIn = Attendance::where('user_id', $userId)
+                                ->where('date', $today)
+                                ->where('type', 'check_in')
+                                ->first();
+
+            if (!$checkIn) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User belum check-in hari ini'
+                ], 400);
+            }
+        }
+
+        // Create attendance record
+        $attendance = Attendance::create([
+            'user_id' => $userId,
+            'type' => $type,
+            'timestamp' => $now,
+            'date' => $today,
+            'notes' => $notes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Manual {$type} berhasil untuk {$user->name}",
+            'data' => [
+                'user' => $user,
+                'type' => $type,
+                'timestamp' => $now->format('H:i:s'),
+                'notes' => $notes
+            ]
+        ]);
+    }
+
+    /**
+     * Get users for manual attendance
+     */
+    public function getUsers()
+    {
+        $aslabs = User::where('role', 'aslab')
+                     ->where('is_active', true)
+                     ->select('id', 'name', 'prodi', 'semester')
+                     ->orderBy('name')
+                     ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $aslabs
+        ]);
+    }
 }

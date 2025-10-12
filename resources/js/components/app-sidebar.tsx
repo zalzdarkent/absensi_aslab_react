@@ -33,6 +33,28 @@ export function AppSidebar() {
 
         // Attendance - only for Admin and Aslab
         if (user.role === 'admin' || user.role === 'aslab') {
+            const attendanceChildren = [
+                {
+                    title: 'Riwayat Absensi',
+                    href: '/attendance-history',
+                    icon: History,
+                },
+                {
+                    title: 'Jadwal Piket',
+                    href: '/jadwal-piket',
+                    icon: CalendarDaysIcon,
+                },
+            ];
+
+            // Add manual attendance option only for admin
+            if (user.role === 'admin') {
+                attendanceChildren.unshift({
+                    title: 'Absen Piket',
+                    href: '/absen-piket',
+                    icon: ScanLine,
+                });
+            }
+
             groups.push({
                 label: 'Attendance',
                 items: [
@@ -40,23 +62,7 @@ export function AppSidebar() {
                         title: 'Absensi Piket',
                         href: '#',
                         icon: ScanLine,
-                        children: [
-                            // {
-                            //     title: 'Scan Absensi',
-                            //     href: '/attendance-scan',
-                            //     icon: ScanLine,
-                            // },
-                            {
-                                title: 'Riwayat Absensi',
-                                href: '/attendance-history',
-                                icon: History,
-                            },
-                            {
-                                title: 'Jadwal Piket',
-                                href: '/jadwal-piket',
-                                icon: CalendarDaysIcon,
-                            },
-                        ],
+                        children: attendanceChildren,
                     },
                 ],
             });
