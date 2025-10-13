@@ -67,31 +67,31 @@ Pengujian formal yang dilakukan oleh end-user untuk memvalidasi bahwa sistem mem
 ### 1. Functional Testing
 
 #### Authentication Module
-| Test Case ID | Test Scenario | Test Steps | Expected Result | Status | Evidence |
-|--------------|---------------|------------|-----------------|--------|----------|
-| BT-AUTH-001 | Valid Login | 1. Navigate to login page<br>2. Enter valid email<br>3. Enter valid password<br>4. Click Login | User redirected to dashboard | ✅ Pass | Screenshot |
-| BT-AUTH-002 | Invalid Login | 1. Navigate to login page<br>2. Enter invalid email<br>3. Enter password<br>4. Click Login | Error message displayed | ✅ Pass | Screenshot |
-| BT-AUTH-003 | Empty Fields | 1. Navigate to login page<br>2. Leave fields empty<br>3. Click Login | Validation errors shown | ✅ Pass | Screenshot |
-| BT-AUTH-004 | Password Reset | 1. Click "Forgot Password"<br>2. Enter email<br>3. Click Submit | Reset email sent | ✅ Pass | Email Screenshot |
-| BT-AUTH-005 | Logout Function | 1. Login to system<br>2. Click logout<br>3. Verify session | Redirected to login | ✅ Pass | Screenshot |
+| Test Case ID | Test Scenario | Test Steps | Expected Result | Status |
+|--------------|---------------|------------|-----------------|--------|
+| BT-AUTH-001 | Valid Login | 1. Navigate to login page<br>2. Enter valid email<br>3. Enter valid password<br>4. Click Login | User redirected to dashboard | ✅ Pass |
+| BT-AUTH-002 | Invalid Login | 1. Navigate to login page<br>2. Enter invalid email<br>3. Enter password<br>4. Click Login | Error message displayed | ✅ Pass |
+| BT-AUTH-003 | Empty Fields | 1. Navigate to login page<br>2. Leave fields empty<br>3. Click Login | Validation errors shown | ✅ Pass |
+| BT-AUTH-004 | Password Reset | 1. Click "Forgot Password"<br>2. Enter email<br>3. Click Submit | Reset email sent | ✅ Pass |
+| BT-AUTH-005 | Logout Function | 1. Login to system<br>2. Click logout<br>3. Verify session | Redirected to login | ✅ Pass |
 
 #### Attendance Management
-| Test Case ID | Test Scenario | Test Steps | Expected Result | Status | Evidence |
-|--------------|---------------|------------|-----------------|--------|----------|
-| BT-ATT-001 | RFID Check-in | 1. Scan RFID card<br>2. Verify user info<br>3. Confirm check-in | Attendance recorded | ✅ Pass | Screenshot |
-| BT-ATT-002 | Manual Check-in | 1. Go to manual attendance<br>2. Select user<br>3. Choose check-in<br>4. Add notes | Attendance saved | ✅ Pass | Screenshot |
-| BT-ATT-003 | Check-out Process | 1. Scan card for check-out<br>2. Verify time calculation | Check-out recorded | ✅ Pass | Screenshot |
-| BT-ATT-004 | View Attendance History | 1. Navigate to history<br>2. Apply date filter<br>3. Export report | History displayed correctly | ✅ Pass | PDF Export |
-| BT-ATT-005 | Duplicate Check-in Prevention | 1. Check-in once<br>2. Try to check-in again | Error message shown | ✅ Pass | Screenshot |
+| Test Case ID | Test Scenario | Test Steps | Expected Result | Status |
+|--------------|---------------|------------|-----------------|--------|
+| BT-ATT-001 | RFID Check-in | 1. Scan RFID card<br>2. Verify user info<br>3. Confirm check-in | Attendance recorded | ✅ Pass |
+| BT-ATT-002 | Manual Check-in | 1. Go to manual attendance<br>2. Select user<br>3. Choose check-in<br>4. Add notes | Attendance saved | ✅ Pass |
+| BT-ATT-003 | Check-out Process | 1. Scan card for check-out<br>2. Verify time calculation | Check-out recorded | ✅ Pass |
+| BT-ATT-004 | View Attendance History | 1. Navigate to history<br>2. Apply date filter<br>3. Export report | History displayed correctly | ✅ Pass |
+| BT-ATT-005 | Duplicate Check-in Prevention | 1. Check-in once<br>2. Try to check-in again | Error message shown | ✅ Pass |
 
 #### User Management
-| Test Case ID | Test Scenario | Test Steps | Expected Result | Status | Evidence |
-|--------------|---------------|------------|-----------------|--------|----------|
-| BT-USER-001 | Add New User | 1. Navigate to user management<br>2. Click Add User<br>3. Fill form<br>4. Submit | User created successfully | ✅ Pass | Screenshot |
-| BT-USER-002 | Edit User Info | 1. Select existing user<br>2. Click Edit<br>3. Modify details<br>4. Save | User updated | ✅ Pass | Screenshot |
-| BT-USER-003 | Delete User | 1. Select user<br>2. Click Delete<br>3. Confirm action | User deactivated | ✅ Pass | Screenshot |
-| BT-USER-004 | Role Assignment | 1. Edit user<br>2. Change role<br>3. Save changes | Role updated | ✅ Pass | Screenshot |
-| BT-USER-005 | User Search | 1. Use search feature<br>2. Enter user name<br>3. Verify results | Correct results shown | ✅ Pass | Screenshot |
+| Test Case ID | Test Scenario | Test Steps | Expected Result | Status |
+|--------------|---------------|------------|-----------------|--------|
+| BT-USER-001 | Add New User | 1. Navigate to user management<br>2. Click Add User<br>3. Fill form<br>4. Submit | User created successfully | ✅ Pass |
+| BT-USER-002 | Edit User Info | 1. Select existing user<br>2. Click Edit<br>3. Modify details<br>4. Save | User updated | ✅ Pass |
+| BT-USER-003 | Delete User | 1. Select user<br>2. Click Delete<br>3. Confirm action | User deactivated | ✅ Pass |
+| BT-USER-004 | Role Assignment | 1. Edit user<br>2. Change role<br>3. Save changes | Role updated | ✅ Pass |
+| BT-USER-005 | User Search | 1. Use search feature<br>2. Enter user name<br>3. Verify results | Correct results shown | ✅ Pass |
 
 ### 2. Boundary Value Testing
 
