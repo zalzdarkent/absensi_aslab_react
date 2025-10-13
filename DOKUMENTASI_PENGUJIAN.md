@@ -177,7 +177,7 @@ Pengujian formal yang dilakukan oleh end-user untuk memvalidasi bahwa sistem mem
 - ✅ Notification system berfungsi
 - ✅ Status tracking akurat
 
-**User Feedback**: "Fitur peminjaman sangat membantu pengelolaan lab."
+**User Feedback**: "Fitur pendataan aset dan peminjaman sangat membantu pengelolaan lab."
 
 ### 2. Usability Testing
 
