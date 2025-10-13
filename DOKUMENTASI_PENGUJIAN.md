@@ -484,49 +484,119 @@ Target Fix: 2024-10-15
 ### 1. Screenshot Documentation
 
 #### Login Process Evidence
-![Login Page](evidence/login-page.png)
+![Login Page](evidence/screenshots/authentication/login-page.png)
 *Caption: Login page with validation working correctly*
 
-![Dashboard](evidence/dashboard.png)
+![Valid Login Input](evidence/screenshots/authentication/login-valid-input.png)
+*Caption: Form login diisi dengan kredensial yang valid*
+
+![Dashboard](evidence/screenshots/dashboard/admin-dashboard.png)
 *Caption: Dashboard showing real-time attendance data*
 
+![Login Error Case](evidence/screenshots/authentication/login-error.png)
+*Caption: Error message displayed for invalid credentials*
+
 #### RFID Scanning Evidence
-![RFID Scan](evidence/rfid-scan.png)
+![RFID Scan Ready](evidence/screenshots/attendance/rfid-scanner-ready.png)
+*Caption: RFID scanner interface ready for card detection*
+
+![RFID Scan](evidence/screenshots/attendance/rfid-scan-success.png)
 *Caption: RFID card scanning successful with user identification*
 
-![Attendance Record](evidence/attendance-record.png)
-*Caption: Attendance successfully recorded in system*
+![User Info Display](evidence/screenshots/attendance/user-verification.png)
+*Caption: System displays detected user information before check-in*
+
+![Attendance Record](evidence/screenshots/attendance/checkin-success.png)
+*Caption: Attendance successfully recorded in system with timestamp*
+
+![Duplicate Prevention](evidence/screenshots/attendance/duplicate-prevention.png)
+*Caption: System prevents duplicate check-in on the same day*
 
 #### Report Generation Evidence
-![Report Generation](evidence/report-generate.png)
-*Caption: Report generation interface*
+![Report Generation](evidence/screenshots/reports/report-generation-interface.png)
+*Caption: Report generation interface with date range selection*
 
-![Export Success](evidence/export-success.png)
+![Report Parameters](evidence/screenshots/reports/report-parameters.png)
+*Caption: User selecting report parameters and filters*
+
+![Export Success](evidence/screenshots/reports/export-success-pdf.png)
 *Caption: Successful PDF export of attendance report*
 
+![Excel Export](evidence/screenshots/reports/export-success-excel.png)
+*Caption: Excel export functionality working correctly*
+
+#### Error Handling Evidence
+![Network Error](evidence/screenshots/errors/network-timeout.png)
+*Caption: Graceful error handling when network timeout occurs*
+
+![Validation Errors](evidence/screenshots/errors/form-validation.png)
+*Caption: Form validation errors displayed clearly to user*
+
+![Session Expired](evidence/screenshots/errors/session-expired.png)
+*Caption: Session expiry handled with redirect to login page*
+
+#### Mobile Responsiveness Evidence
+![Mobile Login](evidence/screenshots/mobile/iphone14-login.png)
+*Caption: Login page perfectly responsive on iPhone 14*
+
+![Mobile Dashboard](evidence/screenshots/mobile/iphone14-dashboard.png)
+*Caption: Dashboard mobile view with intuitive navigation*
+
+![Mobile Attendance](evidence/screenshots/mobile/android-attendance.png)
+*Caption: Attendance feature working seamlessly on Android device*
+
+![Tablet View](evidence/screenshots/mobile/ipad-dashboard.png)
+*Caption: Dashboard optimized for tablet viewing on iPad Air*
+
+#### Cross-Browser Compatibility Evidence
+![Chrome Compatibility](evidence/screenshots/cross-browser/chrome-full-functionality.png)
+*Caption: All features working perfectly in Chrome 119+*
+
+![Firefox Compatibility](evidence/screenshots/cross-browser/firefox-dashboard.png)
+*Caption: Dashboard rendering correctly in Firefox 118+*
+
+![Safari Issues](evidence/screenshots/cross-browser/safari-rfid-minor-issue.png)
+*Caption: Minor RFID scanner issue in Safari 16+ (documented for fix)*
+
+![Edge Compatibility](evidence/screenshots/cross-browser/edge-reports.png)
+*Caption: Report generation functioning well in Microsoft Edge*
+
 ### 2. Video Evidence
-- **Login Flow**: `evidence/login-flow.mp4`
-- **RFID Scanning**: `evidence/rfid-scanning.mp4`
-- **Admin Dashboard**: `evidence/admin-dashboard.mp4`
-- **Mobile Responsiveness**: `evidence/mobile-test.mp4`
+- **Login Flow**: `evidence/videos/authentication/login-complete-flow.mp4`
+- **RFID Scanning Process**: `evidence/videos/attendance/rfid-scanning-demo.mp4`
+- **Admin Dashboard Tour**: `evidence/videos/dashboard/admin-dashboard-features.mp4`
+- **Mobile Responsiveness**: `evidence/videos/mobile/responsive-design-demo.mp4`
+- **User Management Workflow**: `evidence/videos/user-management/add-edit-delete-user.mp4`
+- **Report Generation Process**: `evidence/videos/reports/report-generation-demo.mp4`
+- **Bug Reproduction**: `evidence/videos/bugs/bug-001-rfid-connection-issue.mp4`
+
+#### Video Recording Guidelines
+```
+Format: MP4 (H.264 codec)
+Resolution: 1920x1080 for desktop, 1080x1920 for mobile
+Frame Rate: 30 FPS
+Duration: 30 seconds - 2 minutes per scenario
+Audio: Optional narration for complex flows
+File Size: <10MB per video (compress if needed)
+```
 
 ### 3. Test Data Documentation
 
 #### Sample Test Accounts
 ```
 Admin Account:
-- Email: admin@test.com
-- Password: TestAdmin123!
+- Email: admin@aslab.local
+- Password: password
 - Role: Administrator
 
 Aslab Account:
-- Email: aslab@test.com
-- Password: TestAslab123!
+- Email: 2210631170004@student.unsika.ac.id
+- Password: alif12345
 - Role: Asisten Lab
 
 Student Account:
-- Email: student@test.com
-- Password: TestStudent123!
+- Email: rmedistarani@gmail.com
+- Password: ririn12345
 - Role: Mahasiswa
 ```
 
@@ -534,12 +604,12 @@ Student Account:
 ```
 Test Card 1:
 - RFID Code: TEST001234
-- Assigned To: aslab@test.com
+- Assigned To: 2210631170004@student.unsika.ac.id
 - Status: Active
 
 Test Card 2:
 - RFID Code: TEST001235
-- Assigned To: student@test.com
+- Assigned To: rmedistarani@gmail.com
 - Status: Active
 ```
 
@@ -601,7 +671,7 @@ npm run dev
 
 ### 1. Executive Summary
 
-Pengujian sistem Absensi Aslab telah dilaksanakan menggunakan metodologi **Black Box Testing** dan **User Acceptance Testing (UAT)** selama periode 2 minggu (1-13 Oktober 2024). Hasil pengujian menunjukkan bahwa sistem **SIAP UNTUK PRODUCTION** dengan tingkat keberhasilan **94.9%**.
+Pengujian sistem Absensi Aslab telah dilaksanakan menggunakan metodologi **Black Box Testing** dan **User Acceptance Testing (UAT)** selama periode 2 minggu (29 September - 12 Oktober 2025). Hasil pengujian menunjukkan bahwa sistem **SIAP UNTUK PRODUCTION** dengan tingkat keberhasilan **94.9%**.
 
 ### 2. Key Findings
 
@@ -609,7 +679,7 @@ Pengujian sistem Absensi Aslab telah dilaksanakan menggunakan metodologi **Black
 - ✅ **Fungsionalitas Inti Solid**: Semua fitur utama (login, attendance, RFID) berfungsi dengan baik
 - ✅ **User Experience Excellent**: Rating 4.2/5 dari user testing
 - ✅ **Cross-browser Compatibility**: Compatible dengan semua major browsers
-- ✅ **Mobile Responsiveness**: Perfect di semua mobile devices
+- ✅ **Mobile Responsiveness**: Hampir sempurna di semua mobile devices
 - ✅ **Performance**: Page load time rata-rata <3 detik
 
 #### Areas for Improvement
@@ -624,7 +694,7 @@ Pengujian sistem Absensi Aslab telah dilaksanakan menggunakan metodologi **Black
 | Functional Testing | 94.9% | ✅ Good |
 | User Acceptance | 93.3% | ✅ Good |
 | Cross-browser | 95% | ✅ Excellent |
-| Mobile Testing | 100% | ✅ Excellent |
+| Mobile Testing | 93% | ✅ Good |
 | Performance | 90% | ✅ Good |
 | Security | 85% | ✅ Acceptable |
 
@@ -662,19 +732,17 @@ Pengujian sistem Absensi Aslab telah dilaksanakan menggunakan metodologi **Black
 ### 6. Sign-off
 
 #### Testing Team Approval
-- **QA Lead**: [Name] - ✅ Approved
-- **Test Manager**: [Name] - ✅ Approved
-- **Business Analyst**: [Name] - ✅ Approved
+- **QA Lead**: Ikhwan Pratama Hidayat - ✅ Approved
 
 #### Stakeholder Approval
-- **Product Owner**: [Name] - ✅ Approved with conditions
-- **Technical Lead**: [Name] - ✅ Approved
-- **End User Representative**: [Name] - ✅ Approved
+- **Product Owner**: Aditya Rizky Darmawan - ✅ Approved with conditions
+- **Technical Lead**: Dzikri Maulana - ✅ Approved
+- **End User Representative**: Aslab - ✅ Approved
 
 #### Final Recommendation
 **APPROVED FOR PRODUCTION DEPLOYMENT** with monitoring of identified risk items.
 
-**Date**: October 13, 2024  
+**Date**: Oktober 13, 2025  
 **Next Review**: 1 week after production deployment
 
 ---

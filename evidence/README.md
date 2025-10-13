@@ -1,211 +1,169 @@
-# Evidence Directory - Test Documentation
-
-Folder ini berisi semua bukti pengujian (evidence) untuk sistem Absensi Aslab.
+# Evidence Folder - Dokumentasi Bukti Pengujian
 
 ## Struktur Folder
 
 ```
 evidence/
-├── screenshots/          # Screenshot test execution
-│   ├── login/            # Login process screenshots
-│   ├── dashboard/        # Dashboard functionality
-│   ├── attendance/       # Attendance features
-│   ├── user-management/  # User management
-│   ├── assets/           # Asset management
-│   └── reports/          # Report generation
-├── videos/               # Video recordings of test execution
-├── documents/            # Test documents dan reports
-├── test-data/            # Sample test data dan exports
-└── bug-reports/          # Bug documentation dan screenshots
-
+├── README.md                    # Panduan penggunaan folder evidence
+├── SCREENSHOT_TEMPLATE.md       # Template untuk dokumentasi dengan screenshot
+├── SCREENSHOT_GUIDE.md          # Panduan mengambil screenshot
+├── TEST_CASE_TEMPLATE.md        # Template test case
+├── TESTING_EXECUTION_LOG.md     # Log eksekusi testing
+├── screenshots/                 # Screenshot hasil pengujian
+│   ├── README.md               # Panduan screenshot
+│   ├── authentication/         # Screenshot modul autentikasi
+│   ├── attendance/             # Screenshot modul absensi
+│   ├── user-management/        # Screenshot manajemen user
+│   ├── dashboard/              # Screenshot dashboard
+│   ├── reports/                # Screenshot laporan
+│   ├── errors/                 # Screenshot error handling
+│   ├── mobile/                 # Screenshot mobile responsiveness
+│   └── cross-browser/          # Screenshot compatibility browser
+├── videos/                     # Video recording pengujian
+│   ├── authentication/        # Video login/logout flows
+│   ├── attendance/            # Video RFID scanning demo
+│   ├── dashboard/             # Video dashboard features
+│   ├── mobile/                # Video mobile responsiveness
+│   ├── user-management/       # Video user CRUD operations
+│   ├── reports/               # Video report generation
+│   └── bugs/                  # Video bug reproduction
+└── test-data/                 # Data testing dan sample accounts
+    ├── sample-accounts.json   # Test user accounts
+    ├── rfid-cards.json       # Test RFID cards
+    └── test-scenarios.md      # Dokumentasi skenario testing
 ```
 
-## Panduan Pengambilan Evidence
+## Cara Menggunakan
 
-### 1. Screenshots
-- **Format**: PNG atau JPG
-- **Naming Convention**: `[module]-[feature]-[step].png`
-- **Contoh**: `login-valid-credentials-success.png`
-- **Resolution**: Minimum 1280x720
-- **Include**: Browser address bar dan timestamp
+### 1. Mengambil Screenshot
 
-### 2. Video Recordings
-- **Format**: MP4
-- **Duration**: Maksimal 5 menit per test scenario
-- **Quality**: 720p minimum
-- **Audio**: Include narration jika diperlukan
-- **Naming**: `[module]-[scenario]-recording.mp4`
+Ikuti panduan di `SCREENSHOT_GUIDE.md` untuk:
+- Tools yang direkomendasikan
+- Teknik pengambilan screenshot
+- Naming convention yang konsisten
+- Quality guidelines
 
-### 3. Test Data
-- **Input Data**: Simpan sample data yang digunakan
-- **Output Files**: Export results dari testing
-- **Database Dumps**: Snapshot database state
-- **Log Files**: System logs selama testing
+### 2. Menyimpan Evidence
 
-### 4. Bug Reports
-- **Screenshots**: Visual evidence dari bug
-- **Console Logs**: Browser console errors
-- **Network Logs**: API call failures
-- **System Logs**: Server-side errors
+```bash
+# Struktur file naming
+[module]-[action]-[result]-[browser/device]-[date].png
 
-## Template File Names
-
-### Screenshots
-```
-login-page-load.png
-login-valid-credentials.png
-login-invalid-credentials.png
-login-validation-errors.png
-dashboard-admin-view.png
-dashboard-statistics.png
-rfid-scan-success.png
-rfid-scan-failure.png
-attendance-manual-entry.png
-attendance-history-view.png
-user-management-create.png
-user-management-edit.png
-asset-management-view.png
-asset-creation-form.png
-report-generation.png
-report-export-success.png
+# Contoh:
+auth-login-success-chrome-20241013.png
+dashboard-stats-load-firefox-20241013.png
+mobile-responsive-iphone14-20241013.png
 ```
 
-### Videos
+### 3. Dokumentasi Screenshot
+
+Setiap screenshot harus disertai dengan:
+- **Alt text**: Deskripsi singkat untuk accessibility
+- **Caption**: Penjelasan detail apa yang ditampilkan
+- **Context**: Link ke test case yang relevan
+
+```markdown
+![Login Success](screenshots/authentication/login-success.png)
+*Caption: Dashboard admin setelah login berhasil menampilkan statistik real-time*
 ```
-login-flow-complete.mp4
-rfid-scanning-demo.mp4
-admin-dashboard-tour.mp4
-attendance-workflow.mp4
-user-management-demo.mp4
-asset-management-workflow.mp4
-mobile-responsiveness.mp4
-cross-browser-testing.mp4
-```
 
-## Checklist untuk Evidence Collection
+### 4. Video Recording
 
-### Login & Authentication
-- [ ] Login page loading
-- [ ] Valid login success
-- [ ] Invalid login error
-- [ ] Password reset flow
-- [ ] Logout process
-- [ ] Session timeout
+Untuk scenario kompleks, gunakan video recording:
+- Format: MP4 (H.264)
+- Resolution: 1920x1080 (desktop), 1080x1920 (mobile)
+- Duration: 30 detik - 2 menit
+- File size: <10MB
 
-### Dashboard
-- [ ] Dashboard overview
-- [ ] Statistics display
-- [ ] Real-time updates
-- [ ] Navigation menu
-- [ ] User profile section
-
-### Attendance Management
-- [ ] RFID scan interface
-- [ ] Successful scan result
-- [ ] Failed scan handling
-- [ ] Manual attendance entry
-- [ ] Attendance history view
-- [ ] Report generation
-
-### User Management (Admin)
-- [ ] User list view
-- [ ] Add new user form
-- [ ] Edit user details
-- [ ] User role assignment
-- [ ] User deactivation
-- [ ] Bulk operations
-
-### Asset Management
-- [ ] Asset catalog view
-- [ ] Asset creation form
-- [ ] Asset editing
-- [ ] Asset search/filter
-- [ ] Asset borrowing process
-- [ ] Return process
-
-### Reports & Analytics
-- [ ] Report generation interface
-- [ ] Various report types
-- [ ] Export functionality
-- [ ] Print preview
-- [ ] Data filtering
-
-### Mobile & Browser Testing
-- [ ] Mobile responsive design
-- [ ] Chrome compatibility
-- [ ] Firefox compatibility
-- [ ] Safari compatibility
-- [ ] Edge compatibility
-
-### Error Handling
-- [ ] Network error handling
-- [ ] Server error responses
-- [ ] Validation error display
-- [ ] User-friendly error messages
-- [ ] Recovery mechanisms
-
-## Tools untuk Evidence Collection
-
-### Screenshot Tools
-- **Snipping Tool** (Windows)
-- **Screenshot** (macOS)
-- **Browser DevTools** (F12)
-- **Full Page Screenshot Extensions**
-
-### Video Recording
-- **OBS Studio** (Free, cross-platform)
-- **ScreenToGif** (Windows, for short clips)
-- **QuickTime** (macOS)
-- **Browser recording extensions**
-
-### Console Log Capture
-- **Browser DevTools Console**
-- **Network Tab** untuk API calls
-- **Application Tab** untuk localStorage/sessionStorage
+Tools yang direkomendasikan:
+- **OBS Studio**: Recording layar gratis
+- **ScreenToGif**: Recording ke GIF
+- **Windows Game Bar**: Win+G untuk quick recording
 
 ## Quality Standards
 
-### Screenshots
-- Clear dan readable text
-- Complete UI elements visible
-- No personal/sensitive data exposed
-- Proper timestamp/date visible
-- Browser information visible
+### Screenshot Requirements
+- **Resolution**: Minimum 1920x1080 (desktop), 375x667 (mobile)
+- **Format**: PNG untuk UI, JPG untuk foto
+- **Size**: Maksimum 500KB per file
+- **Quality**: Jelas, tidak blur, cropped dengan baik
 
-### Videos
-- Smooth recording without lag
-- Clear audio narration
-- Logical flow demonstrating scenario
-- Proper pacing (not too fast/slow)
-- Clear resolution and quality
+### Documentation Standards
+- Setiap screenshot memiliki caption yang jelas
+- File naming konsisten dan descriptive
+- Organized by module/feature
+- Referenced dalam test case documentation
 
-### Documentation
-- Proper file organization
-- Descriptive naming conventions
-- README files untuk context
-- Version control untuk updates
-- Cross-references dengan test cases
+## Integration dengan Git
 
-## Evidence Review Checklist
+### Files to Include
+```gitignore
+# Include evidence files
+evidence/screenshots/
+evidence/videos/
+evidence/test-data/
 
-Sebelum submit evidence, pastikan:
+# Exclude large files
+evidence/videos/*.mov
+evidence/screenshots/*.gif
+```
 
-- [ ] Semua required screenshots tersedia
-- [ ] File names sesuai convention
-- [ ] Quality screenshots memadai
-- [ ] Video recordings complete
-- [ ] Test data files included
-- [ ] Bug evidence properly documented
-- [ ] Cross-references dengan test cases
-- [ ] No sensitive data exposed
-- [ ] Files properly organized
-- [ ] README updated dengan info terbaru
+### Commit Guidelines
+```bash
+# Add evidence untuk specific module
+git add evidence/screenshots/authentication/
+git commit -m "Add authentication module test evidence"
+
+# Add complete test evidence
+git add evidence/
+git commit -m "Add complete test evidence for sprint 1"
+```
+
+## Best Practices
+
+### 🟢 Do's
+- Screenshot sebelum dan sesudah action
+- Highlight elemen penting dengan annotation
+- Blur informasi sensitif (password, personal data)
+- Gunakan consistent naming convention
+- Update documentation bersamaan dengan screenshot
+- Test di multiple browser dan device
+
+### 🔴 Don'ts
+- Screenshot full desktop dengan taskbar
+- Include cursor kecuali untuk demo interaction
+- Menggunakan screenshot blur atau low quality
+- Lupa memberikan caption yang jelas
+- Expose data production dalam testing screenshot
+- Upload file berukuran besar tanpa compression
+
+## Tools dan Resources
+
+### Screenshot Tools
+- **Windows Snipping Tool**: Basic screenshot
+- **Greenshot**: Advanced annotation
+- **Lightshot**: Quick sharing
+- **Chrome DevTools**: Browser testing
+
+### Video Recording Tools
+- **OBS Studio**: Professional recording
+- **ScreenToGif**: Recording to GIF
+- **Windows Game Bar**: Quick recording
+- **Camtasia**: Professional editing
+
+### Image Editing
+- **Paint.NET**: Free Windows editor
+- **GIMP**: Advanced free editor
+- **Canva**: Online editing dengan template
+- **Figma**: Design dan annotation
+
+## Contact
+
+Untuk pertanyaan tentang documentation standards atau tools:
+- Technical Lead: [Contact Info]
+- QA Team: [Contact Info]
+- Documentation Team: [Contact Info]
 
 ---
 
-**Note**: Evidence ini akan digunakan untuk:
-1. Academic submission
-2. Quality assurance review
-3. User acceptance testing
-4. Client presentation
-5. Documentation purposes
+*Dokumentasi ini diupdate secara berkala. Last updated: October 13, 2024*
