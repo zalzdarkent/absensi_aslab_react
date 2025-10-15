@@ -28,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Item Search API Routes
     Route::get('/items/search', [ItemSearchController::class, 'search']);
+
+    // Dashboard API Routes
 });
 
 // RFID API Routes (tanpa auth untuk hardware RFID)

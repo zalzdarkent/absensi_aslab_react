@@ -144,6 +144,74 @@ class DashboardService
         ];
     }
 
+    public function getDayDetail($date)
+    {
+        Log::info('getDayDetail called with date: ' . $date);
+
+        try {
+            // Coba parsing format d/m dulu
+            $carbonDate = Carbon::createFromFormat('d/m', $date);
+            $carbonDate->year = now()->year; // Set to current year
+            $dateString = $carbonDate->toDateString();
+            Log::info('Parsed d/m format', ['original' => $date, 'parsed' => $dateString]);
+        } catch (\Exception $e) {
+            // If date format is already Y-m-d
+            try {
+                $carbonDate = Carbon::createFromFormat('Y-m-d', $date);
+                $dateString = $carbonDate->toDateString();
+                Log::info('Parsed Y-m-d format', ['original' => $date, 'parsed' => $dateString]);
+            } catch (\Exception $e2) {
+                Log::error('Failed to parse date', ['date' => $date, 'error1' => $e->getMessage(), 'error2' => $e2->getMessage()]);
+                throw new \Exception('Invalid date format: ' . $date);
+            }
+        }
+
+        Log::info('Getting day detail for date', ['date' => $dateString]);
+
+        // Get all attendances for the specific date
+        $attendances = Attendance::with('user')
+            ->where('date', $dateString)
+            ->get();
+
+        Log::info('Raw attendances found', ['count' => $attendances->count(), 'data' => $attendances->toArray()]);
+
+        $groupedAttendances = $attendances->groupBy('user_id')
+            ->map(function ($userAttendances) use ($dateString) {
+                $user = $userAttendances->first()->user;
+                $checkIn = $userAttendances->where('type', 'check_in')->first();
+                $checkOut = $userAttendances->where('type', 'check_out')->first();
+
+                return [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'prodi' => $user->prodi,
+                        'semester' => $user->semester,
+                    ],
+                    'check_in' => $checkIn ? $checkIn->timestamp->toISOString() : null,
+                    'check_out' => $checkOut ? $checkOut->timestamp->toISOString() : null,
+                    'status' => $this->getDayDetailStatus($checkIn, $checkOut),
+                    'date' => $dateString,
+                ];
+            })
+            ->values();
+
+        Log::info('Day detail result', ['count' => $groupedAttendances->count(), 'data' => $groupedAttendances->toArray()]);
+
+        return $groupedAttendances;
+    }
+
+    private function getDayDetailStatus($checkIn, $checkOut)
+    {
+        if ($checkIn && $checkOut) {
+            return 'present'; // Hadir lengkap
+        } elseif ($checkIn || $checkOut) {
+            return 'partial'; // Hadir sebagian
+        } else {
+            return 'absent'; // Tidak hadir
+        }
+    }
+
     private function getAttendanceStatus($checkIn, $checkOut)
     {
         if (!$checkIn) {

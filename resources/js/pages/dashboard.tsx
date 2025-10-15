@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,13 @@ import { createTodayAttendanceColumns } from '@/components/tables/today-attendan
 import { User as AuthUser } from '@/types';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { PageTransition } from '@/components/ui/loading-animations';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface User {
   id: number;
@@ -36,6 +43,14 @@ interface MostActiveAslab {
 interface WeeklyChartData {
   date: string;
   count: number;
+}
+
+interface DayDetailAttendance {
+  user: User;
+  check_in: string | null;
+  check_out: string | null;
+  status: string;
+  date: string;
 }
 
 interface Props {
@@ -71,6 +86,12 @@ export default function Dashboard({
   const [rfidDetected, setRfidDetected] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const rfidIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // State untuk modal detail hari
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [dayDetailData, setDayDetailData] = useState<DayDetailAttendance[]>([]);
+  const [isLoadingDayDetail, setIsLoadingDayDetail] = useState(false);
 
   // Setup real-time WebSocket connection
   useEffect(() => {
@@ -191,6 +212,39 @@ export default function Dashboard({
     };
   }, []);
 
+  // Fungsi untuk handle klik pada bar chart
+  const handleBarClick = async (data: any, index: number, event: any) => {
+    if (index >= 0 && index < chartData.length) {
+      const clickedDate = chartData[index].date;
+      setSelectedDate(clickedDate);
+      setIsModalOpen(true);
+      setIsLoadingDayDetail(true);
+
+      try {
+        const response = await fetch(`/dashboard/day-detail-data?date=${encodeURIComponent(clickedDate)}`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+        if (!response.ok) throw new Error('Gagal mengambil data detail hari');
+        const data = await response.json();
+        setDayDetailData(data.attendances || []);
+      } catch (error) {
+        setDayDetailData([]);
+      } finally {
+        setIsLoadingDayDetail(false);
+      }
+    }
+  };
+
+  // Fungsi untuk close modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedDate('');
+    setDayDetailData([]);
+  };
+
   // Chart configuration dengan tema amber
   const chartConfig = {
     count: {
@@ -213,6 +267,102 @@ export default function Dashboard({
   console.log('Dashboard render - Current stats:', stats);
   console.log('Dashboard render - Current attendances count:', todayAttendances.length);
   console.log('Dashboard render - Current mostActiveAslabs:', mostActiveAslabs);
+
+  // Kolom untuk tabel detail hari
+  const dayDetailColumns = [
+    {
+      accessorKey: "user.name",
+      header: "Nama",
+      cell: ({ row }: { row: { original: DayDetailAttendance } }) => (
+        <div className="font-medium">{row.original.user.name}</div>
+      ),
+    },
+    {
+      accessorKey: "user.prodi",
+      header: "Prodi",
+      cell: ({ row }: { row: { original: DayDetailAttendance } }) => (
+        <div className="text-sm text-muted-foreground">
+          {row.original.user.prodi}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "user.semester",
+      header: "Semester",
+      cell: ({ row }: { row: { original: DayDetailAttendance } }) => (
+        <div className="text-sm">{row.original.user.semester}</div>
+      ),
+    },
+    {
+      accessorKey: "check_in",
+      header: "Check In",
+      cell: ({ row }: { row: { original: DayDetailAttendance } }) => (
+        <div className="text-sm">
+          {row.original.check_in
+            ? new Date(row.original.check_in).toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            : '-'
+          }
+        </div>
+      ),
+    },
+    {
+      accessorKey: "check_out",
+      header: "Check Out",
+      cell: ({ row }: { row: { original: DayDetailAttendance } }) => (
+        <div className="text-sm">
+          {row.original.check_out
+            ? new Date(row.original.check_out).toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            : '-'
+          }
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }: { row: { original: DayDetailAttendance } }) => {
+        const status = row.original.status;
+        const statusConfig = {
+          present: { label: 'Hadir', className: 'bg-green-100 text-green-800' },
+          partial: { label: 'Sebagian', className: 'bg-yellow-100 text-yellow-800' },
+          absent: { label: 'Tidak Hadir', className: 'bg-red-100 text-red-800' },
+        };
+        const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.absent;
+
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
+            {config.label}
+          </span>
+        );
+      },
+    },
+  ];
+
+  // Format tanggal untuk modal
+  const formatModalDate = (dateStr: string) => {
+    try {
+      if (dateStr.includes('/')) {
+        const [day, month] = dateStr.split('/');
+        const currentYear = new Date().getFullYear();
+        const fullDate = new Date(currentYear, parseInt(month) - 1, parseInt(day));
+        return fullDate.toLocaleDateString('id-ID', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      }
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <AppLayout>
@@ -395,6 +545,10 @@ export default function Dashboard({
                 </div>
               </div>
             </CardDescription>
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              <span>Klik pada batang untuk melihat detail kehadiran hari tersebut</span>
+            </div>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="aspect-auto h-[200px] w-full">
@@ -427,7 +581,8 @@ export default function Dashboard({
                   dataKey="count"
                   fill="var(--color-count)"
                   radius={[4, 4, 0, 0]}
-                  className="hover:opacity-80 transition-opacity"
+                  className="hover:opacity-80 transition-opacity cursor-pointer"
+                  onClick={handleBarClick}
                 />
               </BarChart>
             </ChartContainer>
@@ -464,6 +619,60 @@ export default function Dashboard({
           </div>
         )}
       </div>
+
+      {/* Modal Detail Hari */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Detail Absensi - {formatModalDate(selectedDate)}
+            </DialogTitle>
+            <DialogDescription>
+              Data lengkap kehadiran aslab pada tanggal {formatModalDate(selectedDate)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-hidden">
+            {isLoadingDayDetail ? (
+              <div className="flex items-center justify-center h-48">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Memuat data...</p>
+                </div>
+              </div>
+            ) : dayDetailData.length === 0 ? (
+              <div className="flex items-center justify-center h-48">
+                <div className="text-center">
+                  <UserX className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Tidak ada data absensi pada tanggal ini
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-auto h-full">
+                <DataTable
+                  columns={dayDetailColumns}
+                  data={dayDetailData}
+                  searchPlaceholder="Cari nama aslab..."
+                  filename={`absensi-${selectedDate.replace(/\//g, '-')}`}
+                  enableRowSelection={false}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Total: {dayDetailData.length} aslab
+            </div>
+            <Button onClick={handleCloseModal} variant="outline">
+              Tutup
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       </PageTransition>
     </AppLayout>
   );
