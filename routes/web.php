@@ -24,6 +24,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/day-detail-data', [DashboardController::class, 'dayDetailData'])->name('dashboard.day-detail-data');
     Route::get('/attendance-today', [DashboardController::class, 'attendanceToday'])->name('attendance.today');
 
+    // Telegram Web Routes - accessible to all authenticated users
+    Route::prefix('telegram')->name('telegram.')->group(function () {
+        Route::get('/status', [App\Http\Controllers\TelegramController::class, 'getTelegramStatus'])->name('status');
+        Route::post('/link', [App\Http\Controllers\TelegramController::class, 'linkTelegram'])->name('link');
+        Route::post('/unlink', [App\Http\Controllers\TelegramController::class, 'unlinkTelegram'])->name('unlink');
+        Route::post('/toggle-notifications', [App\Http\Controllers\TelegramController::class, 'toggleNotifications'])->name('toggle-notifications');
+
+        // Admin only routes for Telegram
+        Route::middleware(['role:admin'])->group(function () {
+            Route::post('/send-message', [App\Http\Controllers\TelegramController::class, 'sendCustomMessage'])->name('send-message');
+            Route::get('/test-connection', [App\Http\Controllers\TelegramController::class, 'testConnection'])->name('test-connection');
+        });
+    });
+
     // Test broadcast route (for development only)
     Route::get('/test-broadcast', [App\Http\Controllers\TestController::class, 'testBroadcast'])->name('test.broadcast');
 

@@ -1,11 +1,12 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import RfidModeToggleMini from '@/components/rfid-mode-toggle-mini';
+import TelegramSetup from '@/components/telegram-setup';
 import AppearanceToggleTab from '@/components/appearance-tabs';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
-import { Radio } from 'lucide-react';
+import { Radio, MessageCircle } from 'lucide-react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (
@@ -15,9 +16,22 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
 
-            {/* Right side controls: appearance toggle + RFID Mode Toggle */}
+            {/* Right side controls: appearance toggle + Telegram + RFID Mode Toggle */}
             <div className="ml-auto flex items-center gap-2">
                 <AppearanceToggleTab />
+
+                {/* Telegram Setup Dropdown */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MessageCircle className="h-4 w-4" />
+                            <span className="sr-only">Telegram Setup</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-96" align="end">
+                        <TelegramSetup />
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

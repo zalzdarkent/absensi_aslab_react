@@ -28,6 +28,8 @@ class User extends Authenticatable
         'role',
         'is_active',
         'piket_day',
+        'telegram_chat_id',
+        'telegram_notifications',
     ];
 
     /**
@@ -52,6 +54,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'semester' => 'integer',
+            'telegram_notifications' => 'boolean',
         ];
     }
 
@@ -195,5 +198,21 @@ class User extends Authenticatable
     public function canAccessPeminjaman(): bool
     {
         return $this->hasAnyRole(['admin', 'aslab', 'mahasiswa', 'dosen']);
+    }
+
+    /**
+     * Check if user has telegram connected
+     */
+    public function hasTelegramConnected(): bool
+    {
+        return !empty($this->telegram_chat_id);
+    }
+
+    /**
+     * Check if user has telegram notifications enabled
+     */
+    public function isTelegramNotificationsEnabled(): bool
+    {
+        return $this->telegram_notifications && $this->hasTelegramConnected();
     }
 }

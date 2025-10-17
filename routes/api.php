@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RfidController;
 use App\Http\Controllers\Api\RfidRegistrationController;
 use App\Http\Controllers\Api\ItemSearchController;
+use App\Http\Controllers\TelegramController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// Telegram Webhook (public, no auth required)
+Route::post('/telegram/webhook/' . env('TELEGRAM_BOT_TOKEN'), [TelegramController::class, 'handleWebhook']);
 
 // Protected Authentication Routes (dengan auth:sanctum)
 Route::middleware('auth:sanctum')->group(function () {
@@ -28,6 +32,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Item Search API Routes
     Route::get('/items/search', [ItemSearchController::class, 'search']);
+
+    // Telegram API Routes
+    Route::prefix('telegram')->group(function () {
+        Route::get('/status', [TelegramController::class, 'getTelegramStatus']);
+        Route::post('/link', [TelegramController::class, 'linkTelegram']);
+        Route::post('/unlink', [TelegramController::class, 'unlinkTelegram']);
+        Route::post('/toggle-notifications', [TelegramController::class, 'toggleNotifications']);
+
+        // Admin only routes
+        Route::middleware('admin')->group(function () {
+            Route::post('/send-message', [TelegramController::class, 'sendCustomMessage']);
+            Route::get('/test-connection', [TelegramController::class, 'testConnection']);
+        });
+    });
 
     // Dashboard API Routes
 });
