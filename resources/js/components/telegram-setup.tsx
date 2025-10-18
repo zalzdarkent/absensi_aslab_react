@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { usePage } from '@inertiajs/react';
 import {
@@ -16,7 +16,8 @@ import {
     BellOff,
     ExternalLink,
     Copy,
-    Loader2
+    Loader2,
+    HelpCircle
 } from 'lucide-react';
 
 interface TelegramStatus {
@@ -175,22 +176,41 @@ export default function TelegramSetup() {
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5" />
-                    Notifikasi Telegram
-                    {status.telegram_connected && (
-                        <Badge variant="secondary" className="ml-auto">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Terhubung
-                        </Badge>
-                    )}
-                </CardTitle>
-                <CardDescription>
-                    Hubungkan akun Telegram untuk menerima reminder piket otomatis setiap H-1 pada jam 07:00 dan 19:00
-                </CardDescription>
-            </CardHeader>
+        <TooltipProvider>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <MessageCircle className="h-5 w-5" />
+                        Notifikasi Telegram
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm p-4">
+                                <div className="space-y-2">
+                                    <p className="font-semibold text-sm">Langkah-langkah menghubungkan:</p>
+                                    <ol className="list-decimal list-inside space-y-1 text-xs">
+                                        <li>Klik "Buka Bot Telegram" di bawah</li>
+                                        <li>Di Telegram, klik "START" atau "MULAI"</li>
+                                        <li>Cari dan klik Bot ID atau Chat ID dari bot</li>
+                                        <li>Salin (copy) Chat ID tersebut</li>
+                                        <li>Kembali ke sini, klik "Hubungkan Telegram"</li>
+                                        <li>Tempel Chat ID dan klik "Hubungkan"</li>
+                                    </ol>
+                                </div>
+                            </TooltipContent>
+                        </Tooltip>
+                        {status.telegram_connected && (
+                            <Badge variant="secondary" className="ml-auto">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Terhubung
+                            </Badge>
+                        )}
+                    </CardTitle>
+                    <CardDescription>
+                        Hubungkan akun Telegram untuk menerima reminder piket otomatis setiap H-1 pada jam 07:00 dan 19:00
+                    </CardDescription>
+                </CardHeader>
             <CardContent className="space-y-4">
                 {status.telegram_connected ? (
                     // Connected State
@@ -261,27 +281,12 @@ export default function TelegramSetup() {
                     </div>
                 ) : (
                     // Not Connected State
-                    <div className="space-y-4">
-                        <Alert>
-                            <MessageCircle className="h-4 w-4" />
-                            <AlertDescription className="space-y-2">
-                                <div>
-                                    <strong>Cara menghubungkan Telegram:</strong>
-                                </div>
-                                <ol className="list-decimal list-inside space-y-1 text-sm">
-                                    <li>Buka Telegram dan cari bot: <code className="px-1 py-0.5 bg-muted rounded">@AbsenPiketLab_bot</code></li>
-                                    <li>Kirim pesan <code className="px-1 py-0.5 bg-muted rounded">/start</code> ke bot</li>
-                                    <li>Bot akan memberikan Chat ID Anda</li>
-                                    <li>Copy dan paste Chat ID tersebut di bawah ini</li>
-                                </ol>
-                            </AlertDescription>
-                        </Alert>
-
+                    <div className="space-y-3">
                         <div className="flex gap-2">
                             <Button
                                 variant="outline"
                                 onClick={openTelegramBot}
-                                className="flex-1"
+                                className="flex-1 h-9"
                             >
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 Buka Bot Telegram
@@ -290,7 +295,8 @@ export default function TelegramSetup() {
                                 variant="outline"
                                 size="icon"
                                 onClick={copyBotUsername}
-                                title="Copy bot username"
+                                title="Copy bot username @AbsenPiketLab_bot"
+                                className="h-9 w-9"
                             >
                                 <Copy className="h-4 w-4" />
                             </Button>
@@ -299,16 +305,18 @@ export default function TelegramSetup() {
                         {!showChatIdInput ? (
                             <Button
                                 onClick={() => setShowChatIdInput(true)}
-                                className="w-full"
+                                className="w-full h-9"
                                 variant="default"
                             >
                                 <Link className="h-4 w-4 mr-2" />
                                 Hubungkan Telegram
                             </Button>
                         ) : (
-                            <form onSubmit={handleLinkTelegram} className="space-y-3">
+                            <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
                                 <div className="space-y-2">
-                                    <Label htmlFor="chat_id">Chat ID Telegram</Label>
+                                    <Label htmlFor="chat_id" className="text-sm font-medium">
+                                        Chat ID Telegram
+                                    </Label>
                                     <Input
                                         id="chat_id"
                                         value={chatId}
@@ -316,7 +324,11 @@ export default function TelegramSetup() {
                                         placeholder="Contoh: 123456789"
                                         required
                                         disabled={loading}
+                                        className="h-9"
                                     />
+                                    <p className="text-xs text-muted-foreground">
+                                        💡 Dapatkan Chat ID dengan mengirim /chatid ke bot
+                                    </p>
                                 </div>
                                 <div className="flex gap-2">
                                     <Button
@@ -327,14 +339,15 @@ export default function TelegramSetup() {
                                             setChatId('');
                                         }}
                                         disabled={loading}
-                                        className="flex-1"
+                                        className="flex-1 h-9"
                                     >
                                         Batal
                                     </Button>
                                     <Button
                                         type="submit"
-                                        disabled={loading}
-                                        className="flex-1"
+                                        onClick={handleLinkTelegram}
+                                        disabled={loading || !chatId.trim()}
+                                        className="flex-1 h-9"
                                     >
                                         {loading ? (
                                             <>
@@ -349,18 +362,24 @@ export default function TelegramSetup() {
                                         )}
                                     </Button>
                                 </div>
-                            </form>
+                            </div>
                         )}
                     </div>
                 )}
 
                 {/* Info tambahan */}
-                <div className="pt-3 border-t">
-                    <p className="text-xs text-muted-foreground">
-                        💡 Satu bot melayani semua aslab. Setiap user memiliki Chat ID unik untuk menerima notifikasi pribadi.
-                    </p>
+                                {/* Info tambahan */}
+                <div className="pt-3 border-t mt-4">
+                    <div className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <MessageCircle className="h-4 w-4 mt-0.5 text-blue-600 flex-shrink-0" />
+                        <div className="text-xs text-blue-800 dark:text-blue-200">
+                            <p className="font-medium mb-1">Bot Telegram AbsenPiketLab</p>
+                            <p>Satu bot melayani semua aslab. Setiap user memiliki Chat ID unik untuk menerima notifikasi pribadi berupa reminder piket dan notifikasi attendance.</p>
+                        </div>
+                    </div>
                 </div>
             </CardContent>
         </Card>
+        </TooltipProvider>
     );
 }

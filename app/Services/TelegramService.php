@@ -196,7 +196,13 @@ class TelegramService
         $message .= "🔔 <b>Notifikasi Otomatis Aktif:</b>\n";
         $message .= "• Reminder piket setiap pagi jam 07:00 (H-1)\n";
         $message .= "• Reminder piket setiap malam jam 19:00 (H-1)\n";
-        $message .= "�️ Anda dapat mengatur notifikasi melalui dashboard sistem kapan saja.\n\n";
+        $message .= "• Notifikasi attendance (check-in/check-out)\n";
+        $message .= "• Pengumuman penting dari admin\n\n";
+        $message .= "ℹ️ <b>Command yang tersedia:</b>\n";
+        $message .= "• /status - Cek status notifikasi Anda\n";
+        $message .= "• /chatid - Lihat Chat ID Anda\n";
+        $message .= "• /jadwal - Lihat jadwal piket Anda\n\n";
+        $message .= "⚙️ Anda dapat mengatur notifikasi melalui dashboard sistem kapan saja.\n\n";
         $message .= "🤖 <i>Selamat bergabung dengan Sistem Absensi Aslab!</i>";
 
         Log::info("Welcome message sent to user", [
@@ -233,6 +239,11 @@ class TelegramService
                         $this->handleStatusCommand($chatId);
                         break;
 
+                    case '/jadwal':
+                    case '/piket':
+                        $this->handleJadwalCommand($chatId);
+                        break;
+
                     default:
                         // Handle any text message
                         $this->handleDefaultMessage($chatId, $firstName);
@@ -260,7 +271,8 @@ class TelegramService
             $message .= "📅 Hari piket: " . ucfirst($user->piket_day) . "\n\n";
             $message .= "ℹ️ <b>Command yang tersedia:</b>\n";
             $message .= "• /status - Cek status lengkap notifikasi\n";
-            $message .= "• /chatid - Lihat Chat ID Anda\n\n";
+            $message .= "• /chatid - Lihat Chat ID Anda\n";
+            $message .= "• /jadwal - Lihat jadwal piket Anda\n\n";
             $message .= "🛠️ Kelola pengaturan melalui dashboard sistem.";
         } else {
             // New user - show connection instructions
@@ -275,7 +287,8 @@ class TelegramService
             $message .= "4. Akun akan terhubung otomatis!\n\n";
             $message .= "ℹ️ <b>Command yang tersedia:</b>\n";
             $message .= "• /chatid - Dapatkan Chat ID Anda\n";
-            $message .= "• /status - Cek status notifikasi";
+            $message .= "• /status - Cek status notifikasi\n";
+            $message .= "• /jadwal - Lihat jadwal piket";
         }
 
         $this->sendMessage($chatId, $message);
@@ -328,7 +341,9 @@ class TelegramService
         $message .= "ℹ️ <b>Command yang tersedia:</b>\n";
         $message .= "• /start - Informasi bot dan Chat ID\n";
         $message .= "• /chatid - Dapatkan Chat ID Anda\n";
-        $message .= "• /status - Cek status notifikasi\n\n";
+        $message .= "• /status - Cek status notifikasi\n";
+        $message .= "• /jadwal - Lihat jadwal piket Anda\n";
+        $message .= "• /piket - Lihat jadwal piket Anda\n\n";
         $message .= "🆔 <b>Chat ID Anda:</b> <code>{$chatId}</code>";
 
         $this->sendMessage($chatId, $message);
@@ -456,6 +471,74 @@ class TelegramService
         ]);
 
         return $this->sendMessage($user->telegram_chat_id, $message);
+    }
+
+    private function handleJadwalCommand($chatId)
+    {
+        $user = User::where('telegram_chat_id', $chatId)->first();
+
+        if ($user) {
+            // User terdaftar - tampilkan jadwal piketnya
+            $dayNames = [
+                'senin' => 'Senin',
+                'selasa' => 'Selasa',
+                'rabu' => 'Rabu',
+                'kamis' => 'Kamis',
+                'jumat' => 'Jumat'
+            ];
+
+            $dayIcons = [
+                'senin' => '🌟',
+                'selasa' => '⭐',
+                'rabu' => '💫',
+                'kamis' => '✨',
+                'jumat' => '🌙'
+            ];
+
+            if ($user->piket_day) {
+                $piketDay = $dayNames[$user->piket_day];
+                $icon = $dayIcons[$user->piket_day];
+
+                $message = "📅 <b>Jadwal Piket Anda</b>\n\n";
+                $message .= "👤 <b>Nama:</b> {$user->name}\n";
+                $message .= "📚 <b>Prodi:</b> {$user->prodi}\n";
+                $message .= "🎓 <b>Semester:</b> {$user->semester}\n\n";
+                $message .= "{$icon} <b>Hari Piket:</b> {$piketDay}\n\n";
+                $message .= "⏰ <b>Waktu:</b> Sesuai jadwal yang ditentukan\n";
+                $message .= "📍 <b>Lokasi:</b> Laboratorium Asisten\n\n";
+                $message .= "📋 <b>Tugas Piket:</b>\n";
+                $message .= "• Menjaga kebersihan laboratorium\n";
+                $message .= "• Membantu mahasiswa yang membutuhkan\n";
+                $message .= "• Melakukan absensi masuk dan keluar\n";
+                $message .= "• Mengatur peralatan laboratorium\n\n";
+                $message .= "🔔 <b>Reminder:</b> Anda akan mendapat notifikasi H-1 piket pada jam 07:00 dan 19:00\n\n";
+                $message .= "💡 <i>Jangan lupa datang tepat waktu!</i>";
+            } else {
+                $message = "📅 <b>Jadwal Piket</b>\n\n";
+                $message .= "👤 <b>Nama:</b> {$user->name}\n\n";
+                $message .= "❌ <b>Anda belum memiliki jadwal piket</b>\n\n";
+                $message .= "📞 Silakan hubungi admin untuk mengatur jadwal piket Anda melalui dashboard sistem.\n\n";
+                $message .= "🌟 Jadwal yang tersedia:\n";
+                foreach ($dayNames as $day => $name) {
+                    $icon = $dayIcons[$day];
+                    $message .= "• {$icon} {$name}\n";
+                }
+                $message .= "\n💼 <i>Setelah jadwal ditetapkan, Anda akan mendapat reminder otomatis!</i>";
+            }
+        } else {
+            // User belum terdaftar
+            $message = "❌ <b>Belum Terdaftar</b>\n\n";
+            $message .= "Chat ID Anda belum terhubung dengan sistem absensi.\n\n";
+            $message .= "🔗 Silakan hubungkan akun Telegram Anda melalui dashboard sistem absensi terlebih dahulu.\n\n";
+            $message .= "🆔 <b>Chat ID Anda:</b> <code>{$chatId}</code>\n\n";
+            $message .= "📝 <b>Cara menghubungkan:</b>\n";
+            $message .= "1. Login ke dashboard sistem\n";
+            $message .= "2. Buka pengaturan Telegram\n";
+            $message .= "3. Masukkan Chat ID di atas\n";
+            $message .= "4. Simpan pengaturan";
+        }
+
+        $this->sendMessage($chatId, $message);
     }
 
     /**
