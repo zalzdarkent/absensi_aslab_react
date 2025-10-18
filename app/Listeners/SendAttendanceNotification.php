@@ -33,7 +33,7 @@ class SendAttendanceNotification
             // Create unique cache key based on attendance ID to prevent duplicate processing
             // This ensures each attendance record only sends notification once
             $cacheKey = "attendance_notification_sent_{$attendance->id}";
-            
+
             // Check if notification already sent for this specific attendance record
             if (cache()->has($cacheKey)) {
                 Log::info("Attendance notification already sent for this attendance record, skipping", [
