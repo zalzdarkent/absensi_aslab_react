@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('admin')->group(function () {
             Route::post('/send-message', [TelegramController::class, 'sendCustomMessage']);
             Route::get('/test-connection', [TelegramController::class, 'testConnection']);
+            Route::post('/send-test-message', [TelegramController::class, 'sendTestMessage']);
         });
     });
 

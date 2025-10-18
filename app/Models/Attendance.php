@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Events\AttendanceCreated;
 
 class Attendance extends Model
 {
@@ -18,6 +19,13 @@ class Attendance extends Model
     protected $casts = [
         'timestamp' => 'datetime',
         'date' => 'date',
+    ];
+
+    /**
+     * The event map for the model.
+     */
+    protected $dispatchesEvents = [
+        'created' => AttendanceCreated::class,
     ];
 
     /**

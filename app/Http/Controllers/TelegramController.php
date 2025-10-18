@@ -54,14 +54,22 @@ class TelegramController extends Controller
             $user->telegram_notifications = true;
             $user->save();
 
-            // Send welcome message
-            $this->telegramService->sendWelcomeMessage($chatId, $user->name);
+            // Send welcome message automatically
+            $welcomeSent = $this->telegramService->sendWelcomeMessage($chatId, $user->name);
 
             Log::info("Telegram linked successfully", [
                 'user_id' => $user->id,
                 'user_name' => $user->name,
-                'chat_id' => $chatId
+                'chat_id' => $chatId,
+                'welcome_message_sent' => $welcomeSent
             ]);
+
+            if (!$welcomeSent) {
+                Log::warning("Welcome message failed to send", [
+                    'user_id' => $user->id,
+                    'chat_id' => $chatId
+                ]);
+            }
 
             return response()->json([
                 'message' => 'Telegram berhasil terhubung!',
@@ -310,6 +318,51 @@ class TelegramController extends Controller
 
             return response()->json([
                 'message' => 'Error testing connection: ' . $e->getMessage(),
+                'status' => 'error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Send test message to specific chat ID (admin only)
+     */
+    public function sendTestMessage(Request $request)
+    {
+        if (!Auth::user()->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'chat_id' => 'required|string|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $result = $this->telegramService->sendTestMessage($request->chat_id);
+
+            if ($result) {
+                return response()->json([
+                    'message' => 'Test message sent successfully',
+                    'status' => 'success'
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Failed to send test message',
+                    'status' => 'failed'
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error sending test message: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Error sending test message: ' . $e->getMessage(),
                 'status' => 'error'
             ], 500);
         }
