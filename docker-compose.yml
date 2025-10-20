@@ -14,7 +14,6 @@ services:
       - redis
     networks:
       - laravel
-    # Tidak expose port karena akses via nginx
 
   queue-worker:
     build:
@@ -66,15 +65,14 @@ services:
       - redis
     networks:
       - laravel
-    # Internal port, akses via nginx proxy
 
   webserver:
     image: nginx:alpine
     container_name: laravel-nginx
     restart: unless-stopped
     ports:
-      - "80:80"   # HTTP (redirect ke HTTPS)
-      - "443:443" # HTTPS (production)
+      - "80:80"
+      - "443:443"
     volumes:
       - .:/var/www
       - ./docker/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
@@ -98,7 +96,6 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - laravel
-    # Tidak expose port untuk security (internal only)
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -106,9 +103,8 @@ services:
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: aslab2025
-      PMA_ARBITRARY: 1
     ports:
-      - "8080:80" # PHPMyAdmin web interface
+      - "8080:80"
     networks:
       - laravel
     depends_on:
@@ -116,20 +112,14 @@ services:
 
   redis:
     image: redis:alpine
-    container_name: laravel-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    volumes:
-      - redis-data:/data
+    container_name: absensi_aslab-redis-1
+    ports:
+      - "6379:6379"
     networks:
       - laravel
-    # Tidak expose port untuk security (internal only)
 
 volumes:
   mysql-data:
-    driver: local
-  redis-data:
-    driver: local
 
 networks:
   laravel:
