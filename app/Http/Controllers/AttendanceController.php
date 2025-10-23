@@ -137,8 +137,8 @@ class AttendanceController extends Controller
                         'prodi' => $user->prodi,
                         'semester' => $user->semester,
                     ],
-                    'check_in' => $checkIn ? $checkIn->timestamp->format('H:i') : null,
-                    'check_out' => $checkOut ? $checkOut->timestamp->format('H:i') : null,
+                    'check_in' => $checkIn ? $checkIn->timestamp->setTimezone('Asia/Jakarta')->format('H:i') : null,
+                    'check_out' => $checkOut ? $checkOut->timestamp->setTimezone('Asia/Jakarta')->format('H:i') : null,
                     'status' => $checkOut ? 'Sudah Pulang' : ($checkIn ? 'Sedang di Lab' : 'Belum Datang'),
                 ];
             })
@@ -171,10 +171,10 @@ class AttendanceController extends Controller
             ->map(function ($userAttendances) {
                 $checkIn = $userAttendances->where('type', 'check_in')->first();
                 $checkOut = $userAttendances->where('type', 'check_out')->first();
-                
+
                 return [
-                    'check_in' => $checkIn ? $checkIn->timestamp->format('H:i') : null,
-                    'check_out' => $checkOut ? $checkOut->timestamp->format('H:i') : null,
+                    'check_in' => $checkIn ? $checkIn->timestamp->setTimezone('Asia/Jakarta')->format('H:i') : null,
+                    'check_out' => $checkOut ? $checkOut->timestamp->setTimezone('Asia/Jakarta')->format('H:i') : null,
                     'check_in_method' => $checkIn ? $checkIn->notes : null,
                     'check_out_method' => $checkOut ? $checkOut->notes : null,
                 ];
@@ -279,6 +279,118 @@ class AttendanceController extends Controller
         return response()->json([
             'success' => true,
             'data' => $aslabs
+        ]);
+    }
+
+    /**
+     * Show attendance history page
+     */
+    public function attendanceHistory(Request $request)
+    {
+        $query = Attendance::with(['user']);
+
+        // Filter berdasarkan tanggal jika ada
+        if ($request->has('date_from') && $request->date_from) {
+            $query->where('date', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && $request->date_to) {
+            $query->where('date', '<=', $request->date_to);
+        }
+
+        // Filter berdasarkan user jika ada
+        if ($request->has('user_id') && $request->user_id) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Get raw attendance data
+        $rawAttendances = $query->orderBy('date', 'desc')
+                               ->orderBy('timestamp', 'desc')
+                               ->get();
+
+        // Group by user and date, then format for display
+        $groupedAttendances = $rawAttendances->groupBy(function ($attendance) {
+            return $attendance->user_id . '_' . $attendance->date;
+        });
+
+        $formattedAttendances = [];
+        foreach ($groupedAttendances as $key => $group) {
+            $user = $group->first()->user;
+            $dateString = $group->first()->date;
+
+            $checkIn = $group->where('type', 'check_in')->first();
+            $checkOut = $group->where('type', 'check_out')->first();
+
+            // Create entries for each type that exists
+            if ($checkIn) {
+                $formattedAttendances[] = [
+                    'id' => $checkIn->id,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                    ],
+                    'date' => $dateString,
+                    'check_in' => $checkIn->timestamp ? $checkIn->timestamp->setTimezone('Asia/Jakarta')->format('H:i') : null,
+                    'check_out' => $checkOut && $checkOut->timestamp ? $checkOut->timestamp->setTimezone('Asia/Jakarta')->format('H:i') : null,
+                    'status' => $checkOut ? 'present' : 'present',
+                    'notes' => $checkIn->notes,
+                    'created_at' => $checkIn->created_at,
+                    'updated_at' => $checkIn->updated_at,
+                ];
+            } elseif ($checkOut) {
+                // Edge case: check-out without check-in
+                $formattedAttendances[] = [
+                    'id' => $checkOut->id,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                    ],
+                    'date' => $dateString,
+                    'check_in' => null,
+                    'check_out' => $checkOut->timestamp ? $checkOut->timestamp->setTimezone('Asia/Jakarta')->format('H:i') : null,
+                    'status' => 'present',
+                    'notes' => $checkOut->notes,
+                    'created_at' => $checkOut->created_at,
+                    'updated_at' => $checkOut->updated_at,
+                ];
+            }
+        }
+
+        // Sort by date and time (newest first)
+        $formattedAttendances = collect($formattedAttendances)->sortByDesc(function ($item) {
+            return $item['date'] . ' ' . ($item['check_in'] ?? $item['check_out'] ?? '00:00');
+        });
+
+        // Paginate manually
+        $perPage = 20;
+        $currentPage = $request->get('page', 1);
+        $total = $formattedAttendances->count();
+        $items = $formattedAttendances->forPage($currentPage, $perPage)->values();
+
+        $attendances = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page',
+            ]
+        );
+
+        // Get all aslabs for filter dropdown
+        $aslabs = User::where('role', 'aslab')
+                     ->where('is_active', true)
+                     ->select('id', 'name')
+                     ->orderBy('name')
+                     ->get();
+
+        return Inertia::render('attendance-history', [
+            'attendances' => $attendances,
+            'aslabs' => $aslabs,
+            'filters' => $request->only(['date_from', 'date_to', 'user_id'])
         ]);
     }
 }

@@ -29,6 +29,11 @@ const formatDate = (dateString: string) => {
 
 const formatTime = (timeString: string | null) => {
   if (!timeString) return '-';
+  // If it's already in HH:MM format, return as is
+  if (/^\d{2}:\d{2}$/.test(timeString)) {
+    return timeString;
+  }
+  // Otherwise try to parse as full datetime
   return new Date(timeString).toLocaleTimeString('id-ID', {
     hour: '2-digit',
     minute: '2-digit'

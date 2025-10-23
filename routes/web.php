@@ -63,7 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Admin and Aslab routes
     Route::middleware(['role:admin,aslab'])->group(function () {
         // Attendance related routes
-        Route::get('/attendance-history', [DashboardController::class, 'attendanceHistory'])->name('attendance.history');
+        Route::get('/attendance-history', [AttendanceController::class, 'attendanceHistory'])->name('attendance.history');
         Route::get('/attendance-scan', [AttendanceController::class, 'scanPage'])->name('attendance.scan');
         Route::post('/attendance-scan', [AttendanceController::class, 'processRfidScan'])->name('attendance.process');
         Route::get('/attendance-today', [AttendanceController::class, 'todaySummary'])->name('attendance.today');
