@@ -7,12 +7,12 @@
 #include <freertos/queue.h>
 
 // WiFi
-const char *ssid = "Ya";
-const char *password = "wooyoungie";
+const char *ssid = "Asisten Laboratorium";
+const char *password = "2025Labkomp:3";
   
 // API Endpoints Laravel
-String registrationEndpoint = "http://10.169.100.54:8000/api/rfid/scan-for-registration";
-String attendanceEndpoint = "http://10.169.100.54:8000/api/rfid/scan";
+String registrationEndpoint = "http://192.168.10.251:8000/api/rfid/scan-for-registration";
+String attendanceEndpoint = "http://192.168.10.251:8000/api/rfid/scan";
 
 // RFID
 #define RST_PIN 22
@@ -20,7 +20,7 @@ String attendanceEndpoint = "http://10.169.100.54:8000/api/rfid/scan";
 #define MODE_BUTTON_PIN 2  // Pin untuk switch mode
 #define LED_REG_PIN 4      // LED indikator mode registrasi (hijau)
 #define LED_ATT_PIN 5      // LED indikator mode absensi (biru)
-
+ 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 // System Variables
@@ -33,7 +33,7 @@ enum SystemMode {
 SystemMode currentMode = MODE_REGISTRATION;
 QueueHandle_t rfidQueue;
 SemaphoreHandle_t wifiMutex;
-String commandEndpoint = "http://10.169.100.54:8000/api/rfid/get-mode-command";
+String commandEndpoint = "http://192.168.10.251:8000/api/rfid/get-mode-command";
 
 struct RFIDData {
   String uid;

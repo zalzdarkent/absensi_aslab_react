@@ -192,8 +192,7 @@ export default function TelegramSetup() {
                                     <ol className="list-decimal list-inside space-y-1 text-xs">
                                         <li>Klik "Buka Bot Telegram" di bawah</li>
                                         <li>Di Telegram, klik "START" atau "MULAI"</li>
-                                        <li>Cari dan klik Bot ID atau Chat ID dari bot</li>
-                                        <li>Salin (copy) Chat ID tersebut</li>
+                                        <li>Salin atau copy Chat ID yang diberikan oleh bot</li>
                                         <li>Kembali ke sini, klik "Hubungkan Telegram"</li>
                                         <li>Tempel Chat ID dan klik "Hubungkan"</li>
                                     </ol>

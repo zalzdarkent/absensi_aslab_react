@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class JadwalPiketController extends Controller
@@ -17,25 +18,8 @@ class JadwalPiketController extends Controller
                      ->orderBy('name')
                      ->get();
 
-        // Group by piket_day
-        $jadwalPiket = [
-            'senin' => $aslabs->where('piket_day', 'senin')->values(),
-            'selasa' => $aslabs->where('piket_day', 'selasa')->values(),
-            'rabu' => $aslabs->where('piket_day', 'rabu')->values(),
-            'kamis' => $aslabs->where('piket_day', 'kamis')->values(),
-            'jumat' => $aslabs->where('piket_day', 'jumat')->values(),
-        ];
-
-        $stats = [
-            'total_aslab' => $aslabs->count(),
-            'assigned' => $aslabs->whereNotNull('piket_day')->count(),
-            'unassigned' => $aslabs->whereNull('piket_day')->count(),
-        ];
-
         return Inertia::render('jadwal-piket/index', [
-            'jadwalPiket' => $jadwalPiket,
             'allAslabs' => $aslabs,
-            'stats' => $stats,
         ]);
     }
 
@@ -91,7 +75,7 @@ class JadwalPiketController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'new_piket_day' => 'required|in:senin,selasa,rabu,kamis,jumat',
+            'new_piket_day' => 'nullable|in:senin,selasa,rabu,kamis,jumat',
         ]);
 
         try {
@@ -110,6 +94,46 @@ class JadwalPiketController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal mengubah jadwal: ' . $e->getMessage());
+        }
+    }
+
+    public function batchUpdate(Request $request)
+    {
+        // Debug logging
+        Log::info('Batch update request received', [
+            'data' => $request->all()
+        ]);
+
+        $request->validate([
+            'updates' => 'required|array|min:1',
+            'updates.*.user_id' => 'required|exists:users,id',
+            'updates.*.new_piket_day' => 'nullable|in:senin,selasa,rabu,kamis,jumat',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $updatedCount = 0;
+            foreach ($request->updates as $update) {
+                $user = User::findOrFail($update['user_id']);
+                $user->update(['piket_day' => $update['new_piket_day']]);
+                $updatedCount++;
+            }
+
+            DB::commit();
+
+            Log::info('Batch update successful', [
+                'updated_count' => $updatedCount
+            ]);
+
+            return redirect()->back()->with('success', "{$updatedCount} jadwal piket berhasil diupdate!");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Batch update failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with('error', 'Gagal update jadwal: ' . $e->getMessage());
         }
     }
 

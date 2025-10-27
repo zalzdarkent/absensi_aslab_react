@@ -84,7 +84,7 @@ export default function DayDetail({ date, attendances, total }: Props) {
     },
     {
       accessorKey: "check_in",
-      header: "Check In",
+      header: "Masuk",
       cell: ({ row }: { row: { original: DayDetailAttendance } }) => (
         <div className="text-sm">
           {row.original.check_in
@@ -99,7 +99,7 @@ export default function DayDetail({ date, attendances, total }: Props) {
     },
     {
       accessorKey: "check_out",
-      header: "Check Out",
+      header: "Pulang",
       cell: ({ row }: { row: { original: DayDetailAttendance } }) => (
         <div className="text-sm">
           {row.original.check_out
