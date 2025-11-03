@@ -1,7 +1,6 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -47,7 +46,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
   const [selectedUser, setSelectedUser] = useState<string>('');
-  
+
   const { data, setData, post, processing, errors, reset } = useForm<AttendanceFormData>({
     user_id: '',
     type: 'check_in',
@@ -88,7 +87,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
       cell: ({ row }) => {
         const user = row.original;
         const attendance = todayAttendances[user.id];
-        
+
         if (attendance?.check_in) {
           return (
             <div className="flex flex-col">
@@ -102,7 +101,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
             </div>
           );
         }
-        
+
         return (
           <Badge variant="outline" className="w-fit">
             <UserX className="w-3 h-3 mr-1" />
@@ -117,7 +116,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
       cell: ({ row }) => {
         const user = row.original;
         const attendance = todayAttendances[user.id];
-        
+
         if (attendance?.check_out) {
           return (
             <div className="flex flex-col">
@@ -131,7 +130,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
             </div>
           );
         }
-        
+
         if (attendance?.check_in) {
           return (
             <Badge variant="outline" className="w-fit text-orange-600">
@@ -140,7 +139,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
             </Badge>
           );
         }
-        
+
         return (
           <Badge variant="outline" className="w-fit">
             <UserX className="w-3 h-3 mr-1" />
@@ -155,7 +154,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
       cell: ({ row }) => {
         const user = row.original;
         const attendance = todayAttendances[user.id];
-        
+
         if (attendance?.check_out) {
           return (
             <Badge variant="outline" className="w-fit text-green-600 border-green-600">
@@ -164,7 +163,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
             </Badge>
           );
         }
-        
+
         if (attendance?.check_in) {
           return (
             <Badge variant="default" className="w-fit bg-blue-600">
@@ -173,7 +172,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
             </Badge>
           );
         }
-        
+
         return (
           <Badge variant="outline" className="w-fit text-red-600 border-red-600">
             <UserX className="w-3 h-3 mr-1" />
@@ -186,7 +185,7 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!data.user_id) {
       toast.error('Pilih aslab terlebih dahulu');
       return;
@@ -225,32 +224,36 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Absen Piket Manual" />
-      
-      <div className="space-y-6">
+
+      <div className="space-y-6 py-4 sm:py-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Absen Piket Manual</h1>
-            <p className="text-muted-foreground">
+          <div className="space-y-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+              Absen Piket Manual
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Kelola absensi manual untuk aslab yang lupa membawa RFID card
             </p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CalendarDays className="w-4 h-4" />
-            {new Date().toLocaleDateString('id-ID', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-lg">
+            <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="whitespace-nowrap">
+              {new Date().toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </span>
           </div>
         </div>
 
         {/* Manual Attendance Form */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCheck className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
               Form Absen Manual
             </CardTitle>
           </CardHeader>
@@ -308,8 +311,8 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
 
               {/* Selected User Info */}
               {selectedUserData && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Informasi Aslab Terpilih:</h4>
+                <div className="p-3 sm:p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2 text-sm sm:text-base">Informasi Aslab Terpilih:</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     <div>
                       <span className="text-muted-foreground">Nama:</span>
@@ -323,33 +326,29 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
                       <span className="text-muted-foreground">Semester:</span>
                       <span className="ml-2">{selectedUserData.semester}</span>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Semester:</span>
-                      <span className="ml-2">{selectedUserData.semester}</span>
-                    </div>
                   </div>
-                  
+
                   {/* Current Status */}
                   {selectedUserAttendance && (
                     <div className="mt-3 pt-3 border-t">
-                      <h5 className="font-medium mb-2">Status Hari Ini:</h5>
+                      <h5 className="font-medium mb-2 text-sm sm:text-base">Status Hari Ini:</h5>
                       <div className="flex flex-wrap gap-2">
                         {selectedUserAttendance.check_in ? (
-                          <Badge variant="default">
+                          <Badge variant="default" className="text-xs">
                             <Clock className="w-3 h-3 mr-1" />
                             Check In: {selectedUserAttendance.check_in}
                           </Badge>
                         ) : (
-                          <Badge variant="outline">Belum Check In</Badge>
+                          <Badge variant="outline" className="text-xs">Belum Check In</Badge>
                         )}
-                        
+
                         {selectedUserAttendance.check_out ? (
-                          <Badge variant="secondary">
+                          <Badge variant="secondary" className="text-xs">
                             <Clock className="w-3 h-3 mr-1" />
                             Check Out: {selectedUserAttendance.check_out}
                           </Badge>
                         ) : (
-                          <Badge variant="outline">Belum Check Out</Badge>
+                          <Badge variant="outline" className="text-xs">Belum Check Out</Badge>
                         )}
                       </div>
                     </div>
@@ -373,19 +372,22 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-2">
                 <Button
                   type="submit"
                   disabled={processing || !selectedUser}
-                  className="min-w-[120px]"
+                  className="w-full sm:w-auto min-w-[120px]"
+                  size="default"
                 >
                   {processing ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Menyimpan...
+                      <span className="text-sm">Menyimpan...</span>
                     </div>
                   ) : (
-                    `Submit ${data.type === 'check_in' ? 'Check In' : 'Check Out'}`
+                    <span className="text-sm">
+                      Submit {data.type === 'check_in' ? 'Check In' : 'Check Out'}
+                    </span>
                   )}
                 </Button>
               </div>
@@ -396,8 +398,8 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
         {/* Attendance Status Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <User className="w-4 h-4 sm:w-5 sm:h-5" />
               Status Absensi Hari Ini
             </CardTitle>
           </CardHeader>

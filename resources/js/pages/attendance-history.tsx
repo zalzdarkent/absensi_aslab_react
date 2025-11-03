@@ -33,11 +33,16 @@ interface Props {
   attendances: {
     data: AttendanceRecord[];
   } & PaginationData;
+  aslabs: {
+    id: number;
+    name: string;
+  }[];
   filters: {
-    search: string | null;
-    status: string | null;
-    date: string | null;
+    date_from: string | null;
+    date_to: string | null;
+    user_id: string | null;
   };
+  userRole: 'admin' | 'aslab';
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -46,7 +51,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     }
 ]
 
-export default function AttendanceHistory({ attendances }: Props) {
+export default function AttendanceHistory({ attendances, aslabs, filters, userRole }: Props) {
   const columns = createAttendanceHistoryColumns();
 
   return (
@@ -57,9 +62,14 @@ export default function AttendanceHistory({ attendances }: Props) {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Riwayat Absensi</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {userRole === 'admin' ? 'Riwayat Absensi' : 'Riwayat Absensi Saya'}
+            </h1>
             <p className="text-muted-foreground">
-              Lihat dan kelola data riwayat absensi asisten laboratorium
+              {userRole === 'admin'
+                ? 'Lihat dan kelola data riwayat absensi asisten laboratorium'
+                : 'Lihat riwayat absensi Anda sebagai asisten laboratorium'
+              }
             </p>
           </div>
         </div>

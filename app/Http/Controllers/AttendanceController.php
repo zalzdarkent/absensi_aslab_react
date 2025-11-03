@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -289,6 +290,11 @@ class AttendanceController extends Controller
     {
         $query = Attendance::with(['user']);
 
+        // If user is aslab, only show their own attendance data
+        if (Auth::user()->role === 'aslab') {
+            $query->where('user_id', Auth::user()->id);
+        }
+
         // Filter berdasarkan tanggal jika ada
         if ($request->has('date_from') && $request->date_from) {
             $query->where('date', '>=', $request->date_from);
@@ -298,8 +304,8 @@ class AttendanceController extends Controller
             $query->where('date', '<=', $request->date_to);
         }
 
-        // Filter berdasarkan user jika ada
-        if ($request->has('user_id') && $request->user_id) {
+        // Filter berdasarkan user jika ada (only for admin)
+        if ($request->has('user_id') && $request->user_id && Auth::user()->role === 'admin') {
             $query->where('user_id', $request->user_id);
         }
 
@@ -380,17 +386,21 @@ class AttendanceController extends Controller
             ]
         );
 
-        // Get all aslabs for filter dropdown
-        $aslabs = User::where('role', 'aslab')
-                     ->where('is_active', true)
-                     ->select('id', 'name')
-                     ->orderBy('name')
-                     ->get();
+        // Get all aslabs for filter dropdown (only for admin)
+        $aslabs = [];
+        if (Auth::user()->role === 'admin') {
+            $aslabs = User::where('role', 'aslab')
+                         ->where('is_active', true)
+                         ->select('id', 'name')
+                         ->orderBy('name')
+                         ->get();
+        }
 
         return Inertia::render('attendance-history', [
             'attendances' => $attendances,
             'aslabs' => $aslabs,
-            'filters' => $request->only(['date_from', 'date_to', 'user_id'])
+            'filters' => $request->only(['date_from', 'date_to', 'user_id']),
+            'userRole' => Auth::user()->role
         ]);
     }
 }

@@ -16,11 +16,9 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
 
-            {/* Right side controls: appearance toggle + Telegram + RFID Mode Toggle */}
             <div className="ml-auto flex items-center gap-2">
                 <AppearanceToggleTab />
 
-                {/* Telegram Setup Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">

@@ -316,29 +316,33 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
         <AppLayout>
             <Head title="Ajukan Peminjaman Barang" />
 
-            <div className="p-6">
-                <div className="max-w-7xl mx-auto">
+            <div className="space-y-6 py-4 sm:py-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                        <div className="flex items-center gap-3 lg:gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
                             <Button variant="outline" size="sm" asChild className="flex-shrink-0">
                                 <Link href="/peminjaman-barang">
-                                    <ArrowLeft className="h-4 w-4 mr-1.5" />
-                                    Kembali
+                                    <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                                    <span className="text-xs sm:text-sm">Kembali</span>
                                 </Link>
                             </Button>
                             <div className="min-w-0">
-                                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Katalog Peminjaman</h1>
-                                <p className="text-muted-foreground mt-1 text-sm lg:text-base">Pilih barang yang ingin dipinjam</p>
+                                <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">
+                                    Katalog Peminjaman
+                                </h1>
+                                <p className="text-xs sm:text-sm lg:text-base text-muted-foreground mt-1">
+                                    Pilih barang yang ingin dipinjam
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     {/* Search and Filters */}
-                    <Card className="mb-6">
-                        <CardHeader>
-                            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                                <div className="flex-1 max-w-md">
+                    <Card>
+                        <CardHeader className="pb-4">
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
+                                <div className="flex-1 max-w-sm">
                                     <AutoComplete
                                         value={searchQuery}
                                         onValueChange={setSearchQuery}
@@ -353,13 +357,14 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                     )}
                                 </div>
 
-                                <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                                     {/* Filter Buttons */}
                                     <div className="flex bg-muted rounded-lg p-1">
                                         <Button
                                             variant={filterType === 'all' ? 'default' : 'ghost'}
                                             size="sm"
                                             onClick={() => setFilterType('all')}
+                                            className="text-xs px-2 sm:px-3"
                                         >
                                             Semua
                                         </Button>
@@ -367,6 +372,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                             variant={filterType === 'aset' ? 'default' : 'ghost'}
                                             size="sm"
                                             onClick={() => setFilterType('aset')}
+                                            className="text-xs px-2 sm:px-3"
                                         >
                                             Aset
                                         </Button>
@@ -374,6 +380,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                             variant={filterType === 'bahan' ? 'default' : 'ghost'}
                                             size="sm"
                                             onClick={() => setFilterType('bahan')}
+                                            className="text-xs px-2 sm:px-3"
                                         >
                                             Bahan
                                         </Button>
@@ -385,15 +392,17 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                             variant={viewMode === 'grid' ? 'default' : 'ghost'}
                                             size="sm"
                                             onClick={() => setViewMode('grid')}
+                                            className="px-2"
                                         >
-                                            <Grid3X3 className="h-4 w-4" />
+                                            <Grid3X3 className="h-3 w-3 sm:h-4 sm:w-4" />
                                         </Button>
                                         <Button
                                             variant={viewMode === 'list' ? 'default' : 'ghost'}
                                             size="sm"
                                             onClick={() => setViewMode('list')}
+                                            className="px-2"
                                         >
-                                            <List className="h-4 w-4" />
+                                            <List className="h-3 w-3 sm:h-4 sm:w-4" />
                                         </Button>
                                     </div>
                                 </div>
@@ -406,13 +415,13 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                         <div className="xl:col-span-3 order-1 xl:order-1">
                             {allLoadedItems.length === 0 ? (
                                 <Card>
-                                    <CardContent className="py-12">
+                                    <CardContent className="py-8 sm:py-12">
                                         <div className="text-center">
-                                            <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                            <h3 className="text-lg font-medium text-foreground mb-2">
+                                            <Filter className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                                            <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">
                                                 Tidak ada barang ditemukan
                                             </h3>
-                                            <p className="text-muted-foreground">
+                                            <p className="text-sm text-muted-foreground">
                                                 {searchQuery
                                                     ? `Tidak ada hasil untuk "${searchQuery}"`
                                                     : "Pilih filter atau ubah pencarian Anda"
@@ -423,6 +432,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                                     variant="outline"
                                                     onClick={() => setSearchQuery('')}
                                                     className="mt-4"
+                                                    size="sm"
                                                 >
                                                     Hapus pencarian
                                                 </Button>
@@ -431,12 +441,12 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                     </CardContent>
                                 </Card>
                             ) : (
-                                <div className="space-y-6">
+                                <div className="space-y-4 sm:space-y-6">
                                     {/* Loading State */}
                                     {isSearching && (
-                                        <div className="flex items-center justify-center py-12">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                                            <span className="ml-3 text-muted-foreground">Memuat data...</span>
+                                        <div className="flex items-center justify-center py-8 sm:py-12">
+                                            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary"></div>
+                                            <span className="ml-3 text-sm text-muted-foreground">Memuat data...</span>
                                         </div>
                                     )}
 
@@ -444,7 +454,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                     {!isSearching && (
                                         <div className={cn(
                                             viewMode === 'grid'
-                                                ? "grid gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4"
+                                                ? "grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3"
                                                 : "space-y-3"
                                         )}>
                                             {allLoadedItems.map((product, index) => (
@@ -459,7 +469,8 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                                         onViewDetail={handleViewDetail}
                                                         className={cn(
                                                             "h-full",
-                                                            viewMode === 'list' ? 'flex-row w-full' : 'w-full'
+                                                            viewMode === 'list' ? 'flex-row w-full' : 'w-full',
+                                                            viewMode === 'grid' ? 'text-xs sm:text-sm' : ''
                                                         )}
                                                     />
                                                 </div>
@@ -469,16 +480,16 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
 
                                     {/* Loading More Indicator */}
                                     {isLoadingMore && (
-                                        <div className="flex items-center justify-center py-8">
-                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                                            <span className="ml-3 text-muted-foreground">Memuat lebih banyak...</span>
+                                        <div className="flex items-center justify-center py-6 sm:py-8">
+                                            <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-primary"></div>
+                                            <span className="ml-3 text-sm text-muted-foreground">Memuat lebih banyak...</span>
                                         </div>
                                     )}
 
                                     {/* Results Info */}
                                     {!isSearching && !isLoadingMore && allLoadedItems.length > 0 && (
-                                        <div className="text-center py-4 border-t border-border">
-                                            <p className="text-sm text-muted-foreground">
+                                        <div className="text-center py-3 sm:py-4 border-t border-border">
+                                            <p className="text-xs sm:text-sm text-muted-foreground">
                                                 Menampilkan {currentPagination.from} - {currentPagination.to} dari {currentPagination.total} barang
                                                 {meta?.total_asets && meta?.total_bahans && (
                                                     <span className="block text-xs mt-1">
@@ -496,7 +507,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                                     ✨ Semua data telah ditampilkan
                                                 </p>
                                             )}
-                                            <div className="flex justify-center gap-2 mt-3">
+                                            <div className="flex flex-col sm:flex-row justify-center gap-2 mt-3">
                                                 {(searchQuery || filterType !== 'all') && (
                                                     <Button
                                                         variant="outline"
@@ -505,6 +516,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                                                             setSearchQuery('');
                                                             setFilterType('all');
                                                         }}
+                                                        className="text-xs"
                                                     >
                                                         Tampilkan Semua
                                                     </Button>
@@ -529,14 +541,14 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                         </div>
 
                         {/* Sidebar - Agreement & Summary */}
-                        <div className="space-y-4 xl:space-y-6 order-2 xl:order-2">
+                        <div className="space-y-3 sm:space-y-4 xl:space-y-6 order-2 xl:order-2">
                             {/* Cart Summary */}
                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-base lg:text-lg">Ringkasan</CardTitle>
+                                <CardHeader className="pb-3 sm:pb-4">
+                                    <CardTitle className="text-sm sm:text-base lg:text-lg">Ringkasan</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="space-y-2 lg:space-y-3 text-sm">
+                                    <div className="space-y-2 lg:space-y-3 text-xs sm:text-sm">
                                         <div className="flex justify-between">
                                             <span>Total item:</span>
                                             <span className="font-medium">{getTotalItems()}</span>

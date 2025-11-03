@@ -163,13 +163,13 @@ export function CartDrawer({
                     </div>
                 </Button>
             </SheetTrigger>
-            <SheetContent className="w-[400px] sm:w-[540px] flex flex-col overflow-hidden">
+            <SheetContent className="w-full sm:w-[400px] lg:w-[540px] flex flex-col overflow-hidden">
                 <SheetHeader className="px-1">
-                    <SheetTitle className="flex items-center gap-2">
-                        <ShoppingCart className="h-5 w-5" />
+                    <SheetTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                         Keranjang Peminjaman
                     </SheetTitle>
-                    <SheetDescription>
+                    <SheetDescription className="text-sm">
                         {items.length === 0
                             ? "Keranjang Anda kosong"
                             : `${items.length} item, total ${totalItems} unit`
@@ -177,39 +177,39 @@ export function CartDrawer({
                     </SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-4 flex-1 px-1 pb-6 overflow-hidden flex flex-col">
+                <div className="mt-4 flex-1 px-1 pb-4 sm:pb-6 overflow-hidden flex flex-col">
                     {items.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12">
-                            <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
-                            <p className="text-muted-foreground">Keranjang kosong</p>
-                            <p className="text-sm text-muted-foreground/60 mt-1">
+                        <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+                            <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+                            <p className="text-sm sm:text-base text-muted-foreground">Keranjang kosong</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground/60 mt-1">
                                 Pilih barang yang ingin dipinjam
                             </p>
                         </div>
                     ) : (
                         <div className="flex-1 overflow-hidden flex flex-col">
                             {/* Cart Items */}
-                            <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-4">
+                            <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-2 sm:space-y-3 pb-3 sm:pb-4">
                                 {items.map((item) => (
-                                    <div key={`${item.type}-${item.id}`} className="border border-border rounded-lg p-4 bg-card">
+                                    <div key={`${item.type}-${item.id}`} className="border border-border rounded-lg p-3 sm:p-4 bg-card">
                                         {/* Item Header */}
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="flex items-start justify-between mb-2 sm:mb-3">
+                                            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                                                 <div className="flex-shrink-0">
                                                     {item.type === 'aset' ? (
-                                                        <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                                        <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                                                     ) : (
-                                                        <Beaker className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                                        <Beaker className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
                                                     )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <h4 className="font-medium text-foreground line-clamp-1">{item.name}</h4>
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <h4 className="font-medium text-sm sm:text-base text-foreground line-clamp-1">{item.name}</h4>
+                                                    <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                                                         <span className="truncate">({item.code})</span>
                                                         <Badge
                                                             variant="secondary"
                                                             className={cn(
-                                                                "text-xs flex-shrink-0",
+                                                                "text-xs flex-shrink-0 px-1 sm:px-2 py-0.5",
                                                                 item.type === 'aset'
                                                                     ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                                                                     : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
@@ -224,17 +224,17 @@ export function CartDrawer({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => onRemoveItem(item.id, item.type)}
-                                                className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 ml-2"
+                                                className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 ml-1 sm:ml-2 h-7 w-7 sm:h-8 sm:w-8 p-0"
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                             </Button>
                                         </div>
 
                                         {/* Quantity Controls */}
-                                        <div className="space-y-3">
+                                        <div className="space-y-2 sm:space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <Label className="text-sm font-medium">Jumlah:</Label>
-                                                <div className="flex items-center gap-3">
+                                                <Label className="text-xs sm:text-sm font-medium">Jumlah:</Label>
+                                                <div className="flex items-center gap-2 sm:gap-3">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
@@ -244,11 +244,11 @@ export function CartDrawer({
                                                             Math.max(1, item.quantity - 1)
                                                         )}
                                                         disabled={item.quantity <= 1}
-                                                        className="h-8 w-8 p-0"
+                                                        className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                                                     >
-                                                        <Minus className="h-3 w-3" />
+                                                        <Minus className="h-2 w-2 sm:h-3 sm:w-3" />
                                                     </Button>
-                                                    <span className="min-w-[2rem] text-center font-medium text-sm">
+                                                    <span className="min-w-[1.5rem] sm:min-w-[2rem] text-center font-medium text-xs sm:text-sm">
                                                         {item.quantity}
                                                     </span>
                                                     <Button
@@ -260,9 +260,9 @@ export function CartDrawer({
                                                             Math.min(item.maxStock, item.quantity + 1)
                                                         )}
                                                         disabled={item.quantity >= item.maxStock}
-                                                        className="h-8 w-8 p-0"
+                                                        className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                                                     >
-                                                        <Plus className="h-3 w-3" />
+                                                        <Plus className="h-2 w-2 sm:h-3 sm:w-3" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -272,26 +272,26 @@ export function CartDrawer({
                                             </div>
 
                                             {/* Return Date */}
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium">Target Kembali:</Label>
+                                            <div className="space-y-1 sm:space-y-2">
+                                                <Label className="text-xs sm:text-sm font-medium">Target Kembali:</Label>
                                                 <Input
                                                     type="date"
                                                     value={item.targetReturnDate}
                                                     min={new Date().toISOString().split('T')[0]}
                                                     onChange={(e) => onUpdateReturnDate(item.id, item.type, e.target.value)}
-                                                    className="text-sm h-9"
+                                                    className="text-xs sm:text-sm h-8 sm:h-9"
                                                 />
                                             </div>
 
                                             {/* Note */}
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium">Catatan:</Label>
+                                            <div className="space-y-1 sm:space-y-2">
+                                                <Label className="text-xs sm:text-sm font-medium">Catatan:</Label>
                                                 <Input
                                                     type="text"
                                                     placeholder="Keperluan..."
                                                     value={item.note || ''}
                                                     onChange={(e) => onUpdateNote(item.id, item.type, e.target.value)}
-                                                    className="text-sm h-9"
+                                                    className="text-xs sm:text-sm h-8 sm:h-9"
                                                 />
                                             </div>
                                         </div>
@@ -300,24 +300,24 @@ export function CartDrawer({
                             </div>
 
                             {/* Cart Footer */}
-                            <div className="border-t border-border pt-6 pb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-                                <div className="space-y-4 px-1">
-                                    <div className="flex justify-between text-sm">
+                            <div className="border-t border-border pt-4 sm:pt-6 pb-3 sm:pb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+                                <div className="space-y-3 sm:space-y-4 px-1">
+                                    <div className="flex justify-between text-xs sm:text-sm">
                                         <span className="text-muted-foreground">Total Item:</span>
                                         <span className="font-semibold text-foreground">{items.length}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
+                                    <div className="flex justify-between text-xs sm:text-sm">
                                         <span className="text-muted-foreground">Total Kuantitas:</span>
                                         <span className="font-semibold text-foreground">{totalItems} unit</span>
                                     </div>
 
                                     {/* Agreement Section */}
-                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
                                         <div className="flex items-start gap-2">
-                                            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                                            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
                                             <div className="text-xs text-yellow-800 dark:text-yellow-200">
-                                                <p className="font-medium mb-2">Syarat & Ketentuan:</p>
-                                                <ul className="list-disc list-inside space-y-1 text-xs">
+                                                <p className="font-medium mb-1 sm:mb-2">Syarat & Ketentuan:</p>
+                                                <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 text-xs">
                                                     <li>Menjaga barang dengan baik</li>
                                                     <li>Mengembalikan sesuai jadwal</li>
                                                     <li>Mengganti rugi jika rusak/hilang</li>
@@ -326,7 +326,7 @@ export function CartDrawer({
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center space-x-2 mt-4">
+                                        <div className="flex items-center space-x-2 mt-3 sm:mt-4">
                                             <Checkbox
                                                 id="cart-agreement"
                                                 checked={agreementAccepted}
@@ -342,21 +342,21 @@ export function CartDrawer({
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="space-y-3">
+                                    <div className="space-y-2 sm:space-y-3">
                                         <Button
                                             onClick={handleSubmitRequest}
                                             disabled={!agreementAccepted || items.length === 0 || isSubmitting}
-                                            className="w-full h-11"
+                                            className="w-full h-10 sm:h-11 text-xs sm:text-sm"
                                             size="default"
                                         >
                                             {isSubmitting ? (
                                                 <>
-                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-2" />
                                                     Mengirim...
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Send className="h-4 w-4 mr-2" />
+                                                    <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                                                     Ajukan Peminjaman ({items.length})
                                                 </>
                                             )}
@@ -366,9 +366,9 @@ export function CartDrawer({
                                             variant="outline"
                                             size="default"
                                             onClick={handleClearCartAndClose}
-                                            className="w-full h-11 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30"
+                                            className="w-full h-10 sm:h-11 text-xs sm:text-sm text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30"
                                         >
-                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                                             Kosongkan Keranjang
                                         </Button>
                                     </div>

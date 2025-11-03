@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordStrengthInput } from '@/components/ui/password-strength-input';
 
 export default function Register() {
     return (
@@ -51,7 +52,7 @@ export default function Register() {
                                             tabIndex={1}
                                             autoComplete="name"
                                             name="name"
-                                            placeholder="Contoh: Ahmad Fauzi"
+                                            placeholder="Contoh: Alif Fadillah"
                                         />
                                         <InputError message={errors.name} />
                                     </div>
@@ -72,14 +73,13 @@ export default function Register() {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="password">Password</Label>
-                                        <Input
+                                        <PasswordStrengthInput
                                             id="password"
-                                            type="password"
+                                            name="password"
                                             required
                                             tabIndex={3}
                                             autoComplete="new-password"
-                                            name="password"
-                                            placeholder="Minimal 8 karakter"
+                                            placeholder="Masukkan Password"
                                         />
                                         <InputError message={errors.password} />
                                     </div>

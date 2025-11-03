@@ -57,7 +57,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         if (highlight) {
             const id = parseInt(highlight);
             setHighlightId(id);
-            
+
             // Auto-scroll to highlighted row after a delay
             setTimeout(() => {
                 const element = document.querySelector(`[data-row-id="${id}"]`);
@@ -65,7 +65,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }, 500);
-            
+
             // Remove highlight after 5 seconds
             setTimeout(() => {
                 setHighlightId(null);
@@ -357,32 +357,36 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         <AppLayout>
             <Head title="Peminjaman Barang" />
 
-            <div className="p-6">
+            <div className="space-y-6 py-4 sm:py-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-foreground">Peminjaman Barang</h1>
-                        <p className="text-muted-foreground mt-2">Kelola peminjaman barang laboratorium assistant</p>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div className="space-y-2">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+                            Peminjaman Barang
+                        </h1>
+                        <p className="text-sm sm:text-base text-muted-foreground">
+                            Kelola peminjaman barang laboratorium assistant
+                        </p>
                     </div>
-                    <Button asChild>
+                    <Button asChild className="w-full sm:w-auto">
                         <Link href="/peminjaman-barang/create">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Ajukan Peminjaman
+                            <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="text-xs sm:text-sm">Ajukan Peminjaman</span>
                         </Link>
                     </Button>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Total Peminjaman
                             </CardTitle>
-                            <ShoppingCart className="h-4 w-4 opacity-90" />
+                            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.total_peminjaman}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.total_peminjaman}</div>
                             <p className="text-xs opacity-90">
                                 Seluruh transaksi
                             </p>
@@ -391,13 +395,13 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
 
                     <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Sedang Dipinjam
                             </CardTitle>
-                            <Clock className="h-4 w-4 opacity-90" />
+                            <Clock className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.sedang_dipinjam}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.sedang_dipinjam}</div>
                             <p className="text-xs opacity-90">
                                 Belum dikembalikan
                             </p>
@@ -406,13 +410,13 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
 
                     <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Sudah Kembali
                             </CardTitle>
-                            <CheckCircle className="h-4 w-4 opacity-90" />
+                            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.sudah_kembali}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.sudah_kembali}</div>
                             <p className="text-xs opacity-90">
                                 Selesai dipinjam
                             </p>
@@ -421,13 +425,13 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
 
                     <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Terlambat
                             </CardTitle>
-                            <AlertTriangle className="h-4 w-4 opacity-90" />
+                            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.terlambat_kembali}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.terlambat_kembali}</div>
                             <p className="text-xs opacity-90">
                                 Melewati batas waktu
                             </p>
@@ -438,12 +442,12 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                 {/* Data Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Daftar Peminjaman</CardTitle>
-                        <CardDescription>
+                        <CardTitle className="text-lg sm:text-xl">Daftar Peminjaman</CardTitle>
+                        <CardDescription className="text-sm">
                             Riwayat dan status peminjaman barang dalam sistem
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="overflow-x-auto">
                         <DataTable
                             columns={columns}
                             data={pinjamBarangs}

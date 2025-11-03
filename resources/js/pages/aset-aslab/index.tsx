@@ -234,40 +234,44 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
         <AppLayout>
             <Head title="Data Aset & Bahan" />
 
-            <div className="p-6">
+            <div className="space-y-6 py-4 sm:py-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Data Aset & Bahan</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">Kelola inventaris aset dan bahan laboratorium</p>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div className="space-y-2">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                            Data Aset & Bahan
+                        </h1>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                            Kelola inventaris aset dan bahan laboratorium
+                        </p>
                     </div>
-                    <div className="flex space-x-3">
-                        <Button variant="outline" asChild>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                        <Button variant="outline" asChild className="w-full sm:w-auto">
                             <Link href="/test-bahan">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Tambah Bahan
+                                <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="text-xs sm:text-sm">Tambah Bahan</span>
                             </Link>
                         </Button>
-                        <Button asChild>
+                        <Button asChild className="w-full sm:w-auto">
                             <Link href="/aset-aslab/create">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Tambah Aset
+                                <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="text-xs sm:text-sm">Tambah Aset</span>
                             </Link>
                         </Button>
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
                     <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Total Aset
                             </CardTitle>
-                            <Package className="h-4 w-4 opacity-90" />
+                            <Package className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.total_aset}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.total_aset}</div>
                             <p className="text-xs opacity-90">
                                 Seluruh aset aslab
                             </p>
@@ -276,13 +280,13 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
 
                     <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Kondisi Baik
                             </CardTitle>
-                            <CheckCircle className="h-4 w-4 opacity-90" />
+                            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.aset_baik}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.aset_baik}</div>
                             <p className="text-xs opacity-90">
                                 Siap digunakan
                             </p>
@@ -291,13 +295,13 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
 
                     <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Kurang Baik
                             </CardTitle>
-                            <AlertTriangle className="h-4 w-4 opacity-90" />
+                            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.aset_kurang_baik}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.aset_kurang_baik}</div>
                             <p className="text-xs opacity-90">
                                 Perlu perhatian
                             </p>
@@ -306,13 +310,13 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
 
                     <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Tidak Baik
                             </CardTitle>
-                            <XCircle className="h-4 w-4 opacity-90" />
+                            <XCircle className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.aset_tidak_baik}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.aset_tidak_baik}</div>
                             <p className="text-xs opacity-90">
                                 Perlu perbaikan
                             </p>
@@ -322,13 +326,13 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
                     {/* Bahan Stats */}
                     <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Total Bahan
                             </CardTitle>
-                            <Package className="h-4 w-4 opacity-90" />
+                            <Package className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.total_bahan}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.total_bahan}</div>
                             <p className="text-xs opacity-90">
                                 Seluruh bahan
                             </p>
@@ -337,13 +341,13 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
 
                     <Card className="bg-gradient-to-r from-teal-500 to-teal-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Bahan Tersedia
                             </CardTitle>
-                            <CheckCircle className="h-4 w-4 opacity-90" />
+                            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.bahan_tersedia}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.bahan_tersedia}</div>
                             <p className="text-xs opacity-90">
                                 Siap digunakan
                             </p>
@@ -352,13 +356,13 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
 
                     <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium opacity-90">
+                            <CardTitle className="text-xs sm:text-sm font-medium opacity-90">
                                 Bahan Habis
                             </CardTitle>
-                            <XCircle className="h-4 w-4 opacity-90" />
+                            <XCircle className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.bahan_habis}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{stats.bahan_habis}</div>
                             <p className="text-xs opacity-90">
                                 Perlu restok
                             </p>
@@ -369,8 +373,8 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
                 {/* Data Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Daftar Aset & Bahan</CardTitle>
-                        <CardDescription>
+                        <CardTitle className="text-lg sm:text-xl">Daftar Aset & Bahan</CardTitle>
+                        <CardDescription className="text-sm">
                             Semua aset dan bahan yang terdaftar dalam sistem
                         </CardDescription>
                     </CardHeader>

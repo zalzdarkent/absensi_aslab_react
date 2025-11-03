@@ -385,9 +385,9 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
   // Function untuk update local state
   const updateLocalSchedule = (userId: number, userName: string, oldDay: string | null, newDay: string | null) => {
     // Update local all aslabs - ini akan otomatis update localJadwalPiket juga
-    setLocalAllAslabs(prev => 
-      prev.map(aslab => 
-        aslab.id === userId 
+    setLocalAllAslabs(prev =>
+      prev.map(aslab =>
+        aslab.id === userId
           ? { ...aslab, piket_day: newDay }
           : aslab
       )
@@ -398,8 +398,8 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
       const existing = prev.find(change => change.user_id === userId);
       if (existing) {
         // Update existing change
-        return prev.map(change => 
-          change.user_id === userId 
+        return prev.map(change =>
+          change.user_id === userId
             ? { ...change, new_day: newDay }
             : change
         );
@@ -410,7 +410,7 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
     });
 
     setHasUnsavedChanges(true);
-    
+
     // Hanya tampilkan toast jika ini adalah perubahan baru (bukan update dari existing change)
     const isNewChange = !pendingChanges.find(change => change.user_id === userId);
     if (isNewChange) {
@@ -554,105 +554,115 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
       >
         <div className="space-y-6 py-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                <CalendarDays className="h-8 w-8" />
-                Jadwal Piket
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-2">
+                  <CalendarDays className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" />
+                  <span>Jadwal Piket</span>
+                </h1>
                 {hasUnsavedChanges && (
-                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs w-fit">
                     {pendingChanges.length} perubahan belum disimpan
                   </Badge>
                 )}
-              </h1>
-              <p className="text-muted-foreground">
-                Kelola jadwal piket asisten laboratorium
+              </div>
+              <div className="text-sm sm:text-base text-muted-foreground space-y-1">
+                <p>Kelola jadwal piket asisten laboratorium</p>
                 {currentUser.role === 'admin' && (
-                  <span className="block text-sm text-blue-600 mt-1">
+                  <p className="text-xs sm:text-sm text-blue-600">
                     💡 Tip: Drag & drop aslab untuk mengubah jadwal piket
-                  </span>
+                  </p>
                 )}
-              </p>
+              </div>
             </div>
-            {/* Only show buttons for admin */}
+
+            {/* Admin Action Buttons */}
             {currentUser.role === 'admin' && (
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 {/* Batch Update Buttons */}
                 {hasUnsavedChanges && (
-                  <>
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <Button
                       onClick={handleResetChanges}
                       variant="outline"
                       size="sm"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
+                      className="flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50"
                     >
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      Batal
+                      <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="text-xs sm:text-sm">Batal</span>
                     </Button>
                     <Button
                       onClick={handleSaveBatchChanges}
                       size="sm"
                       disabled={batchUpdateForm.processing}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
                     >
-                      <Save className="mr-2 h-4 w-4" />
-                      {batchUpdateForm.processing ? 'Menyimpan...' : `Simpan (${pendingChanges.length})`}
+                      <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="text-xs sm:text-sm">
+                        {batchUpdateForm.processing ? 'Menyimpan...' : `Simpan (${pendingChanges.length})`}
+                      </span>
                     </Button>
-                  </>
+                  </div>
                 )}
 
                 {/* Original Buttons */}
-                <Button
-                  onClick={handleReset}
-                  variant="outline"
-                  disabled={processing || hasUnsavedChanges}
-                >
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Reset
-                </Button>
-                <Button
-                  onClick={handleGenerateAuto}
-                  disabled={processing || hasUnsavedChanges}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Otomatis
-                </Button>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    size="sm"
+                    disabled={processing || hasUnsavedChanges}
+                    className="flex-1 sm:flex-none"
+                  >
+                    <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="text-xs sm:text-sm">Reset</span>
+                  </Button>
+                  <Button
+                    onClick={handleGenerateAuto}
+                    disabled={processing || hasUnsavedChanges}
+                    size="sm"
+                    className="flex-1 sm:flex-none bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  >
+                    <Sparkles className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="text-xs sm:text-sm">Generate</span>
+                  </Button>
+                </div>
               </div>
             )}
           </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-50">Total Aslab</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-blue-50">Total Aslab</CardTitle>
               <Users className="h-4 w-4 text-blue-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{localAllAslabs.length}</div>
+              <div className="text-xl sm:text-2xl font-bold">{localAllAslabs.length}</div>
               <p className="text-xs text-blue-100">Aslab aktif</p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-50">Sudah Dijadwal</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-green-50">Sudah Dijadwal</CardTitle>
               <UserCheck className="h-4 w-4 text-green-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{localAllAslabs.filter(aslab => aslab.piket_day).length}</div>
+              <div className="text-xl sm:text-2xl font-bold">{localAllAslabs.filter(aslab => aslab.piket_day).length}</div>
               <p className="text-xs text-green-100">Memiliki jadwal piket</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 text-white">
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 text-white sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-50">Belum Dijadwal</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-orange-50">Belum Dijadwal</CardTitle>
               <UserX className="h-4 w-4 text-orange-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{localAllAslabs.filter(aslab => !aslab.piket_day).length}</div>
+              <div className="text-xl sm:text-2xl font-bold">{localAllAslabs.filter(aslab => !aslab.piket_day).length}</div>
               <p className="text-xs text-orange-100">Belum memiliki jadwal</p>
             </CardContent>
           </Card>
@@ -661,11 +671,11 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
           {/* Weekly Schedule Grid */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                 Jadwal Piket Mingguan
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Pembagian jadwal piket aslab untuk setiap hari dalam seminggu
               </CardDescription>
             </CardHeader>
@@ -678,34 +688,37 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-4">
-                  {/* First Row: Senin - Rabu */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Object.entries(localJadwalPiket)
-                      .filter(([day]) => ['senin', 'selasa', 'rabu'].includes(day))
-                      .map(([day, aslabs]) => (
-                        <DroppableDayCard
-                          key={day}
-                          day={day}
-                          aslabs={aslabs}
-                          isAdmin={currentUser.role === 'admin'}
-                          onEdit={handleSwapSchedule}
-                        />
-                      ))}
-                  </div>
+                  {/* Mobile: Stack all days vertically, Desktop: Grid layout */}
+                  <div className="space-y-4 lg:space-y-0">
+                    {/* First Row: Senin - Rabu */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {Object.entries(localJadwalPiket)
+                        .filter(([day]) => ['senin', 'selasa', 'rabu'].includes(day))
+                        .map(([day, aslabs]) => (
+                          <DroppableDayCard
+                            key={day}
+                            day={day}
+                            aslabs={aslabs}
+                            isAdmin={currentUser.role === 'admin'}
+                            onEdit={handleSwapSchedule}
+                          />
+                        ))}
+                    </div>
 
-                  {/* Second Row: Kamis - Jumat */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(localJadwalPiket)
-                      .filter(([day]) => ['kamis', 'jumat'].includes(day))
-                      .map(([day, aslabs]) => (
-                        <DroppableDayCard
-                          key={day}
-                          day={day}
-                          aslabs={aslabs}
-                          isAdmin={currentUser.role === 'admin'}
-                          onEdit={handleSwapSchedule}
-                        />
-                      ))}
+                    {/* Second Row: Kamis - Jumat */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:max-w-2xl">
+                      {Object.entries(localJadwalPiket)
+                        .filter(([day]) => ['kamis', 'jumat'].includes(day))
+                        .map(([day, aslabs]) => (
+                          <DroppableDayCard
+                            key={day}
+                            day={day}
+                            aslabs={aslabs}
+                            isAdmin={currentUser.role === 'admin'}
+                            onEdit={handleSwapSchedule}
+                          />
+                        ))}
+                    </div>
                   </div>
                 </div>
               </SortableContext>
@@ -716,14 +729,19 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
           {localAllAslabs.filter(aslab => !aslab.piket_day).length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-orange-600">
-                  <UserX className="h-5 w-5" />
-                  Aslab Belum Dijadwal ({localAllAslabs.filter(aslab => !aslab.piket_day).length})
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-orange-600">
+                  <div className="flex items-center gap-2">
+                    <UserX className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-lg sm:text-xl">Aslab Belum Dijadwal</span>
+                  </div>
+                  <Badge variant="secondary" className="w-fit bg-orange-100 text-orange-800 text-xs">
+                    {localAllAslabs.filter(aslab => !aslab.piket_day).length} orang
+                  </Badge>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm">
                   Aslab yang belum memiliki jadwal piket
                   {currentUser.role === 'admin' && (
-                    <span className="block text-sm text-blue-600 mt-1">
+                    <span className="block text-xs sm:text-sm text-blue-600 mt-1">
                       💡 Drag aslab ke hari yang diinginkan untuk memberi jadwal
                     </span>
                   )}
@@ -736,7 +754,7 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
                     .map(aslab => `aslab-${aslab.id}`)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                     {localAllAslabs
                       .filter(aslab => !aslab.piket_day)
                       .map((aslab) => (
@@ -756,30 +774,39 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
           {pendingChanges.length > 0 && (
             <Card className="border-yellow-200 bg-yellow-50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-yellow-800">
-                  <Clock className="h-5 w-5" />
-                  Perubahan Belum Disimpan ({pendingChanges.length})
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-yellow-800">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-lg sm:text-xl">Perubahan Belum Disimpan</span>
+                  </div>
+                  <Badge variant="secondary" className="w-fit bg-yellow-200 text-yellow-800 text-xs">
+                    {pendingChanges.length} perubahan
+                  </Badge>
                 </CardTitle>
-                <CardDescription className="text-yellow-700">
+                <CardDescription className="text-yellow-700 text-sm">
                   Perubahan berikut akan disimpan saat klik "Simpan Perubahan"
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-2 sm:space-y-3">
                   {pendingChanges.map((change, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <Avatar className="h-8 w-8 flex-shrink-0">
                           <AvatarFallback className="text-xs bg-yellow-100 text-yellow-800">
                             {getInitials(change.user_name)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">{change.user_name}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{change.old_day ? dayNames[change.old_day as keyof typeof dayNames] : 'Belum dijadwal'}</span>
-                            <ArrowRightLeft className="h-3 w-3" />
-                            <span>{change.new_day ? dayNames[change.new_day as keyof typeof dayNames] : 'Belum dijadwal'}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{change.user_name}</p>
+                          <div className="flex items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
+                            <span className="truncate">
+                              {change.old_day ? dayNames[change.old_day as keyof typeof dayNames] : 'Belum dijadwal'}
+                            </span>
+                            <ArrowRightLeft className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">
+                              {change.new_day ? dayNames[change.new_day as keyof typeof dayNames] : 'Belum dijadwal'}
+                            </span>
                           </div>
                         </div>
                       </div>
