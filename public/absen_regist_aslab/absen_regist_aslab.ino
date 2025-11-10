@@ -7,8 +7,8 @@
 #include <freertos/queue.h>
 
 // WiFi
-const char *ssid = "Asisten Laboratorium";
-const char *password = "2025Labkomp:3";
+const char *ssid = "narzo 50A";
+const char *password = "aixhwishx";
   
 // API Endpoints Laravel
 String registrationEndpoint = "http://192.168.10.95:8000/api/rfid/scan-for-registration";
