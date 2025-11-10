@@ -211,10 +211,9 @@ class AttendanceController extends Controller
                    ->first();
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User tidak ditemukan atau bukan aslab aktif'
-            ], 404);
+            return redirect()->back()->withErrors([
+                'user_id' => 'User tidak ditemukan atau bukan aslab aktif'
+            ]);
         }
 
         // Check existing attendance for today
@@ -224,10 +223,9 @@ class AttendanceController extends Controller
                                       ->first();
 
         if ($existingAttendance) {
-            return response()->json([
-                'success' => false,
-                'message' => "User sudah melakukan {$type} hari ini"
-            ], 400);
+            return redirect()->back()->withErrors([
+                'general' => "User sudah melakukan {$type} hari ini"
+            ]);
         }
 
         // For check_out, ensure check_in exists
@@ -238,10 +236,9 @@ class AttendanceController extends Controller
                                 ->first();
 
             if (!$checkIn) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User belum check-in hari ini'
-                ], 400);
+                return redirect()->back()->withErrors([
+                    'general' => 'User belum check-in hari ini'
+                ]);
             }
         }
 
@@ -254,16 +251,7 @@ class AttendanceController extends Controller
             'notes' => $notes
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => "Manual {$type} berhasil untuk {$user->name}",
-            'data' => [
-                'user' => $user,
-                'type' => $type,
-                'timestamp' => $now->format('H:i:s'),
-                'notes' => $notes
-            ]
-        ]);
+        return redirect()->back()->with('success', "Manual {$type} berhasil untuk {$user->name}");
     }
 
     /**

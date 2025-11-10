@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
+import { DragDropImageUpload } from '@/components/ui/drag-drop-image-upload';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
@@ -100,16 +101,12 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
         });
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setData('gambar', file);
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setImagePreview(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
+    const handleImageChange = (file: File | null) => {
+        setData('gambar', file);
+    };
+
+    const handlePreviewChange = (preview: string | null) => {
+        setImagePreview(preview);
     };
 
     const handleNamaChange = (value: string) => {
@@ -375,31 +372,14 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
                                         </div>
 
                                         <div className="space-y-4">
-                                            {!imagePreview ? (
-                                                <div className="border-2 border-dashed border-input rounded-lg p-6 text-center hover:border-accent transition-colors">
-                                                    <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                                                    <div className="mt-4">
-                                                        <label htmlFor="gambar" className="cursor-pointer">
-                                                            <span className="mt-2 block text-sm font-medium text-muted-foreground">Klik untuk upload gambar</span>
-                                                            <span className="mt-1 block text-xs text-muted-foreground">PNG, JPG, GIF up to 2MB</span>
-                                                        </label>
-                                                        <input
-                                                            id="gambar"
-                                                            type="file"
-                                                            className="hidden"
-                                                            accept="image/*"
-                                                            onChange={handleImageChange}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="relative">
-                                                    <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
-                                                    <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={removeImage}>
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            )}
+                                            <DragDropImageUpload
+                                                value={data.gambar}
+                                                onValueChange={handleImageChange}
+                                                preview={imagePreview}
+                                                onPreviewChange={handlePreviewChange}
+                                                maxSize={2}
+                                                disabled={processing}
+                                            />
                                             <InputError message={errors.gambar} />
                                         </div>
 

@@ -10,7 +10,8 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { useState } from 'react';
+import { UserCombobox } from '@/components/ui/user-combobox';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface User {
@@ -30,6 +31,10 @@ interface AttendanceStatus {
 interface Props {
   aslabs: User[];
   todayAttendances: Record<string, AttendanceStatus>;
+  flash?: {
+    success?: string;
+    error?: string;
+  };
 }
 
 interface AttendanceFormData {
@@ -44,7 +49,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     }
 ]
 
-export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
+export default function AbsenPiket({ aslabs, todayAttendances, flash }: Props) {
   const [selectedUser, setSelectedUser] = useState<string>('');
 
   const { data, setData, post, processing, errors, reset } = useForm<AttendanceFormData>({
@@ -52,6 +57,16 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
     type: 'check_in',
     notes: '',
   });
+
+  // Handle flash messages from Laravel
+  useEffect(() => {
+    if (flash?.success) {
+      toast.success(flash.success);
+    }
+    if (flash?.error) {
+      toast.error(flash.error);
+    }
+  }, [flash]);
 
   // Create columns for the data table
   const columns: ColumnDef<User>[] = [
@@ -191,17 +206,24 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
       return;
     }
 
-    const user = aslabs.find(u => u.id.toString() === data.user_id);
-    const userName = user?.name || '';
-
     post('/absen-piket', {
       onSuccess: () => {
-        toast.success(`Manual ${data.type} berhasil untuk ${userName}`);
+        // Success message will be handled by flash message
         reset();
         setSelectedUser('');
       },
       onError: (errors) => {
-        if (typeof errors === 'object' && errors !== null) {
+        console.log('Errors received:', errors);
+        // Handle general error (for existing attendance, check-in required, etc.)
+        if (errors.general) {
+          toast.error(errors.general);
+        }
+        // Handle specific field errors
+        else if (errors.user_id) {
+          toast.error(errors.user_id);
+        }
+        // Handle any other errors
+        else if (typeof errors === 'object' && errors !== null) {
           const errorMessages = Object.values(errors);
           if (errorMessages.length > 0) {
             toast.error(errorMessages[0] as string);
@@ -217,9 +239,6 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
     setSelectedUser(userId);
     setData('user_id', userId);
   };
-
-  const selectedUserData = aslabs.find(user => user.id.toString() === selectedUser);
-  const selectedUserAttendance = selectedUser ? todayAttendances[selectedUser] : null;
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -263,26 +282,12 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
                 {/* User Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="user_id">Pilih Aslab</Label>
-                  <Select
+                  <UserCombobox
                     value={selectedUser}
                     onValueChange={handleUserSelect}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih aslab..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {aslabs.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          <div className="flex flex-col">
-                            <span>{user.name}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {user.prodi} - Sem {user.semester}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Cari dan pilih aslab..."
+                    users={aslabs}
+                  />
                   {errors.user_id && (
                     <p className="text-sm text-red-600">{errors.user_id}</p>
                   )}
@@ -308,53 +313,6 @@ export default function AbsenPiket({ aslabs, todayAttendances }: Props) {
                   )}
                 </div>
               </div>
-
-              {/* Selected User Info */}
-              {selectedUserData && (
-                <div className="p-3 sm:p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2 text-sm sm:text-base">Informasi Aslab Terpilih:</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Nama:</span>
-                      <span className="ml-2 font-medium">{selectedUserData.name}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Program Studi:</span>
-                      <span className="ml-2">{selectedUserData.prodi}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Semester:</span>
-                      <span className="ml-2">{selectedUserData.semester}</span>
-                    </div>
-                  </div>
-
-                  {/* Current Status */}
-                  {selectedUserAttendance && (
-                    <div className="mt-3 pt-3 border-t">
-                      <h5 className="font-medium mb-2 text-sm sm:text-base">Status Hari Ini:</h5>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedUserAttendance.check_in ? (
-                          <Badge variant="default" className="text-xs">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Check In: {selectedUserAttendance.check_in}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">Belum Check In</Badge>
-                        )}
-
-                        {selectedUserAttendance.check_out ? (
-                          <Badge variant="secondary" className="text-xs">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Check Out: {selectedUserAttendance.check_out}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">Belum Check Out</Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Notes */}
               <div className="space-y-2">
