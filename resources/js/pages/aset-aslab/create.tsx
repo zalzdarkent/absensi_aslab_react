@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DragDropImageUpload } from '@/components/ui/drag-drop-image-upload';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { JenisCombobox } from '@/components/ui/jenis-combobox';
+import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
@@ -142,11 +143,6 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
         }, 600);
     };
 
-    const removeImage = () => {
-        setData('gambar', null);
-        setImagePreview(null);
-    };
-
     const handleJenisSubmit = () => {
         // Validasi manual sebelum submit
         if (!jenisData.nama_jenis_aset.trim()) {
@@ -217,63 +213,14 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
 
                                                 <div className="space-y-2">
                                                     <Label htmlFor="jenis_id">Jenis Aset *</Label>
-                                                    <div className="flex gap-2">
-                                                        <Select
-                                                            value={data.jenis_id}
-                                                            onValueChange={(value) => setData('jenis_id', value)}
-                                                        >
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Pilih jenis aset" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {jenisAsetList.map((jenis) => (
-                                                                    <SelectItem key={jenis.id} value={jenis.id.toString()}>
-                                                                        {jenis.nama_jenis_aset}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                                                            <DialogTrigger asChild>
-                                                                <Button type="button" variant="outline" size="icon">
-                                                                    <Plus className="h-4 w-4" />
-                                                                </Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent className="sm:max-w-md">
-                                                                <DialogHeader>
-                                                                    <DialogTitle>Tambah Jenis Aset Baru</DialogTitle>
-                                                                </DialogHeader>
-                                                                <div className="space-y-4">
-                                                                    <div className="space-y-2">
-                                                                        <Label htmlFor="nama_jenis_aset">Nama Jenis Aset *</Label>
-                                                                        <Input
-                                                                            id="nama_jenis_aset"
-                                                                            type="text"
-                                                                            value={jenisData.nama_jenis_aset}
-                                                                            onChange={(e) => setJenisData('nama_jenis_aset', e.target.value)}
-                                                                            onKeyDown={(e) => {
-                                                                                if (e.key === 'Enter') {
-                                                                                    e.preventDefault();
-                                                                                    handleJenisSubmit();
-                                                                                }
-                                                                            }}
-                                                                            placeholder="Contoh: Mikroskop"
-                                                                            required
-                                                                        />
-                                                                        <InputError message={jenisErrors.nama_jenis_aset} />
-                                                                    </div>
-                                                                    <div className="flex justify-end space-x-2">
-                                                                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                                                            Batal
-                                                                        </Button>
-                                                                        <Button type="button" onClick={handleJenisSubmit} disabled={jenisProcessing}>
-                                                                            {jenisProcessing ? 'Menyimpan...' : 'Simpan'}
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            </DialogContent>
-                                                        </Dialog>
-                                                    </div>
+                                                    <JenisCombobox
+                                                        value={data.jenis_id}
+                                                        onValueChange={(value) => setData('jenis_id', value)}
+                                                        placeholder="Cari dan pilih jenis aset..."
+                                                        jenisOptions={jenisAsetList}
+                                                        onAddNew={() => setIsDialogOpen(true)}
+                                                        disabled={processing}
+                                                    />
                                                     <InputError message={errors.jenis_id} />
                                                 </div>
                                             </div>
@@ -399,6 +346,43 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Dialog for adding new jenis aset */}
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Tambah Jenis Aset Baru</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="nama_jenis_aset">Nama Jenis Aset *</Label>
+                                <Input
+                                    id="nama_jenis_aset"
+                                    type="text"
+                                    value={jenisData.nama_jenis_aset}
+                                    onChange={(e) => setJenisData('nama_jenis_aset', e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleJenisSubmit();
+                                        }
+                                    }}
+                                    placeholder="Contoh: Mikroskop"
+                                    required
+                                />
+                                <InputError message={jenisErrors.nama_jenis_aset} />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                    Batal
+                                </Button>
+                                <Button type="button" onClick={handleJenisSubmit} disabled={jenisProcessing}>
+                                    {jenisProcessing ? 'Menyimpan...' : 'Simpan'}
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

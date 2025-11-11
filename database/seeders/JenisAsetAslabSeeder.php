@@ -22,11 +22,16 @@ class JenisAsetAslabSeeder extends Seeder
             'Perangkat Keras',
             'Peralatan Keamanan',
             'Peralatan Kantor',
-            'Peralatan Maintenance'
+            'Peralatan Maintenance',
+            'Mikroskop',
+            'Sensor & Module',
+            'Development Board',
+            'Peralatan Laboratorium',
+            'Kabel & Connector'
         ];
 
         foreach ($jenisAset as $jenis) {
-            JenisAsetAslab::create([
+            JenisAsetAslab::firstOrCreate([
                 'nama_jenis_aset' => $jenis
             ]);
         }
