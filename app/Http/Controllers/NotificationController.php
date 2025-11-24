@@ -12,10 +12,10 @@ class NotificationController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // Get peminjaman from last 3 days OR pending status (regardless of date)
         $threeDaysAgo = now()->subDays(3);
-        
+
         $peminjamanQuery = PeminjamanAset::with(['asetAslab', 'bahan', 'user', 'approvedBy'])
             ->where(function($query) use ($threeDaysAgo) {
                 $query->where('created_at', '>=', $threeDaysAgo)  // 3 hari terakhir
@@ -23,7 +23,7 @@ class NotificationController extends Controller
             })
             ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")  // Pending di atas
             ->orderBy('created_at', 'desc');
-        
+
         // Filter based on user role
         if (in_array($user->role, ['admin', 'aslab'])) {
             // Admin/aslab see all peminjaman
@@ -32,19 +32,19 @@ class NotificationController extends Controller
             // Regular users only see their own peminjaman
             $peminjamanList = $peminjamanQuery->where('user_id', $user->id)->get();
         }
-        
+
         $notifications = collect();
-        
+
         foreach ($peminjamanList as $peminjaman) {
             $itemName = $peminjaman->asetAslab->nama_aset ?? $peminjaman->bahan->nama ?? 'Item';
-            
+
             if (in_array($user->role, ['admin', 'aslab'])) {
                 // For admin/aslab, show loan requests (focus on pending ones)
                 $isUnread = $peminjaman->status === 'pending';
                 $type = 'peminjaman_created';
                 $title = 'Permintaan Peminjaman';
                 $message = $peminjaman->user->name . ' mengajukan peminjaman ' . $itemName;
-                
+
                 if ($peminjaman->status === 'approved') {
                     $title = 'Peminjaman Disetujui';
                     $message = 'Peminjaman ' . $itemName . ' oleh ' . $peminjaman->user->name . ' telah disetujui';
@@ -54,14 +54,14 @@ class NotificationController extends Controller
                     $message = 'Peminjaman ' . $itemName . ' oleh ' . $peminjaman->user->name . ' telah ditolak';
                     $type = 'peminjaman_rejected';
                 }
-                
+
             } else {
                 // For regular users, show status updates of their requests
                 $isUnread = false;
                 $type = 'peminjaman_created';
                 $title = 'Peminjaman Diajukan';
                 $message = 'Anda mengajukan peminjaman ' . $itemName;
-                
+
                 if ($peminjaman->status === 'approved') {
                     $title = 'Peminjaman Disetujui';
                     $message = 'Peminjaman Anda untuk ' . $itemName . ' telah disetujui';
@@ -74,7 +74,7 @@ class NotificationController extends Controller
                     $isUnread = true; // User should be notified when their request is rejected
                 }
             }
-            
+
             $notifications->push([
                 'id' => 'peminjaman_' . $peminjaman->id,
                 'type' => $type,
@@ -91,10 +91,10 @@ class NotificationController extends Controller
                 'url' => "/peminjaman-barang?highlight={$peminjaman->id}"
             ]);
         }
-        
+
         // Calculate unread count: Only pending status
         $unreadCount = $peminjamanList->where('status', 'pending')->count();
-        
+
         // Sort notifications: unread first (pending for admin, approved/rejected for users)
         $sortedNotifications = $notifications->sortBy(function ($notification) {
             return $notification['isRead'] ? 1 : 0;
@@ -111,7 +111,7 @@ class NotificationController extends Controller
         // Extract peminjaman ID from notification ID
         if (strpos($id, 'peminjaman_') === 0) {
             // For now, we'll just return success since we're using peminjaman data directly
-            // In a full implementation, you might want to create a pivot table 
+            // In a full implementation, you might want to create a pivot table
             // for user_notification_read_status
             return response()->json(['success' => true]);
         }
@@ -133,7 +133,7 @@ class NotificationController extends Controller
             case 'peminjaman_created':
             case 'peminjaman_approved':
             case 'peminjaman_rejected':
-                return "/peminjaman-aset?highlight={$notification->related_model_id}";
+                return "/peminjaman-barang?highlight={$notification->related_model_id}";
             default:
                 return '/dashboard';
         }
@@ -156,7 +156,7 @@ class NotificationController extends Controller
 
         // Tentukan siapa yang akan menerima notifikasi
         $targetUsers = [];
-        
+
         if ($type === 'peminjaman_created') {
             // Kirim ke admin/aslab
             $targetUsers = \App\Models\User::whereIn('role', ['admin', 'aslab'])->get();

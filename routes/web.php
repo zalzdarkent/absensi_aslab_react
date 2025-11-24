@@ -99,19 +99,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
         Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 
-        // Peminjaman Barang routes - accessible to all user types
+        // Peminjaman Barang routes - accessible to all user types (handles both aset and bahan)
         Route::get('/peminjaman-barang/search-items', [PeminjamanBarangController::class, 'searchItems'])->name('peminjaman-barang.search-items');
         Route::resource('peminjaman-barang', PeminjamanBarangController::class);
         Route::post('/peminjaman-barang/{id}/approve', [PeminjamanBarangController::class, 'approve'])->name('peminjaman-barang.approve');
         Route::post('/peminjaman-barang/{id}/return', [PeminjamanBarangController::class, 'return'])->name('peminjaman-barang.return');
-
-        // Peminjaman Aset routes - accessible to all user types
-        Route::get('/peminjaman-aset', [PeminjamanBarangController::class, 'indexAset'])->name('peminjaman-aset.index');
-        Route::get('/peminjaman-aset/create', [PeminjamanBarangController::class, 'createAset'])->name('peminjaman-aset.create');
-        Route::post('/peminjaman-aset', [PeminjamanBarangController::class, 'storeAset'])->name('peminjaman-aset.store');
-        Route::get('/peminjaman-aset/{id}', [PeminjamanBarangController::class, 'showAset'])->name('peminjaman-aset.show');
-        Route::post('/peminjaman-aset/{id}/approve', [PeminjamanBarangController::class, 'approveAset'])->name('peminjaman-aset.approve');
-        Route::post('/peminjaman-aset/{id}/reject', [PeminjamanBarangController::class, 'rejectAset'])->name('peminjaman-aset.reject');
     });
 });
 

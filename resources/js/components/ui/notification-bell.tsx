@@ -151,7 +151,7 @@ export default function NotificationBell({ userRole, className = "" }: Notificat
                                 onClick={() => {
                                     handleNotificationClick({
                                         id: 0,
-                                        url: '/peminjaman-aset',
+                                        url: '/peminjaman-barang',
                                         isRead: true,
                                         type: '',
                                         title: '',
