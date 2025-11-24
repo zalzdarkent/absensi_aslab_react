@@ -150,7 +150,8 @@ class AsetAslabController extends Controller
     {
         $aset = AsetAslab::findOrFail($id);
 
-        $validated = $request->validate([
+        // Validasi field tanpa gambar terlebih dahulu
+        $rules = [
             'nama_aset' => 'required|string|max:255',
             'jenis_id' => 'required|exists:jenis_aset_aslabs,id',
             'kode_aset' => 'required|string|max:255|unique:aset_aslabs,kode_aset,' . $id,
@@ -158,16 +159,26 @@ class AsetAslabController extends Controller
             'stok' => 'required|integer|min:0',
             'status' => 'required|in:baik,kurang_baik,tidak_baik',
             'catatan' => 'nullable|string',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ];
 
+        // Hanya validasi gambar jika ada file yang diupload
         if ($request->hasFile('gambar')) {
-            // Hapus gambar lama jika ada
-            if ($aset->gambar && $aset->gambar !== 'default-aset.png') {
+            $rules['gambar'] = 'image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Handle gambar hanya jika ada file baru yang diupload
+        if ($request->hasFile('gambar')) {
+            // Hapus gambar lama jika ada dan bukan default
+            if ($aset->gambar && $aset->gambar !== 'default-aset.png' && Storage::disk('public')->exists($aset->gambar)) {
                 Storage::disk('public')->delete($aset->gambar);
             }
+
+            // Upload gambar baru
             $validated['gambar'] = $request->file('gambar')->store('aset-aslab', 'public');
         }
+        // Jika tidak ada file gambar baru, jangan update field gambar (biarkan tetap)
 
         $aset->update($validated);
 

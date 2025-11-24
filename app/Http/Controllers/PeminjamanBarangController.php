@@ -754,6 +754,90 @@ class PeminjamanBarangController extends Controller
         }
     }
 
+    public function destroy($id)
+    {
+        // Only admin and aslab can delete records
+        if (!in_array(Auth::user()->role, ['admin', 'aslab'])) {
+            abort(403);
+        }
+
+        // Handle composite ID for unified records
+        $recordType = 'peminjaman'; // default
+        $originalId = $id;
+
+        if (strpos($id, 'peminjaman_') === 0) {
+            $originalId = str_replace('peminjaman_', '', $id);
+            $recordType = 'peminjaman';
+        } elseif (strpos($id, 'penggunaan_') === 0) {
+            $originalId = str_replace('penggunaan_', '', $id);
+            $recordType = 'penggunaan';
+        }
+
+        try {
+            DB::beginTransaction();
+
+            if ($recordType === 'peminjaman') {
+                $peminjaman = PeminjamanAset::with(['asetAslab', 'bahan'])->findOrFail($originalId);
+
+                // If the record is pending or rejected, we need to restore the stock
+                if (in_array($peminjaman->status, [PeminjamanAset::STATUS_PENDING, PeminjamanAset::STATUS_REJECTED])) {
+                    if ($peminjaman->aset_id) {
+                        // Restore aset stock
+                        $aset = AsetAslab::where('id', $peminjaman->aset_id)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($aset) {
+                            $aset->increment('stok', $peminjaman->stok);
+                            Log::info("Stock restored for deleted peminjaman aset {$aset->nama_aset}: {$peminjaman->stok} units");
+                        }
+                    } elseif ($peminjaman->bahan_id) {
+                        // Restore bahan stock
+                        $bahan = Bahan::where('id', $peminjaman->bahan_id)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($bahan) {
+                            $bahan->increment('stok', $peminjaman->stok);
+                            Log::info("Stock restored for deleted peminjaman bahan {$bahan->nama}: {$peminjaman->stok} units");
+                        }
+                    }
+                }
+
+                // Delete the peminjaman record
+                $peminjaman->delete();
+
+                Log::info("Peminjaman record deleted", [
+                    'deleted_by' => Auth::id(),
+                    'peminjaman_id' => $originalId,
+                    'status' => $peminjaman->status
+                ]);
+
+            } else {
+                // Delete penggunaan bahan record
+                $penggunaan = PenggunaanBahan::findOrFail($originalId);
+                $penggunaan->delete();
+
+                Log::info("Penggunaan bahan record deleted", [
+                    'deleted_by' => Auth::id(),
+                    'penggunaan_id' => $originalId
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Data peminjaman berhasil dihapus');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Delete peminjaman failed', [
+                'error' => $e->getMessage(),
+                'record_id' => $originalId,
+                'record_type' => $recordType
+            ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
     // Peminjaman Aset Methods
     public function indexAset()
     {

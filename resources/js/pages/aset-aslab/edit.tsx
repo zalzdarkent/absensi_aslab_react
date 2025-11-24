@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { JenisCombobox } from '@/components/ui/jenis-combobox';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
+import InputError from '@/components/input-error';
 
 interface JenisAset {
     id: number;
@@ -42,7 +44,7 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
         aset.gambar ? `/storage/${aset.gambar}` : null
     );
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, processing, errors } = useForm({
         nama_aset: aset.nama_aset,
         jenis_id: aset.jenis_id.toString(),
         kode_aset: aset.kode_aset,
@@ -50,38 +52,55 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
         stok: aset.stok,
         status: aset.status,
         catatan: aset.catatan || '',
-        gambar: null as File | null,
-        _method: 'PUT',
     });
+
+    // Separate state untuk gambar agar tidak masuk ke form data utama
+    const [newImage, setNewImage] = useState<File | null>(null);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const formData = new FormData();
-        formData.append('nama_aset', data.nama_aset);
-        formData.append('jenis_id', data.jenis_id);
-        formData.append('kode_aset', data.kode_aset);
-        formData.append('nomor_seri', data.nomor_seri);
-        formData.append('stok', data.stok.toString());
-        formData.append('status', data.status);
-        formData.append('catatan', data.catatan);
-        formData.append('_method', 'PUT');
-        if (data.gambar) {
-            formData.append('gambar', data.gambar);
-        }
+        // Jika ada gambar baru, gunakan FormData dengan method spoofing
+        if (newImage) {
+            const formData = new FormData();
+            formData.append('_method', 'PUT');
+            formData.append('nama_aset', data.nama_aset);
+            formData.append('jenis_id', data.jenis_id);
+            formData.append('kode_aset', data.kode_aset);
+            formData.append('nomor_seri', data.nomor_seri);
+            formData.append('stok', data.stok.toString());
+            formData.append('status', data.status);
+            formData.append('catatan', data.catatan);
+            formData.append('gambar', newImage);
 
-        post(`/aset-aslab/${aset.id}`, {
-            forceFormData: true,
-            onSuccess: () => {
-                toast.success('Aset berhasil diperbarui!');
-            },
-        });
+            router.post(`/aset-aslab/${aset.id}`, formData, {
+                forceFormData: true,
+                onSuccess: () => {
+                    toast.success('Aset berhasil diperbarui!');
+                },
+                onError: (errors: Record<string, string>) => {
+                    console.error('Error updating asset:', errors);
+                    toast.error('Gagal memperbarui aset!');
+                }
+            });
+        } else {
+            // Jika tidak ada gambar baru, gunakan PUT biasa
+            router.put(`/aset-aslab/${aset.id}`, data, {
+                onSuccess: () => {
+                    toast.success('Aset berhasil diperbarui!');
+                },
+                onError: (errors: Record<string, string>) => {
+                    console.error('Error updating asset:', errors);
+                    toast.error('Gagal memperbarui aset!');
+                }
+            });
+        }
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setData('gambar', file);
+            setNewImage(file);
             const reader = new FileReader();
             reader.onload = (e) => {
                 setImagePreview(e.target?.result as string);
@@ -91,31 +110,30 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
     };
 
     const removeImage = () => {
-        setData('gambar', null);
-        setImagePreview(aset.gambar ? `/storage/${aset.gambar}` : null);
+        setNewImage(null);
+        setImagePreview(null);
     };
 
     return (
         <AppLayout>
             <Head title={`Edit Aset - ${aset.nama_aset}`} />
 
-            <div className="p-6">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header */}
-                    <div className="flex items-center gap-4 mb-6">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/aset-aslab">
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Kembali
-                            </Link>
-                        </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Aset</h1>
-                            <p className="text-gray-600 dark:text-gray-400 mt-2">Perbarui informasi aset {aset.nama_aset}</p>
-                        </div>
+            <div className="space-y-6 py-4">
+                {/* Header */}
+                <div className="space-y-4">
+                    <Button variant="outline" size="sm" asChild className="w-fit">
+                        <Link href="/aset-aslab">
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Kembali
+                        </Link>
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Aset</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">Perbarui informasi aset {aset.nama_aset}</p>
                     </div>
+                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Form Fields */}
                             <div className="lg:col-span-2 space-y-6">
@@ -139,31 +157,19 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                                                     placeholder="Contoh: Mikroskop Digital"
                                                     className="focus:ring-blue-500"
                                                 />
-                                                {errors.nama_aset && (
-                                                    <p className="text-sm text-red-600">{errors.nama_aset}</p>
-                                                )}
+                                                <InputError message={errors.nama_aset} />
                                             </div>
 
                                             <div className="space-y-2">
                                                 <Label htmlFor="jenis_id">Jenis Aset *</Label>
-                                                <Select
+                                                <JenisCombobox
                                                     value={data.jenis_id}
                                                     onValueChange={(value) => setData('jenis_id', value)}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Pilih jenis aset" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {jenisAsets.map((jenis) => (
-                                                            <SelectItem key={jenis.id} value={jenis.id.toString()}>
-                                                                {jenis.nama_jenis_aset}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                {errors.jenis_id && (
-                                                    <p className="text-sm text-red-600">{errors.jenis_id}</p>
-                                                )}
+                                                    placeholder="Cari dan pilih jenis aset..."
+                                                    jenisOptions={jenisAsets}
+                                                    disabled={processing}
+                                                />
+                                                <InputError message={errors.jenis_id} />
                                             </div>
                                         </div>
 
@@ -174,13 +180,12 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                                                     id="kode_aset"
                                                     type="text"
                                                     value={data.kode_aset}
-                                                    onChange={(e) => setData('kode_aset', e.target.value)}
+                                                    readOnly
                                                     placeholder="Contoh: AST-001"
-                                                    className="font-mono focus:ring-blue-500"
+                                                    className="font-mono bg-muted"
                                                 />
-                                                {errors.kode_aset && (
-                                                    <p className="text-sm text-red-600">{errors.kode_aset}</p>
-                                                )}
+                                                <InputError message={errors.kode_aset} />
+                                                <p className="text-xs text-muted-foreground">(Kode aset tidak dapat diubah)</p>
                                             </div>
 
                                             <div className="space-y-2">
@@ -193,9 +198,7 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                                                     placeholder="Contoh: SN123456789"
                                                     className="font-mono focus:ring-blue-500"
                                                 />
-                                                {errors.nomor_seri && (
-                                                    <p className="text-sm text-red-600">{errors.nomor_seri}</p>
-                                                )}
+                                                <InputError message={errors.nomor_seri} />
                                             </div>
                                         </div>
                                     </CardContent>
@@ -221,9 +224,7 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                                                     onChange={(e) => setData('stok', parseInt(e.target.value) || 0)}
                                                     className="focus:ring-blue-500"
                                                 />
-                                                {errors.stok && (
-                                                    <p className="text-sm text-red-600">{errors.stok}</p>
-                                                )}
+                                                <InputError message={errors.stok} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -241,9 +242,7 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                                                         <SelectItem value="tidak_baik">Tidak Baik</SelectItem>
                                                     </SelectContent>
                                                 </Select>
-                                                {errors.status && (
-                                                    <p className="text-sm text-red-600">{errors.status}</p>
-                                                )}
+                                                <InputError message={errors.status} />
                                             </div>
                                         </div>
 
@@ -257,9 +256,7 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                                                 rows={4}
                                                 className="focus:ring-blue-500"
                                             />
-                                            {errors.catatan && (
-                                                <p className="text-sm text-red-600">{errors.catatan}</p>
-                                            )}
+                                            <InputError message={errors.catatan} />
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -314,24 +311,24 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                                                         <X className="h-4 w-4" />
                                                     </Button>
                                                     <div className="absolute bottom-2 left-2">
-                                                        <label htmlFor="gambar" className="cursor-pointer">
-                                                            <Button type="button" variant="secondary" size="sm">
-                                                                <Upload className="h-4 w-4 mr-2" />
-                                                                Ganti Gambar
-                                                            </Button>
-                                                        </label>
                                                         <input
-                                                            id="gambar"
+                                                            id="gambar-ganti"
                                                             type="file"
                                                             className="hidden"
                                                             accept="image/*"
                                                             onChange={handleImageChange}
                                                         />
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            onClick={() => document.getElementById('gambar-ganti')?.click()}
+                                                        >
+                                                            <Upload className="h-4 w-4 mr-2" />
+                                                            Ganti Gambar
+                                                        </Button>
                                                     </div>
                                                 </div>
-                                            )}
-                                            {errors.gambar && (
-                                                <p className="text-sm text-red-600">{errors.gambar}</p>
                                             )}
                                         </div>
                                     </CardContent>
@@ -360,7 +357,6 @@ export default function AsetAslabEdit({ aset, jenisAsets }: Props) {
                         </div>
                     </form>
                 </div>
-            </div>
         </AppLayout>
     );
 }

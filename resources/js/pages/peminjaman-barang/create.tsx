@@ -410,7 +410,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                         </CardHeader>
                     </Card>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 lg:gap-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 lg:gap-6 mt-6">
                         {/* Products Grid */}
                         <div className="xl:col-span-3 order-1 xl:order-1">
                             {allLoadedItems.length === 0 ? (
