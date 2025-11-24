@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   CalendarDays,
   Users,
@@ -122,18 +123,18 @@ function DraggableAslab({ aslab, currentDay, isAdmin, onEdit }: DraggableAslabPr
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 bg-white/10 rounded-lg p-3 cursor-grab active:cursor-grabbing transition-all ${
-        isDragging ? 'opacity-50 rotate-2 scale-105' : ''
+      className={`flex items-center gap-2 bg-white/10 rounded-md p-2 cursor-grab active:cursor-grabbing transition-all ${
+        isDragging ? 'opacity-50 rotate-1 scale-105' : ''
       } ${isAdmin ? 'hover:bg-white/20' : ''} ${
-        hasPendingChange ? 'ring-2 ring-yellow-400/50' : ''
+        hasPendingChange ? 'ring-1 ring-yellow-400/50' : ''
       }`}
       {...attributes}
       {...listeners}
     >
       {isAdmin && (
-        <GripVertical className="h-4 w-4 text-white/40" />
+        <GripVertical className="h-3 w-3 text-white/40 flex-shrink-0" />
       )}
-      <Avatar className="h-8 w-8">
+      <Avatar className="h-6 w-6 flex-shrink-0">
         <AvatarFallback className="text-xs bg-white/20 text-white">
           {aslab.name
             .split(' ')
@@ -144,21 +145,21 @@ function DraggableAslab({ aslab, currentDay, isAdmin, onEdit }: DraggableAslabPr
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-white text-sm truncate">
+        <p className="font-medium text-white text-xs truncate">
           {aslab.name}
           {hasPendingChange && (
             <span className="ml-1 text-yellow-300 text-xs">●</span>
           )}
         </p>
         <p className="text-white/70 text-xs">
-          {aslab.prodi} • Sem {aslab.semester}
+          {aslab.prodi} • S{aslab.semester}
         </p>
       </div>
       {isAdmin && (
         <Button
           size="sm"
           variant="ghost"
-          className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
+          className="h-5 w-5 p-0 text-white/60 hover:text-white hover:bg-white/10 flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation();
             onEdit(aslab);
@@ -194,30 +195,30 @@ function DroppableDayCard({ day, aslabs, isAdmin, onEdit }: DroppableDayCardProp
   return (
     <Card
       ref={setNodeRef}
-      className={`bg-gradient-to-br ${dayColors[day as keyof typeof dayColors]} border-0 text-white min-h-[200px] transition-all ${
-        isOver ? 'ring-4 ring-white/50 scale-105' : ''
+      className={`bg-gradient-to-br ${dayColors[day as keyof typeof dayColors]} border-0 text-white h-80 transition-all duration-200 ${
+        isOver ? 'ring-4 ring-white/50 scale-105 shadow-2xl' : 'shadow-lg hover:shadow-xl'
       }`}
     >
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-bold text-center text-white flex items-center justify-center gap-2">
-          <span className="text-xl">{dayIcons[day as keyof typeof dayIcons]}</span>
-          {dayNames[day as keyof typeof dayNames]}
+      <CardHeader className="pb-3 px-4 pt-4">
+        <CardTitle className="text-base font-bold text-center text-white flex items-center justify-center gap-2">
+          <span className="text-lg">{dayIcons[day as keyof typeof dayIcons]}</span>
+          <span className="text-sm">{dayNames[day as keyof typeof dayNames]}</span>
         </CardTitle>
-        <Badge variant="secondary" className="w-fit mx-auto bg-white/20 text-white border-0">
+        <Badge variant="secondary" className="w-fit mx-auto bg-white/20 text-white border-0 text-xs">
           {aslabs.length} Aslab
         </Badge>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 px-4 pb-4 h-52 overflow-y-auto">
         <SortableContext
           items={aslabs.map(aslab => `aslab-${aslab.id}`)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-3 min-h-[100px]">
+          <div className="space-y-2">
             {aslabs.length === 0 ? (
-              <div className={`text-center py-4 border-2 border-dashed border-white/30 rounded-lg transition-all ${
+              <div className={`text-center py-6 border-2 border-dashed border-white/30 rounded-lg transition-all ${
                 isOver ? 'border-white/60 bg-white/10' : ''
               }`}>
-                <p className="text-white/70 text-sm">
+                <p className="text-white/70 text-xs">
                   {isOver ? 'Lepaskan disini' : 'Belum ada aslab'}
                 </p>
               </div>
@@ -562,18 +563,29 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
                   <span>Jadwal Piket</span>
                 </h1>
                 {hasUnsavedChanges && (
-                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs w-fit">
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs w-fit">
                     {pendingChanges.length} perubahan belum disimpan
                   </Badge>
                 )}
               </div>
               <div className="text-sm sm:text-base text-muted-foreground space-y-1">
-                <p>Kelola jadwal piket asisten laboratorium</p>
-                {currentUser.role === 'admin' && (
-                  <p className="text-xs sm:text-sm text-blue-600">
-                    💡 Tip: Drag & drop aslab untuk mengubah jadwal piket
-                  </p>
-                )}
+                <div className="flex items-center gap-2">
+                  <p>Kelola jadwal piket asisten laboratorium</p>
+                  {currentUser.role === 'admin' && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-flex items-center justify-center w-4 h-4 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-full text-xs cursor-help">
+                            💡
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>Drag & drop aslab untuk mengubah jadwal piket</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -624,8 +636,8 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
                     size="sm"
                     className="flex-1 sm:flex-none bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                   >
-                    <Sparkles className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-xs sm:text-sm">Generate</span>
+                    <Sparkles className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 text-black dark:text-white" />
+                    <span className="text-xs sm:text-sm text-black dark:text-white">Generate</span>
                   </Button>
                 </div>
               </div>
@@ -687,38 +699,38 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
                 ]}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="space-y-4">
-                  {/* Mobile: Stack all days vertically, Desktop: Grid layout */}
-                  <div className="space-y-4 lg:space-y-0">
-                    {/* First Row: Senin - Rabu */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {Object.entries(localJadwalPiket)
-                        .filter(([day]) => ['senin', 'selasa', 'rabu'].includes(day))
-                        .map(([day, aslabs]) => (
-                          <DroppableDayCard
-                            key={day}
-                            day={day}
-                            aslabs={aslabs}
-                            isAdmin={currentUser.role === 'admin'}
-                            onEdit={handleSwapSchedule}
-                          />
-                        ))}
-                    </div>
+                {/* Custom Grid Layout - 3 cards first row, 2 cards second row */}
+                <div className="space-y-4 md:space-y-6">
+                  {/* First row: Senin, Selasa, Rabu */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {Object.entries(localJadwalPiket)
+                      .filter(([day]) => ['senin', 'selasa', 'rabu'].includes(day))
+                      .map(([day, aslabs]) => (
+                        <DroppableDayCard
+                          key={day}
+                          day={day}
+                          aslabs={aslabs}
+                          isAdmin={currentUser.role === 'admin'}
+                          onEdit={handleSwapSchedule}
+                        />
+                      ))}
+                  </div>
 
-                    {/* Second Row: Kamis - Jumat */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:max-w-2xl">
-                      {Object.entries(localJadwalPiket)
-                        .filter(([day]) => ['kamis', 'jumat'].includes(day))
-                        .map(([day, aslabs]) => (
-                          <DroppableDayCard
-                            key={day}
-                            day={day}
-                            aslabs={aslabs}
-                            isAdmin={currentUser.role === 'admin'}
-                            onEdit={handleSwapSchedule}
-                          />
-                        ))}
-                    </div>
+                  {/* Second row: Kamis, Jumat */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {Object.entries(localJadwalPiket)
+                      .filter(([day]) => ['kamis', 'jumat'].includes(day))
+                      .map(([day, aslabs]) => (
+                        <DroppableDayCard
+                          key={day}
+                          day={day}
+                          aslabs={aslabs}
+                          isAdmin={currentUser.role === 'admin'}
+                          onEdit={handleSwapSchedule}
+                        />
+                      ))}
+                    {/* Empty placeholder for third column to maintain alignment */}
+                    <div className="hidden lg:block"></div>
                   </div>
                 </div>
               </SortableContext>
@@ -739,12 +751,23 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  Aslab yang belum memiliki jadwal piket
-                  {currentUser.role === 'admin' && (
-                    <span className="block text-xs sm:text-sm text-blue-600 mt-1">
-                      💡 Drag aslab ke hari yang diinginkan untuk memberi jadwal
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <span>Aslab yang belum memiliki jadwal piket</span>
+                    {currentUser.role === 'admin' && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center justify-center w-4 h-4 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-full text-xs cursor-help">
+                              💡
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p>Drag aslab ke hari yang diinginkan untuk memberi jadwal</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -772,28 +795,28 @@ export default function JadwalPiketIndex({ allAslabs }: Props) {
 
           {/* Pending Changes Card */}
           {pendingChanges.length > 0 && (
-            <Card className="border-yellow-200 bg-yellow-50">
+            <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
               <CardHeader>
-                <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-yellow-800">
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-amber-800 dark:text-amber-200">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="text-lg sm:text-xl">Perubahan Belum Disimpan</span>
                   </div>
-                  <Badge variant="secondary" className="w-fit bg-yellow-200 text-yellow-800 text-xs">
+                  <Badge variant="secondary" className="w-fit bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs">
                     {pendingChanges.length} perubahan
                   </Badge>
                 </CardTitle>
-                <CardDescription className="text-yellow-700 text-sm">
+                <CardDescription className="text-amber-700 dark:text-amber-300 text-sm">
                   Perubahan berikut akan disimpan saat klik "Simpan Perubahan"
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 sm:space-y-3">
                   {pendingChanges.map((change, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div key={index} className="flex items-center justify-between p-3 bg-background rounded-lg border">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         <Avatar className="h-8 w-8 flex-shrink-0">
-                          <AvatarFallback className="text-xs bg-yellow-100 text-yellow-800">
+                          <AvatarFallback className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
                             {getInitials(change.user_name)}
                           </AvatarFallback>
                         </Avatar>
