@@ -20,7 +20,10 @@ class PeminjamanAset extends Model
         'approval_note',
         'keterangan',
         'agreement_accepted',
-        'target_return_date'
+        'target_return_date',
+        'manual_borrower_name',
+        'manual_borrower_phone',
+        'manual_borrower_class'
     ];
 
     protected $casts = [

@@ -52,6 +52,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
         updateQuantity,
         updateReturnDate,
         updateNote,
+        updateManualBorrower,
         removeFromCart,
         clearCart,
         findCartItem,
@@ -590,6 +591,7 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
                     onUpdateQuantity={updateQuantity}
                     onUpdateReturnDate={updateReturnDate}
                     onUpdateNote={updateNote}
+                    onUpdateManualBorrower={updateManualBorrower}
                     onRemoveItem={handleRemoveFromCart}
                     onClearCart={handleClearCart}
                     isAnimating={cartAnimation}

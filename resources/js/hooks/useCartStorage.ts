@@ -10,6 +10,9 @@ export interface CartItem {
     quantity: number;
     targetReturnDate: string;
     note?: string;
+    manualBorrowerName?: string;
+    manualBorrowerPhone?: string;
+    manualBorrowerClass?: string;
 }
 
 const CART_STORAGE_KEY = 'peminjaman_cart';
@@ -77,6 +80,18 @@ export function useCartStorage() {
         ));
     }, []);
 
+    const updateManualBorrower = useCallback((id: number, type: 'aset' | 'bahan', field: 'name' | 'phone' | 'class', value: string) => {
+        setCartItems(prev => prev.map(item => {
+            if (item.id === id && item.type === type) {
+                return {
+                    ...item,
+                    [`manualBorrower${field.charAt(0).toUpperCase() + field.slice(1)}`]: value
+                };
+            }
+            return item;
+        }));
+    }, []);
+
     const removeFromCart = useCallback((id: number, type: 'aset' | 'bahan') => {
         setCartItems(prev => prev.filter(item =>
             !(item.id === id && item.type === type)
@@ -105,6 +120,7 @@ export function useCartStorage() {
         updateQuantity,
         updateReturnDate,
         updateNote,
+        updateManualBorrower,
         removeFromCart,
         clearCart,
         findCartItem,

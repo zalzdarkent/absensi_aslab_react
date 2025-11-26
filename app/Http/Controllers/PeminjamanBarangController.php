@@ -73,6 +73,9 @@ class PeminjamanBarangController extends Controller
                 'keterangan' => $peminjaman->keterangan,
                 'approved_by' => $peminjaman->approvedBy?->name ?? null,
                 'approved_at' => $peminjaman->approved_at,
+                'manual_borrower_name' => $peminjaman->manual_borrower_name,
+                'manual_borrower_phone' => $peminjaman->manual_borrower_phone,
+                'manual_borrower_class' => $peminjaman->manual_borrower_class,
                 // Add raw item data for detail modal
                 'aset_data' => $peminjaman->asetAslab,
                 'bahan_data' => $peminjaman->bahan,
@@ -294,6 +297,9 @@ class PeminjamanBarangController extends Controller
                         'status' => PeminjamanAset::STATUS_PENDING,
                         'keterangan' => $validated['note'],
                         'agreement_accepted' => $request->agreement_accepted,
+                        'manual_borrower_name' => $validated['manual_borrower_name'],
+                        'manual_borrower_phone' => $validated['manual_borrower_phone'],
+                        'manual_borrower_class' => $validated['manual_borrower_class'],
                     ]);
 
                     $createdRecords[] = $record;
@@ -329,6 +335,9 @@ class PeminjamanBarangController extends Controller
                         'status' => PeminjamanAset::STATUS_PENDING,
                         'keterangan' => $validated['note'],
                         'agreement_accepted' => $request->agreement_accepted,
+                        'manual_borrower_name' => $validated['manual_borrower_name'],
+                        'manual_borrower_phone' => $validated['manual_borrower_phone'],
+                        'manual_borrower_class' => $validated['manual_borrower_class'],
                     ]);
 
                     $createdRecords[] = $record;
@@ -407,6 +416,9 @@ class PeminjamanBarangController extends Controller
                         'approved_by' => $record->approvedBy?->name,
                         'approved_at' => $record->approved_at,
                         'agreement_accepted' => $record->agreement_accepted,
+                        'manual_borrower_name' => $record->manual_borrower_name,
+                        'manual_borrower_phone' => $record->manual_borrower_phone,
+                        'manual_borrower_class' => $record->manual_borrower_class,
                     ]
                 ]);
             } elseif ($record->bahan_id && $record->bahan) {
@@ -429,6 +441,9 @@ class PeminjamanBarangController extends Controller
                         'approved_by' => $record->approvedBy?->name,
                         'approved_at' => $record->approved_at,
                         'agreement_accepted' => $record->agreement_accepted,
+                        'manual_borrower_name' => $record->manual_borrower_name,
+                        'manual_borrower_phone' => $record->manual_borrower_phone,
+                        'manual_borrower_class' => $record->manual_borrower_class,
                     ]
                 ]);
             } else {
@@ -621,8 +636,8 @@ class PeminjamanBarangController extends Controller
                 throw new \Exception('Target return date is required for aset');
             }
 
-            if (Carbon::parse($item['target_return_date'])->isPast()) {
-                throw new \Exception('Target return date must be in the future');
+            if (Carbon::parse($item['target_return_date'])->lt(Carbon::today())) {
+                throw new \Exception('Target return date must not be in the past');
             }
         }
 
@@ -632,6 +647,9 @@ class PeminjamanBarangController extends Controller
             'quantity' => (int)$item['quantity'],
             'target_return_date' => $item['item_type'] === 'aset' ? $item['target_return_date'] : null,
             'note' => $item['note'] ?? '',
+            'manual_borrower_name' => $item['manual_borrower_name'] ?? null,
+            'manual_borrower_phone' => $item['manual_borrower_phone'] ?? null,
+            'manual_borrower_class' => $item['manual_borrower_class'] ?? null,
         ];
     }
 

@@ -30,6 +30,9 @@ interface PinjamBarang {
     keterangan?: string;
     approved_by?: string;
     approved_at?: string;
+    manual_borrower_name?: string;
+    manual_borrower_phone?: string;
+    manual_borrower_class?: string;
 }
 
 interface PeminjamanDetailModalProps {
@@ -194,6 +197,33 @@ export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onRetu
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Approval Info - Show in left column if manual borrower data exists */}
+                            {(peminjaman.manual_borrower_name || peminjaman.manual_borrower_phone || peminjaman.manual_borrower_class) && (peminjaman.approved_by || peminjaman.approved_at) && (
+                                <div className="border-t border-border pt-4">
+                                    <h3 className="text-lg font-semibold text-foreground mb-3">Informasi Persetujuan</h3>
+                                    <div className="space-y-3">
+                                        {peminjaman.approved_by && (
+                                            <div className="flex items-center gap-3">
+                                                <UserCheck className="h-4 w-4 text-muted-foreground" />
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Disetujui oleh</p>
+                                                    <p className="font-medium">{peminjaman.approved_by}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {peminjaman.approved_at && (
+                                            <div className="flex items-center gap-3">
+                                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Waktu Persetujuan</p>
+                                                    <p className="font-medium">{formatDateTime(peminjaman.approved_at)}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Right Column */}
@@ -218,8 +248,49 @@ export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onRetu
                                 </div>
                             </div>
 
-                            {/* Approval Info */}
-                            {(peminjaman.approved_by || peminjaman.approved_at) && (
+                            {/* Manual Borrower Data - Only show if data exists */}
+                            {(peminjaman.manual_borrower_name || peminjaman.manual_borrower_phone || peminjaman.manual_borrower_class) && (
+                                <div className="border-t border-border pt-4">
+                                    <h3 className="text-lg font-semibold text-foreground mb-3">Data Peminjam Manual</h3>
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                        <div className="space-y-3">
+                                            {peminjaman.manual_borrower_name && (
+                                                <div className="flex items-center gap-3">
+                                                    <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                    <div>
+                                                        <p className="text-sm text-blue-700 dark:text-blue-300">Nama</p>
+                                                        <p className="font-medium text-blue-800 dark:text-blue-200">{peminjaman.manual_borrower_name}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {peminjaman.manual_borrower_phone && (
+                                                <div className="flex items-center gap-3">
+                                                    <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                    <div>
+                                                        <p className="text-sm text-blue-700 dark:text-blue-300">No. Telepon</p>
+                                                        <p className="font-medium text-blue-800 dark:text-blue-200">{peminjaman.manual_borrower_phone}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {peminjaman.manual_borrower_class && (
+                                                <div className="flex items-center gap-3">
+                                                    <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                    <div>
+                                                        <p className="text-sm text-blue-700 dark:text-blue-300">Kelas/Jabatan</p>
+                                                        <p className="font-medium text-blue-800 dark:text-blue-200">{peminjaman.manual_borrower_class}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 italic">
+                                            Data peminjam yang datang langsung ke aslab
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Approval Info - Show in right column if NO manual borrower data */}
+                            {!(peminjaman.manual_borrower_name || peminjaman.manual_borrower_phone || peminjaman.manual_borrower_class) && (peminjaman.approved_by || peminjaman.approved_at) && (
                                 <div className="border-t border-border pt-4">
                                     <h3 className="text-lg font-semibold text-foreground mb-3">Informasi Persetujuan</h3>
                                     <div className="space-y-3">

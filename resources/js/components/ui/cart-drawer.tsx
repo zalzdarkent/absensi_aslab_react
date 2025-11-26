@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ShoppingCart, Plus, Minus, Trash2, Package, Beaker, Send, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Package, Beaker, Send, AlertTriangle, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -20,6 +20,9 @@ export interface CartItem {
     quantity: number;
     targetReturnDate: string;
     note?: string;
+    manualBorrowerName?: string;
+    manualBorrowerPhone?: string;
+    manualBorrowerClass?: string;
 }
 
 interface CartDrawerProps {
@@ -27,6 +30,7 @@ interface CartDrawerProps {
     onUpdateQuantity: (id: number, type: 'aset' | 'bahan', quantity: number) => void;
     onUpdateReturnDate: (id: number, type: 'aset' | 'bahan', date: string) => void;
     onUpdateNote: (id: number, type: 'aset' | 'bahan', note: string) => void;
+    onUpdateManualBorrower: (id: number, type: 'aset' | 'bahan', field: 'name' | 'phone' | 'class', value: string) => void;
     onRemoveItem: (id: number, type: 'aset' | 'bahan') => void;
     onClearCart: () => void;
     isAnimating?: boolean;
@@ -37,6 +41,7 @@ export function CartDrawer({
     onUpdateQuantity,
     onUpdateReturnDate,
     onUpdateNote,
+    onUpdateManualBorrower,
     onRemoveItem,
     onClearCart,
     isAnimating = false
@@ -87,10 +92,10 @@ export function CartDrawer({
         }
 
         const today = new Date().toISOString().split('T')[0];
-        const invalidItems = items.filter(item => item.targetReturnDate <= today);
+        const invalidItems = items.filter(item => !item.targetReturnDate || item.targetReturnDate < today);
         if (invalidItems.length > 0) {
-            toast.error('Tanggal pengembalian tidak valid', {
-                description: 'Tanggal pengembalian harus setelah hari ini'
+            toast.error('Tanggal pengembalian wajib diisi', {
+                description: 'Tanggal pengembalian harus diisi dan tidak boleh hari kemarin'
             });
             return;
         }
@@ -103,7 +108,10 @@ export function CartDrawer({
                 item_type: item.type,
                 quantity: item.quantity,
                 target_return_date: item.targetReturnDate,
-                note: item.note || ''
+                note: item.note || '',
+                manual_borrower_name: item.manualBorrowerName || null,
+                manual_borrower_phone: item.manualBorrowerPhone || null,
+                manual_borrower_class: item.manualBorrowerClass || null
             }))),
             agreement_accepted: agreementAccepted ? 1 : 0
         }, {
@@ -273,19 +281,61 @@ export function CartDrawer({
 
                                             {/* Return Date */}
                                             <div className="space-y-1 sm:space-y-2">
-                                                <Label className="text-xs sm:text-sm font-medium">Target Kembali:</Label>
+                                                <Label className="text-xs sm:text-sm font-medium">
+                                                    Target Kembali: <span className="text-red-500">*</span>
+                                                </Label>
                                                 <Input
                                                     type="date"
                                                     value={item.targetReturnDate}
                                                     min={new Date().toISOString().split('T')[0]}
                                                     onChange={(e) => onUpdateReturnDate(item.id, item.type, e.target.value)}
                                                     className="text-xs sm:text-sm h-8 sm:h-9"
+                                                    required
                                                 />
+                                            </div>
+
+
+                                            {/* Manual Borrower Data */}
+                                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 sm:p-3">
+                                                <div className="flex items-center gap-1 sm:gap-2 mb-2">
+                                                    <User className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                                                    <Label className="text-xs font-medium text-blue-800 dark:text-blue-200">
+                                                        Peminjaman Manual (Opsional)
+                                                    </Label>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="Nama peminjam..."
+                                                        value={item.manualBorrowerName || ''}
+                                                        onChange={(e) => onUpdateManualBorrower(item.id, item.type, 'name', e.target.value)}
+                                                        className="text-xs h-7 border-blue-200 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-400"
+                                                    />
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <Input
+                                                            type="text"
+                                                            placeholder="No. telepon..."
+                                                            value={item.manualBorrowerPhone || ''}
+                                                            onChange={(e) => onUpdateManualBorrower(item.id, item.type, 'phone', e.target.value)}
+                                                            className="text-xs h-7 border-blue-200 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-400"
+                                                        />
+                                                        <Input
+                                                            type="text"
+                                                            placeholder="Kelas"
+                                                            value={item.manualBorrowerClass || ''}
+                                                            onChange={(e) => onUpdateManualBorrower(item.id, item.type, 'class', e.target.value)}
+                                                            className="text-xs h-7 border-blue-200 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-400"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 italic">
+                                                    Untuk peminjaman orang lain yang datang langsung
+                                                </p>
                                             </div>
 
                                             {/* Note */}
                                             <div className="space-y-1 sm:space-y-2">
-                                                <Label className="text-xs sm:text-sm font-medium">Catatan:</Label>
+                                                <Label className="text-xs sm:text-sm font-medium">Catatan (Opsional):</Label>
                                                 <Input
                                                     type="text"
                                                     placeholder="Keperluan..."
