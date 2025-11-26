@@ -92,17 +92,27 @@ export function CartDrawer({
         }
 
         const today = new Date().toISOString().split('T')[0];
+        console.log('Debug validation:', {
+            today,
+            items: items.map(item => ({
+                name: item.name,
+                targetReturnDate: item.targetReturnDate,
+                isValid: item.targetReturnDate && item.targetReturnDate >= today
+            }))
+        });
+
         const invalidItems = items.filter(item => !item.targetReturnDate || item.targetReturnDate < today);
         if (invalidItems.length > 0) {
+            console.error('Invalid items found:', invalidItems);
             toast.error('Tanggal pengembalian wajib diisi', {
-                description: 'Tanggal pengembalian harus diisi dan tidak boleh hari kemarin'
+                description: 'Tanggal pengembalian harus diisi dan tidak boleh lebih awal dari hari ini'
             });
             return;
         }
 
         setIsSubmitting(true);
 
-        router.post('/peminjaman-barang', {
+        const requestData = {
             items: JSON.stringify(items.map(item => ({
                 item_id: item.id,
                 item_type: item.type,
@@ -114,7 +124,12 @@ export function CartDrawer({
                 manual_borrower_class: item.manualBorrowerClass || null
             }))),
             agreement_accepted: agreementAccepted ? 1 : 0
-        }, {
+        };
+
+        console.log('Sending request:', requestData);
+        console.log('Parsed items:', JSON.parse(requestData.items));
+
+        router.post('/peminjaman-barang', requestData, {
             onSuccess: () => {
                 toast.success('Permintaan peminjaman berhasil dikirim', {
                     description: 'Menunggu persetujuan dari admin/aslab'
@@ -137,7 +152,8 @@ export function CartDrawer({
                 setAgreementAccepted(false);
                 setIsSheetOpen(false);
             },
-            onError: () => {
+            onError: (errors) => {
+                console.error('Request failed:', errors);
                 toast.error('Gagal mengirim permintaan', {
                     description: 'Silakan coba lagi'
                 });

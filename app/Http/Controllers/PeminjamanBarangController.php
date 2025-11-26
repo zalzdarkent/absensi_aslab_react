@@ -253,8 +253,14 @@ class PeminjamanBarangController extends Controller
             return back()->withErrors(['items' => 'No items selected']);
         }
 
-        // Debug log
-        Log::info('Peminjaman items:', $items);
+        // Debug log untuk melihat data yang diterima
+        Log::info('Store method debug', [
+            'raw_items' => $request->items,
+            'parsed_items' => $items,
+            'agreement_accepted' => $request->agreement_accepted,
+            'current_date' => Carbon::today()->toDateString(),
+            'current_datetime' => Carbon::now()->toDateTimeString()
+        ]);
 
         try {
             // Set transaction isolation level BEFORE starting transaction
@@ -636,7 +642,24 @@ class PeminjamanBarangController extends Controller
                 throw new \Exception('Target return date is required for aset');
             }
 
-            if (Carbon::parse($item['target_return_date'])->lt(Carbon::today())) {
+            // Convert target date to start of day for comparison
+            $targetDate = Carbon::parse($item['target_return_date'])->startOfDay();
+            $today = Carbon::today();
+
+            // Debug logging
+            Log::info('Date validation debug', [
+                'target_date_input' => $item['target_return_date'],
+                'target_date_parsed' => $targetDate->toDateString(),
+                'today' => $today->toDateString(),
+                'is_valid' => $targetDate->gte($today),
+                'comparison' => $targetDate->format('Y-m-d') . ' >= ' . $today->format('Y-m-d')
+            ]);
+
+            if ($targetDate->lt($today)) {
+                Log::error('Date validation failed', [
+                    'target_date' => $targetDate->toDateString(),
+                    'today' => $today->toDateString()
+                ]);
                 throw new \Exception('Target return date must not be in the past');
             }
         }
