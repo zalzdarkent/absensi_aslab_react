@@ -27,6 +27,7 @@ interface PinjamBarang {
     keterangan?: string;
     approved_by?: string;
     approved_at?: string;
+    manual_borrower_name?: string;
 }
 
 interface Stats {
@@ -212,8 +213,24 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
 
     const columns: ColumnDef<PinjamBarang>[] = [
         {
-            accessorKey: "nama_peminjam",
+            id: "nama_peminjam",
+            accessorFn: (row) => row.manual_borrower_name || row.nama_peminjam,
             header: "Nama Peminjam",
+            cell: ({ row }) => {
+                const manualName = row.original.manual_borrower_name;
+                const registeredName = row.original.nama_peminjam;
+                
+                if (manualName) {
+                    return (
+                        <div className="flex flex-col">
+                            <span className="font-medium text-blue-600 dark:text-blue-400">{manualName}</span>
+                            <span className="text-[10px] text-muted-foreground italic">Manual (via {registeredName})</span>
+                        </div>
+                    );
+                }
+                
+                return <span className="font-medium">{registeredName}</span>;
+            },
         },
         {
             accessorKey: "nama_barang",
