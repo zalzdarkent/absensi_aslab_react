@@ -662,61 +662,75 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                     {/* Logic: 
-                                        - If ANY selected item is approved/borrowed, HIDE Approve, Reject, Delete. SHOW Return.
-                                        - If NO selected item is approved/borrowed, SHOW Approve, Reject, Delete. HIDE Return.
+                                        1. If ANY selected item is active (approved/borrowed) -> SHOW Return ONLY.
+                                        2. If ALL selected items are completed (returned/rejected/used) -> SHOW Delete ONLY.
+                                        3. Otherwise (implies there are pending items) -> SHOW Approve, Reject, Delete.
                                     */}
                                     {(() => {
-                                        const hasActiveItems = selectedRows.some(row => 
-                                            ['approved', 'borrowed'].includes(row.raw_status || '')
-                                        );
+                                        const statusList = selectedRows.map(row => (row.raw_status || '').toLowerCase());
                                         
-                                        // Can only approve/reject/delete if NO active items are selected
-                                        if (!hasActiveItems) {
+                                        const hasActive = statusList.some(s => ['approved', 'borrowed'].includes(s));
+                                        const isAllCompleted = statusList.every(s => ['returned', 'rejected', 'used'].includes(s));
+                                        
+                                        // Priority 1: Active items need to be returned
+                                        if (hasActive) {
                                             return (
-                                                <>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setIsBulkApproveModalOpen(true)}
-                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950 border-green-200 dark:border-green-800"
-                                                    >
-                                                        <ThumbsUp className="mr-2 h-4 w-4" />
-                                                        Setujui
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setIsBulkRejectModalOpen(true)}
-                                                        className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-950 border-orange-200 dark:border-orange-800"
-                                                    >
-                                                        <ThumbsDown className="mr-2 h-4 w-4" />
-                                                        Tolak
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() => setIsBulkDeleteModalOpen(true)}
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Hapus
-                                                    </Button>
-                                                </>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setIsBulkReturnModalOpen(true)}
+                                                    className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-950 border-purple-200 dark:border-purple-800"
+                                                >
+                                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                                    Kembalikan
+                                                </Button>
+                                            );
+                                        }
+
+                                        // Priority 2: Completed items can only be deleted
+                                        if (isAllCompleted) {
+                                            return (
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => setIsBulkDeleteModalOpen(true)}
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Hapus
+                                                </Button>
                                             );
                                         }
                                         
-                                        // If active items are present, only allow Return (and maybe ensure ALL are returnable if we want strictness, but for now just show Return)
-                                        // Actually, let's check if ALL selected are returnable to show the button, or just show it and let backend handle/frontend modal show partial.
-                                        // User request: "ketika sudah disetujui, gabisa di bulk reject juga kan? ... hilangkan aja aksi setujui, tolak, dan hapus"
+                                        // Priority 3: Pending items (or mixed pending + completed) need approval/rejection
                                         return (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setIsBulkReturnModalOpen(true)}
-                                                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-950 border-purple-200 dark:border-purple-800"
-                                            >
-                                                <CheckCircle className="mr-2 h-4 w-4" />
-                                                Kembalikan
-                                            </Button>
+                                            <>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setIsBulkApproveModalOpen(true)}
+                                                    className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950 border-green-200 dark:border-green-800"
+                                                >
+                                                    <ThumbsUp className="mr-2 h-4 w-4" />
+                                                    Setujui
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setIsBulkRejectModalOpen(true)}
+                                                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-950 border-orange-200 dark:border-orange-800"
+                                                >
+                                                    <ThumbsDown className="mr-2 h-4 w-4" />
+                                                    Tolak
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => setIsBulkDeleteModalOpen(true)}
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Hapus
+                                                </Button>
+                                            </>
                                         );
                                     })()}
                                 </div>
