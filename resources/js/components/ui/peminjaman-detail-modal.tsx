@@ -19,14 +19,17 @@ import {
 import { cn } from '@/lib/utils';
 
 interface PinjamBarang {
-    id: number;
+    id: string;
     nama_peminjam: string;
-    nama_aset: string;
+    nama_aset?: string;
     nama_barang?: string;
     jumlah: number;
     tanggal_pinjam: string;
-    tanggal_kembali: string;
+    tanggal_kembali: string | null;
+    target_return_date?: string | null;
     status: string;
+    raw_status?: string;
+    tipe_barang?: string;
     keterangan?: string;
     approved_by?: string;
     approved_at?: string;
@@ -39,7 +42,7 @@ interface PeminjamanDetailModalProps {
     peminjaman: PinjamBarang | null;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    onReturn?: (peminjamanId: number) => void; // Optional callback for return action
+    onReturn?: (peminjamanId: string) => void; // Changed to string to match ID type
 }
 
 export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onReturn }: PeminjamanDetailModalProps) {
@@ -241,8 +244,25 @@ export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onRetu
                                     <div className="flex items-center gap-3">
                                         <Clock className="h-4 w-4 text-muted-foreground" />
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Target Kembali</p>
-                                            <p className="font-medium">{formatDate(peminjaman.tanggal_kembali)}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {peminjaman.tanggal_kembali ? 'Tanggal Kembali' :
+                                                 peminjaman.target_return_date ? 'Target Kembali' : 'Status Kembali'}
+                                            </p>
+                                            <p className="font-medium">
+                                                {peminjaman.tanggal_kembali ? (
+                                                    <span className="text-green-600 dark:text-green-400">
+                                                        {formatDate(peminjaman.tanggal_kembali)}
+                                                    </span>
+                                                ) : peminjaman.target_return_date ? (
+                                                    <span className="text-blue-600 dark:text-blue-400">
+                                                        {formatDate(peminjaman.target_return_date)}
+                                                    </span>
+                                                ) : peminjaman.tipe_barang === 'bahan' ? (
+                                                    <span className="text-muted-foreground">Tidak perlu dikembalikan</span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">Belum ditentukan</span>
+                                                )}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

@@ -14,14 +14,16 @@ import { ColumnDef } from "@tanstack/react-table";
 import { toast } from 'sonner';
 
 interface PinjamBarang {
-    id: number;
+    id: string;
     nama_peminjam: string;
-    nama_aset: string;
-    nama_barang?: string; // untuk bahan
+    nama_barang: string; // Backend mengirim nama_barang (unified name untuk aset & bahan)
     jumlah: number;
     tanggal_pinjam: string;
-    tanggal_kembali: string;
+    tanggal_kembali: string | null;
+    target_return_date?: string | null;
     status: string;
+    raw_status?: string;
+    tipe_barang?: string;
     keterangan?: string;
     approved_by?: string;
     approved_at?: string;
@@ -154,7 +156,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         });
     };
 
-    const handleReturn = (id: number) => {
+    const handleReturn = (id: string) => {
         router.post(`/peminjaman-barang/${id}/return`, {}, {
             onSuccess: () => {
                 toast.success('Barang berhasil ditandai sebagai dikembalikan', {
@@ -214,20 +216,11 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
             header: "Nama Peminjam",
         },
         {
-            accessorKey: "nama_aset",
+            accessorKey: "nama_barang",
             header: "Nama Barang",
             cell: ({ row }) => {
-                const namaAset = row.getValue("nama_aset") as string;
-                const namaBarang = row.original.nama_barang;
-
-                // Prioritaskan nama_aset, jika N/A atau kosong, gunakan nama_barang (untuk bahan)
-                if (namaAset && namaAset !== 'N/A') {
-                    return namaAset;
-                } else if (namaBarang && namaBarang !== 'N/A') {
-                    return namaBarang;
-                } else {
-                    return '-';
-                }
+                const namaBarang = row.getValue("nama_barang") as string;
+                return namaBarang && namaBarang !== 'N/A' ? namaBarang : '-';
             },
         },
         {
@@ -246,8 +239,53 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
             accessorKey: "tanggal_kembali",
             header: "Tanggal Kembali",
             cell: ({ row }) => {
-                const tanggal = row.getValue("tanggal_kembali") as string;
-                return tanggal ? new Date(tanggal).toLocaleDateString('id-ID') : '-';
+                const tanggal = row.getValue("tanggal_kembali") as string | null;
+                const status = row.getValue("status") as string;
+                const tipeBarang = row.original.tipe_barang;
+                const targetReturnDate = row.original.target_return_date;
+
+                // Jika bahan, tampilkan "Tidak perlu dikembalikan"
+                if (tipeBarang === 'bahan' || status?.toLowerCase() === 'digunakan') {
+                    return <span className="text-muted-foreground text-xs">Tidak perlu dikembalikan</span>;
+                }
+
+                // Jika sudah ada tanggal kembali aktual, tampilkan tanggal kembali + target
+                if (tanggal) {
+                    return (
+                        <div className="text-xs space-y-1">
+                            <div className="font-medium text-green-600 dark:text-green-400">
+                                {new Date(tanggal).toLocaleDateString('id-ID')}
+                            </div>
+                            <div className="text-muted-foreground">Sudah dikembalikan</div>
+                            {targetReturnDate && (
+                                <div className="text-xs text-muted-foreground">
+                                    Target: {new Date(targetReturnDate).toLocaleDateString('id-ID')}
+                                </div>
+                            )}
+                        </div>
+                    );
+                }
+
+                // Jika belum dikembalikan tapi ada target return date (tampilkan apapun statusnya)
+                if (targetReturnDate) {
+                    const targetDate = new Date(targetReturnDate);
+                    const isOverdue = targetDate < new Date() && (status?.toLowerCase() === 'disetujui' || status?.toLowerCase() === 'sedang dipinjam');
+
+                    return (
+                        <div className="text-xs">
+                            <div className={`font-medium ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                                {targetDate.toLocaleDateString('id-ID')}
+                            </div>
+                            <div className={`${isOverdue ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                {status?.toLowerCase() === 'menunggu persetujuan' ? 'Target kembali' :
+                                 status?.toLowerCase() === 'ditolak' ? 'Target kembali' :
+                                 isOverdue ? 'Terlambat' : 'Target kembali'}
+                            </div>
+                        </div>
+                    );
+                }
+
+                return <span className="text-muted-foreground">-</span>;
             },
         },
         {
@@ -511,7 +549,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Barang:</span>
-                                        <span className="font-medium">{selectedPeminjaman.nama_aset || selectedPeminjaman.nama_barang}</span>
+                                        <span className="font-medium">{selectedPeminjaman.nama_barang}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Jumlah:</span>
@@ -636,7 +674,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Barang:</span>
-                                        <span className="font-medium">{selectedPeminjaman.nama_aset || selectedPeminjaman.nama_barang}</span>
+                                        <span className="font-medium">{selectedPeminjaman.nama_barang}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Jumlah:</span>
