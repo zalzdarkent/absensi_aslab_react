@@ -6,6 +6,8 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
 import { createUserColumns } from '@/components/tables/user-columns';
+import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 interface User {
     id: number;
@@ -27,6 +29,7 @@ interface Props {
         search: string | null;
         role: string | null;
     };
+    success?: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -35,8 +38,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function KelolaUserIndex({ users }: Pick<Props, 'users'>) {
+export default function KelolaUserIndex({ users, success }: Pick<Props, 'users' | 'success'>) {
     const columns = createUserColumns();
+
+    // Show success toast when success prop is present
+    useEffect(() => {
+        if (success) {
+            toast.success(success);
+        }
+    }, [success]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

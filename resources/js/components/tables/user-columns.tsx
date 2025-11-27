@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Eye, Edit, UserX, UserCheck, Trash } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash } from "lucide-react";
 import { Link, router } from "@inertiajs/react";
 
 import { Button } from "@/components/ui/button";
@@ -150,12 +150,6 @@ export const createUserColumns = (): ColumnDef<User>[] => [
     cell: ({ row }) => {
       const user = row.original;
 
-      const handleToggleStatus = () => {
-        router.patch(`/kelola-user/${user.id}/toggle-status`, {}, {
-          preserveScroll: true,
-        });
-      };
-
       const handleDelete = () => {
         if (confirm(`Apakah Anda yakin ingin menghapus ${user.name}?`)) {
           router.delete(`/kelola-user/${user.id}`, {
@@ -188,19 +182,6 @@ export const createUserColumns = (): ColumnDef<User>[] => [
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleToggleStatus}>
-                {user.is_active ? (
-                  <>
-                    <UserX className="mr-2 h-4 w-4" />
-                    Nonaktifkan
-                  </>
-                ) : (
-                  <>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Aktifkan
-                  </>
-                )}
-              </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive hover:text-destructive/90 dark:text-red-400 dark:hover:text-red-300"
                 onClick={handleDelete}

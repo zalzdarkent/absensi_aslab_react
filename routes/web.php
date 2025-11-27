@@ -51,7 +51,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('aslabs/{aslab}/toggle-status', [AslabController::class, 'toggleStatus'])->name('aslabs.toggle-status');
 
         // User management routes - only admin can manage all users
-        Route::resource('kelola-user', UserController::class);
+        Route::resource('kelola-user', UserController::class)->parameters([
+            'kelola-user' => 'user'
+        ]);
         Route::patch('kelola-user/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('kelola-user.toggle-status');
 
         // Manual attendance routes - only admin can manually record attendance

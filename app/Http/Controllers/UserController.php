@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -39,6 +40,7 @@ class UserController extends Controller
                     'search' => $search,
                     'role' => $role,
                 ],
+                'success' => session('success'),
             ]);
         } catch (\Exception $e) {
             Log::error('UserController@index error: ' . $e->getMessage());
@@ -50,7 +52,8 @@ class UserController extends Controller
     {
         $roles = ['admin', 'aslab', 'mahasiswa', 'dosen'];
         return Inertia::render('kelola-user/create', [
-            'roles' => $roles
+            'roles' => $roles,
+            'success' => session('success'),
         ]);
     }
 
@@ -84,7 +87,8 @@ class UserController extends Controller
     public function show(User $user)
     {
         return Inertia::render('kelola-user/show', [
-            'user' => $user
+            'user' => $user,
+            'success' => session('success'),
         ]);
     }
 
@@ -93,7 +97,8 @@ class UserController extends Controller
         $roles = ['admin', 'aslab', 'mahasiswa', 'dosen'];
         return Inertia::render('kelola-user/edit', [
             'user' => $user,
-            'roles' => $roles
+            'roles' => $roles,
+            'success' => session('success'),
         ]);
     }
 
@@ -131,7 +136,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Prevent admin from deleting themselves
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return back()->with('error', 'Tidak dapat menghapus akun sendiri!');
         }
 
