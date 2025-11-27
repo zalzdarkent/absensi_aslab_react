@@ -8,7 +8,7 @@ import { PeminjamanDetailModal } from '@/components/ui/peminjaman-detail-modal';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock, ThumbsUp, ThumbsDown, Eye, Trash2 } from 'lucide-react';
+import { Plus, ShoppingCart, Clock, CheckCircle, AlertTriangle, X, FileCheck, FileClock, ThumbsUp, ThumbsDown, Eye, Trash2, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from 'sonner';
@@ -83,6 +83,14 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
     const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
     const [approvalNote, setApprovalNote] = useState('');
     const [processing, setProcessing] = useState(false);
+
+    // Bulk actions state
+    const [selectedRows, setSelectedRows] = useState<PinjamBarang[]>([]);
+    const [tableKey, setTableKey] = useState(0);
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [isBulkApproveModalOpen, setIsBulkApproveModalOpen] = useState(false);
+    const [isBulkRejectModalOpen, setIsBulkRejectModalOpen] = useState(false);
+    const [isBulkReturnModalOpen, setIsBulkReturnModalOpen] = useState(false);
 
     const canApprove = auth.user.role === 'admin' || auth.user.role === 'aslab';
 
@@ -170,6 +178,96 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
             }
         });
     };
+
+    // Bulk action handlers
+    const handleBulkDelete = () => {
+        if (selectedRows.length === 0) return;
+
+        setProcessing(true);
+        const items = selectedRows.map(row => ({ id: row.id }));
+
+        router.post('/peminjaman-barang-bulk-delete', { items }, {
+            onSuccess: () => {
+                setIsBulkDeleteModalOpen(false);
+                setSelectedRows([]);
+                setTableKey(prev => prev + 1);
+            },
+            onError: (errors) => {
+                console.error('Bulk delete error:', errors);
+                toast.error('Terjadi kesalahan saat menghapus data');
+            },
+            onFinish: () => {
+                setProcessing(false);
+            }
+        });
+    };
+
+    const handleBulkApprove = () => {
+        if (selectedRows.length === 0) return;
+
+        setProcessing(true);
+        const items = selectedRows.map(row => ({ id: row.id }));
+
+        router.post('/peminjaman-barang-bulk-approve', { items }, {
+            onSuccess: () => {
+                setIsBulkApproveModalOpen(false);
+                setSelectedRows([]);
+                setTableKey(prev => prev + 1);
+            },
+            onError: (errors) => {
+                console.error('Bulk approve error:', errors);
+                toast.error('Terjadi kesalahan saat menyetujui data');
+            },
+            onFinish: () => {
+                setProcessing(false);
+            }
+        });
+    };
+
+    const handleBulkReject = () => {
+        if (selectedRows.length === 0) return;
+
+        setProcessing(true);
+        const items = selectedRows.map(row => ({ id: row.id }));
+
+        router.post('/peminjaman-barang-bulk-reject', { items }, {
+            onSuccess: () => {
+                setIsBulkRejectModalOpen(false);
+                setSelectedRows([]);
+                setTableKey(prev => prev + 1);
+            },
+            onError: (errors) => {
+                console.error('Bulk reject error:', errors);
+                toast.error('Terjadi kesalahan saat menolak data');
+            },
+            onFinish: () => {
+                setProcessing(false);
+            }
+        });
+    };
+
+    const handleBulkReturn = () => {
+        if (selectedRows.length === 0) return;
+
+        setProcessing(true);
+        const items = selectedRows.map(row => ({ id: row.id }));
+
+        router.post('/peminjaman-barang-bulk-return', { items }, {
+            onSuccess: () => {
+                setIsBulkReturnModalOpen(false);
+                setSelectedRows([]);
+                setTableKey(prev => prev + 1);
+            },
+            onError: (errors) => {
+                console.error('Bulk return error:', errors);
+                toast.error('Terjadi kesalahan saat mengembalikan barang');
+            },
+            onFinish: () => {
+                setProcessing(false);
+            }
+        });
+    };
+
     const getStatusBadge = (status: string) => {
         let variant = "";
         let icon = null;
@@ -215,11 +313,22 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         {
             id: "nama_peminjam",
             accessorFn: (row) => row.manual_borrower_name || row.nama_peminjam,
-            header: "Nama Peminjam",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Nama Peminjam
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
             cell: ({ row }) => {
                 const manualName = row.original.manual_borrower_name;
                 const registeredName = row.original.nama_peminjam;
-                
+
                 if (manualName) {
                     return (
                         <div className="flex flex-col">
@@ -228,13 +337,24 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                         </div>
                     );
                 }
-                
+
                 return <span className="font-medium">{registeredName}</span>;
             },
         },
         {
             accessorKey: "nama_barang",
-            header: "Nama Barang",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Nama Barang
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
             cell: ({ row }) => {
                 const namaBarang = row.getValue("nama_barang") as string;
                 return namaBarang && namaBarang !== 'N/A' ? namaBarang : '-';
@@ -242,11 +362,33 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         },
         {
             accessorKey: "jumlah",
-            header: "Jumlah",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Jumlah
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
         },
         {
             accessorKey: "tanggal_pinjam",
-            header: "Tanggal Pinjam",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Tanggal Pinjam
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
             cell: ({ row }) => {
                 const tanggal = row.getValue("tanggal_pinjam") as string;
                 return tanggal ? new Date(tanggal).toLocaleDateString('id-ID') : '-';
@@ -307,7 +449,18 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
         },
         {
             accessorKey: "status",
-            header: "Status",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Status
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
             cell: ({ row }) => {
                 const status = row.getValue("status") as string;
                 return getStatusBadge(status);
@@ -391,8 +544,8 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                             </Button>
                         )}
 
-                        {/* Delete button - only for admin/aslab */}
-                        {canApprove && (
+                        {/* Delete button - only for admin/aslab and NOT for borrowed items */}
+                        {canApprove && !isBorrowed && (
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -494,6 +647,84 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                     </Card>
                 </div>
 
+                {/* Bulk Actions */}
+                {canApprove && selectedRows.length > 0 && (
+                    <Card className="bg-muted/50 border-dashed">
+                        <CardContent className="pt-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="bg-primary/10 p-2 rounded-full">
+                                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <span className="text-sm font-medium">
+                                        {selectedRows.length} item dipilih
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                    {/* Logic: 
+                                        - If ANY selected item is approved/borrowed, HIDE Approve, Reject, Delete. SHOW Return.
+                                        - If NO selected item is approved/borrowed, SHOW Approve, Reject, Delete. HIDE Return.
+                                    */}
+                                    {(() => {
+                                        const hasActiveItems = selectedRows.some(row => 
+                                            ['approved', 'borrowed'].includes(row.raw_status || '')
+                                        );
+                                        
+                                        // Can only approve/reject/delete if NO active items are selected
+                                        if (!hasActiveItems) {
+                                            return (
+                                                <>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setIsBulkApproveModalOpen(true)}
+                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950 border-green-200 dark:border-green-800"
+                                                    >
+                                                        <ThumbsUp className="mr-2 h-4 w-4" />
+                                                        Setujui
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setIsBulkRejectModalOpen(true)}
+                                                        className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-950 border-orange-200 dark:border-orange-800"
+                                                    >
+                                                        <ThumbsDown className="mr-2 h-4 w-4" />
+                                                        Tolak
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => setIsBulkDeleteModalOpen(true)}
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Hapus
+                                                    </Button>
+                                                </>
+                                            );
+                                        }
+                                        
+                                        // If active items are present, only allow Return (and maybe ensure ALL are returnable if we want strictness, but for now just show Return)
+                                        // Actually, let's check if ALL selected are returnable to show the button, or just show it and let backend handle/frontend modal show partial.
+                                        // User request: "ketika sudah disetujui, gabisa di bulk reject juga kan? ... hilangkan aja aksi setujui, tolak, dan hapus"
+                                        return (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setIsBulkReturnModalOpen(true)}
+                                                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-950 border-purple-200 dark:border-purple-800"
+                                            >
+                                                <CheckCircle className="mr-2 h-4 w-4" />
+                                                Kembalikan
+                                            </Button>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
                 {/* Data Table */}
                 <Card>
                     <CardHeader>
@@ -504,11 +735,15 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                     </CardHeader>
                     <CardContent className="overflow-x-auto">
                         <DataTable
+                            key={tableKey}
                             columns={columns}
                             data={pinjamBarangs}
                             searchPlaceholder="Cari nama peminjam..."
-                            highlightId={highlightId || undefined}
+                            highlightId={highlightId ? highlightId.toString() : undefined}
                             highlightKey="id"
+                            enableRowSelection={true}
+                            onRowSelectionChange={setSelectedRows}
+                            getRowId={(row) => row.id.toString()}
                         />
                     </CardContent>
                 </Card>
@@ -731,6 +966,202 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                     Hapus Data
                                 </span>
                             )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Modal */}
+            <Dialog open={isBulkDeleteModalOpen} onOpenChange={setIsBulkDeleteModalOpen}>
+                <DialogContent className="sm:max-w-lg bg-background border-border">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                                <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <span className="text-foreground">Hapus {selectedRows.length} Data Peminjaman</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Apakah Anda yakin ingin menghapus {selectedRows.length} data peminjaman yang dipilih? Tindakan ini tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="max-h-60 overflow-y-auto">
+                        <div className="space-y-2">
+                            {selectedRows.slice(0, 5).map((row) => (
+                                <div key={row.id} className="text-sm p-2 bg-muted rounded">
+                                    <span className="font-medium">{row.nama_peminjam}</span> - {row.nama_barang}
+                                </div>
+                            ))}
+                            {selectedRows.length > 5 && (
+                                <div className="text-sm text-muted-foreground text-center">
+                                    ... dan {selectedRows.length - 5} lainnya
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-3 pt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsBulkDeleteModalOpen(false)}
+                            disabled={processing}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleBulkDelete}
+                            disabled={processing}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {processing ? 'Menghapus...' : 'Hapus Semua'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Approve Modal */}
+            <Dialog open={isBulkApproveModalOpen} onOpenChange={setIsBulkApproveModalOpen}>
+                <DialogContent className="sm:max-w-lg bg-background border-border">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+                                <ThumbsUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+                            </div>
+                            <span className="text-foreground">Setujui {selectedRows.length} Peminjaman</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Apakah Anda yakin ingin menyetujui {selectedRows.length} peminjaman yang dipilih?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="max-h-60 overflow-y-auto">
+                        <div className="space-y-2">
+                            {selectedRows.slice(0, 5).map((row) => (
+                                <div key={row.id} className="text-sm p-2 bg-muted rounded">
+                                    <span className="font-medium">{row.nama_peminjam}</span> - {row.nama_barang}
+                                </div>
+                            ))}
+                            {selectedRows.length > 5 && (
+                                <div className="text-sm text-muted-foreground text-center">
+                                    ... dan {selectedRows.length - 5} lainnya
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-3 pt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsBulkApproveModalOpen(false)}
+                            disabled={processing}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleBulkApprove}
+                            disabled={processing}
+                            className="bg-green-600 hover:bg-green-700"
+                        >
+                            {processing ? 'Memproses...' : 'Setujui Semua'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Reject Modal */}
+            <Dialog open={isBulkRejectModalOpen} onOpenChange={setIsBulkRejectModalOpen}>
+                <DialogContent className="sm:max-w-lg bg-background border-border">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/20">
+                                <ThumbsDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <span className="text-foreground">Tolak {selectedRows.length} Peminjaman</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Apakah Anda yakin ingin menolak {selectedRows.length} peminjaman yang dipilih?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="max-h-60 overflow-y-auto">
+                        <div className="space-y-2">
+                            {selectedRows.slice(0, 5).map((row) => (
+                                <div key={row.id} className="text-sm p-2 bg-muted rounded">
+                                    <span className="font-medium">{row.nama_peminjam}</span> - {row.nama_barang}
+                                </div>
+                            ))}
+                            {selectedRows.length > 5 && (
+                                <div className="text-sm text-muted-foreground text-center">
+                                    ... dan {selectedRows.length - 5} lainnya
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-3 pt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsBulkRejectModalOpen(false)}
+                            disabled={processing}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleBulkReject}
+                            disabled={processing}
+                            className="bg-orange-600 hover:bg-orange-700"
+                        >
+                            {processing ? 'Memproses...' : 'Tolak Semua'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Return Modal */}
+            <Dialog open={isBulkReturnModalOpen} onOpenChange={setIsBulkReturnModalOpen}>
+                <DialogContent className="sm:max-w-lg bg-background border-border">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/20">
+                                <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <span className="text-foreground">Kembalikan {selectedRows.length} Barang</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Apakah Anda yakin ingin menandai {selectedRows.length} barang sebagai dikembalikan?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="max-h-60 overflow-y-auto">
+                        <div className="space-y-2">
+                            {selectedRows.slice(0, 5).map((row) => (
+                                <div key={row.id} className="text-sm p-2 bg-muted rounded">
+                                    <span className="font-medium">{row.nama_peminjam}</span> - {row.nama_barang}
+                                </div>
+                            ))}
+                            {selectedRows.length > 5 && (
+                                <div className="text-sm text-muted-foreground text-center">
+                                    ... dan {selectedRows.length - 5} lainnya
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-3 pt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsBulkReturnModalOpen(false)}
+                            disabled={processing}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleBulkReturn}
+                            disabled={processing}
+                            className="bg-purple-600 hover:bg-purple-700"
+                        >
+                            {processing ? 'Memproses...' : 'Kembalikan Semua'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

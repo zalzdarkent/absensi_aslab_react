@@ -42,7 +42,10 @@ interface Props {
 export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
     const [selectedItem, setSelectedItem] = useState<{ id: number; nama: string; type: 'aset' | 'bahan' } | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [selectedRows, setSelectedRows] = useState<AsetAslab[]>([]);
     const [processing, setProcessing] = useState(false);
+    const [tableKey, setTableKey] = useState(0);
 
     // Show success toast for flash messages
     useEffect(() => {
@@ -69,6 +72,31 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
             },
             onError: (errors) => {
                 console.error('Delete error:', errors);
+                toast.error('Terjadi kesalahan saat menghapus data');
+            },
+            onFinish: () => {
+                setProcessing(false);
+            }
+        });
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedRows.length === 0) return;
+
+        setProcessing(true);
+        const items = selectedRows.map(row => ({
+            id: row.id,
+            type: row.type
+        }));
+
+        router.post('/aset-aslab-bulk-delete', { items }, {
+            onSuccess: () => {
+                setIsBulkDeleteModalOpen(false);
+                setSelectedRows([]); // Clear selection
+                setTableKey(prev => prev + 1); // Reset table state
+            },
+            onError: (errors) => {
+                console.error('Bulk delete error:', errors);
                 toast.error('Terjadi kesalahan saat menghapus data');
             },
             onFinish: () => {
@@ -370,6 +398,35 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
                     </Card>
                 </div>
 
+                {/* Bulk Actions */}
+                {selectedRows.length > 0 && (
+                    <Card className="bg-muted/50 border-dashed">
+                        <CardContent className="pt-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="bg-primary/10 p-2 rounded-full">
+                                        <CheckCircle className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <span className="text-sm font-medium">
+                                        {selectedRows.length} item dipilih
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => setIsBulkDeleteModalOpen(true)}
+                                        className="w-full sm:w-auto"
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Hapus Terpilih
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
                 {/* Data Table */}
                 <Card>
                     <CardHeader>
@@ -380,9 +437,13 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
                     </CardHeader>
                     <CardContent>
                         <DataTable
+                            key={tableKey}
                             columns={columns}
                             data={asetAslabs}
                             searchPlaceholder="Cari nama aset atau bahan..."
+                            enableRowSelection={true}
+                            onRowSelectionChange={setSelectedRows}
+                            getRowId={(row) => `${row.type}-${row.id}`}
                         />
                     </CardContent>
                 </Card>
@@ -470,6 +531,86 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
                                 <span className="flex items-center gap-2">
                                     <Trash2 className="h-4 w-4" />
                                     Hapus {selectedItem?.type === 'aset' ? 'Aset' : 'Bahan'}
+                                </span>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Confirmation Modal */}
+            <Dialog open={isBulkDeleteModalOpen} onOpenChange={setIsBulkDeleteModalOpen}>
+                <DialogContent className="sm:max-w-lg bg-background border-border">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                                <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <span className="text-foreground">
+                                Hapus {selectedRows.length} Data Terpilih
+                            </span>
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Apakah Anda yakin ingin menghapus {selectedRows.length} data yang dipilih?
+                            Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        {/* Warning */}
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                            <div className="flex items-start gap-2">
+                                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                                <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                                    <p className="font-medium mb-1">Peringatan:</p>
+                                    <p>Data yang dihapus tidak dapat dipulihkan. Pastikan Anda yakin dengan tindakan ini.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Preview List (Limited to 5 items) */}
+                        <div className="rounded-lg border bg-muted/50 p-3">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Preview data yang akan dihapus:</p>
+                            <ul className="space-y-1">
+                                {selectedRows.slice(0, 5).map((item) => (
+                                    <li key={item.id} className="text-sm flex items-center gap-2">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${item.type === 'aset' ? 'bg-blue-500' : 'bg-purple-500'}`}></span>
+                                        <span className="font-mono text-xs text-muted-foreground">[{item.type === 'aset' ? 'ASET' : 'BAHAN'}]</span>
+                                        <span className="truncate">{item.nama_aset}</span>
+                                    </li>
+                                ))}
+                                {selectedRows.length > 5 && (
+                                    <li className="text-xs text-muted-foreground italic pl-3">
+                                        ...dan {selectedRows.length - 5} data lainnya
+                                    </li>
+                                )}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-3 pt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsBulkDeleteModalOpen(false)}
+                            disabled={processing}
+                            className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleBulkDelete}
+                            disabled={processing}
+                            className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 focus:ring-red-500 text-white shadow-sm"
+                        >
+                            {processing ? (
+                                <span className="flex items-center gap-2">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                    Menghapus...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    <Trash2 className="h-4 w-4" />
+                                    Hapus {selectedRows.length} Data
                                 </span>
                             )}
                         </Button>

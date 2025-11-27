@@ -80,6 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Aset Aslab routes - Admin and Aslab can manage assets
         Route::get('aset-aslab/generate-kode', [AsetAslabController::class, 'generateKode'])->name('aset-aslab.generate-kode');
+        Route::post('aset-aslab-bulk-delete', [AsetAslabController::class, 'bulkDelete'])->name('aset-aslab.bulk-delete');
         Route::resource('aset-aslab', AsetAslabController::class);
 
         // Jenis Aset Aslab routes
@@ -92,6 +93,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('bahan/{bahan}/edit', [BahanController::class, 'edit'])->name('bahan.edit');
         Route::put('bahan/{bahan}', [BahanController::class, 'update'])->name('bahan.update');
         Route::delete('bahan/{bahan}', [BahanController::class, 'destroy'])->name('bahan.destroy');
+
+        // Peminjaman Barang Bulk Actions
+        Route::post('peminjaman-barang-bulk-delete', [PeminjamanBarangController::class, 'bulkDelete'])->name('peminjaman-barang.bulk-delete');
+        Route::post('peminjaman-barang-bulk-approve', [PeminjamanBarangController::class, 'bulkApprove'])->name('peminjaman-barang.bulk-approve');
+        Route::post('peminjaman-barang-bulk-reject', [PeminjamanBarangController::class, 'bulkReject'])->name('peminjaman-barang.bulk-reject');
+        Route::post('peminjaman-barang-bulk-return', [PeminjamanBarangController::class, 'bulkReturn'])->name('peminjaman-barang.bulk-return');
     });
 
     // All authenticated users can access peminjaman barang and aset

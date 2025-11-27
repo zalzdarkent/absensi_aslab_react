@@ -203,4 +203,40 @@ class AsetAslabController extends Controller
 
         return redirect()->route('aset-aslab.index')->with('success', 'Aset berhasil dihapus!');
     }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer',
+            'items.*.type' => 'required|in:aset,bahan',
+        ]);
+
+        $items = $request->items;
+        $count = 0;
+
+        foreach ($items as $item) {
+            if ($item['type'] === 'aset') {
+                $aset = AsetAslab::find($item['id']);
+                if ($aset) {
+                    if ($aset->gambar && $aset->gambar !== 'default-aset.png' && Storage::disk('public')->exists($aset->gambar)) {
+                        Storage::disk('public')->delete($aset->gambar);
+                    }
+                    $aset->delete();
+                    $count++;
+                }
+            } else {
+                $bahan = Bahan::find($item['id']);
+                if ($bahan) {
+                    if ($bahan->gambar && $bahan->gambar !== 'default-bahan.png' && Storage::disk('public')->exists($bahan->gambar)) {
+                        Storage::disk('public')->delete($bahan->gambar);
+                    }
+                    $bahan->delete();
+                    $count++;
+                }
+            }
+        }
+
+        return redirect()->route('aset-aslab.index')->with('success', "$count data berhasil dihapus!");
+    }
 }

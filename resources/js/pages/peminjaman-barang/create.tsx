@@ -320,27 +320,27 @@ export default function PeminjamanBarangCreate({ items, pagination, meta }: Prop
             <div className="space-y-6 py-4 sm:py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
+                    <div className="flex flex-col gap-4">
+                        <div>
                             <Button variant="outline" size="sm" asChild className="flex-shrink-0">
                                 <Link href="/peminjaman-barang">
                                     <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
                                     <span className="text-xs sm:text-sm">Kembali</span>
                                 </Link>
                             </Button>
-                            <div className="min-w-0">
-                                <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">
-                                    Katalog Peminjaman
-                                </h1>
-                                <p className="text-xs sm:text-sm lg:text-base text-muted-foreground mt-1">
-                                    Pilih barang yang ingin dipinjam
-                                </p>
-                            </div>
+                        </div>
+                        <div>
+                            <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">
+                                Katalog Peminjaman
+                            </h1>
+                            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground mt-1">
+                                Pilih barang yang ingin dipinjam
+                            </p>
                         </div>
                     </div>
 
                     {/* Search and Filters */}
-                    <Card>
+                    <Card className="mt-6">
                         <CardHeader className="pb-4">
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
                                 <div className="flex-1 max-w-sm">

@@ -820,7 +820,13 @@ class PeminjamanBarangController extends Controller
             if ($recordType === 'peminjaman') {
                 $peminjaman = PeminjamanAset::with(['asetAslab', 'bahan'])->findOrFail($originalId);
 
-                // If the record is pending or rejected, we need to restore the stock
+                // Prevent deletion of borrowed items (approved/borrowed status)
+                if (in_array($peminjaman->status, [PeminjamanAset::STATUS_APPROVED, PeminjamanAset::STATUS_BORROWED])) {
+                    DB::rollBack();
+                    return back()->withErrors(['error' => 'Data peminjaman yang sedang dipinjam tidak dapat dihapus. Silakan kembalikan barang terlebih dahulu.']);
+                }
+
+                // Restore stock for pending or rejected items
                 if (in_array($peminjaman->status, [PeminjamanAset::STATUS_PENDING, PeminjamanAset::STATUS_REJECTED])) {
                     if ($peminjaman->aset_id) {
                         // Restore aset stock
@@ -875,6 +881,225 @@ class PeminjamanBarangController extends Controller
                 'record_id' => $originalId,
                 'record_type' => $recordType
             ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|string',
+        ]);
+
+        $items = $request->items;
+        $count = 0;
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($items as $item) {
+                $id = $item['id'];
+                $originalId = $id;
+                $recordType = 'peminjaman';
+
+                if (strpos($id, 'peminjaman_') === 0) {
+                    $originalId = str_replace('peminjaman_', '', $id);
+                    $recordType = 'peminjaman';
+                } elseif (strpos($id, 'penggunaan_') === 0) {
+                    $originalId = str_replace('penggunaan_', '', $id);
+                    $recordType = 'penggunaan';
+                }
+
+                if ($recordType === 'peminjaman') {
+                    $peminjaman = PeminjamanAset::find($originalId);
+                    if ($peminjaman) {
+                        // Check if item is currently borrowed (cannot delete if borrowed)
+                        if (in_array($peminjaman->status, [PeminjamanAset::STATUS_BORROWED, PeminjamanAset::STATUS_APPROVED])) {
+                            continue; 
+                        }
+                        
+                        // If pending, we need to restore stock before deleting
+                        if ($peminjaman->status === PeminjamanAset::STATUS_PENDING) {
+                            if ($peminjaman->aset_id) {
+                                $aset = AsetAslab::find($peminjaman->aset_id);
+                                if ($aset) $aset->increment('stok', $peminjaman->stok);
+                            } elseif ($peminjaman->bahan_id) {
+                                $bahan = Bahan::find($peminjaman->bahan_id);
+                                if ($bahan) $bahan->increment('stok', $peminjaman->stok);
+                            }
+                        }
+
+                        $peminjaman->delete();
+                        $count++;
+                    }
+                } else {
+                    $penggunaan = PenggunaanBahan::find($originalId);
+                    if ($penggunaan) {
+                        $penggunaan->delete();
+                        $count++;
+                    }
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', "$count data berhasil dihapus");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function bulkApprove(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|string',
+        ]);
+
+        $items = $request->items;
+        $count = 0;
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($items as $item) {
+                $id = $item['id'];
+                
+                // Skip penggunaan bahan as they are already approved/used
+                if (strpos($id, 'penggunaan_') === 0) continue;
+
+                $originalId = str_replace('peminjaman_', '', $id);
+                $peminjaman = PeminjamanAset::with(['asetAslab', 'bahan'])->find($originalId);
+
+                if ($peminjaman && $peminjaman->status === PeminjamanAset::STATUS_PENDING) {
+                    if ($peminjaman->aset_id) {
+                        $peminjaman->update([
+                            'status' => PeminjamanAset::STATUS_APPROVED,
+                            'approved_by' => Auth::id(),
+                            'approved_at' => now(),
+                            'approval_note' => 'Bulk approved',
+                        ]);
+                    } elseif ($peminjaman->bahan_id) {
+                        // Convert to penggunaan_bahan
+                        PenggunaanBahan::create([
+                            'bahan_id' => $peminjaman->bahan_id,
+                            'user_id' => $peminjaman->user_id,
+                            'tanggal_penggunaan' => $peminjaman->tanggal_pinjam,
+                            'jumlah_digunakan' => $peminjaman->stok,
+                            'keperluan' => $peminjaman->keterangan ?: 'Keperluan praktikum/penelitian',
+                            'catatan' => "Bulk approved by admin/aslab",
+                            'approved_by' => Auth::id(),
+                            'approved_at' => now()
+                        ]);
+                        $peminjaman->delete();
+                    }
+                    $count++;
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', "$count peminjaman berhasil disetujui");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function bulkReject(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|string',
+        ]);
+
+        $items = $request->items;
+        $count = 0;
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($items as $item) {
+                $id = $item['id'];
+                
+                if (strpos($id, 'penggunaan_') === 0) continue;
+
+                $originalId = str_replace('peminjaman_', '', $id);
+                $peminjaman = PeminjamanAset::find($originalId);
+
+                if ($peminjaman && $peminjaman->status === PeminjamanAset::STATUS_PENDING) {
+                    // Restore stock
+                    if ($peminjaman->aset_id) {
+                        $aset = AsetAslab::find($peminjaman->aset_id);
+                        if ($aset) $aset->increment('stok', $peminjaman->stok);
+                    } elseif ($peminjaman->bahan_id) {
+                        $bahan = Bahan::find($peminjaman->bahan_id);
+                        if ($bahan) $bahan->increment('stok', $peminjaman->stok);
+                    }
+
+                    $peminjaman->update([
+                        'status' => PeminjamanAset::STATUS_REJECTED,
+                        'approved_by' => Auth::id(),
+                        'approved_at' => now(),
+                        'approval_note' => 'Bulk rejected',
+                    ]);
+                    $count++;
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', "$count peminjaman berhasil ditolak");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function bulkReturn(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|string',
+        ]);
+
+        $items = $request->items;
+        $count = 0;
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($items as $item) {
+                $id = $item['id'];
+                
+                if (strpos($id, 'penggunaan_') === 0) continue;
+
+                $originalId = str_replace('peminjaman_', '', $id);
+                $peminjaman = PeminjamanAset::find($originalId);
+
+                // Can return if approved (not yet picked up but marked as such) or borrowed
+                if ($peminjaman && in_array($peminjaman->status, [PeminjamanAset::STATUS_APPROVED, PeminjamanAset::STATUS_BORROWED])) {
+                    // Restore stock for aset
+                    if ($peminjaman->aset_id) {
+                        $aset = AsetAslab::find($peminjaman->aset_id);
+                        if ($aset) $aset->increment('stok', $peminjaman->stok);
+                    }
+
+                    $peminjaman->update([
+                        'status' => PeminjamanAset::STATUS_RETURNED,
+                        'tanggal_kembali' => now(),
+                    ]);
+                    $count++;
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', "$count barang berhasil dikembalikan");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
             return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }

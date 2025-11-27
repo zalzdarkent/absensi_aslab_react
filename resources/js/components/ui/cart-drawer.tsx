@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ShoppingCart, Plus, Minus, Trash2, Package, Beaker, Send, AlertTriangle, User } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ShoppingCart, Plus, Minus, Trash2, Package, Beaker, Send, AlertTriangle, User, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -248,7 +249,7 @@ export function CartDrawer({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => onRemoveItem(item.id, item.type)}
-                                                className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 ml-1 sm:ml-2 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 flex-shrink-0 ml-1 sm:ml-2 h-7 w-7 sm:h-8 sm:w-8 p-0"
                                             >
                                                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                             </Button>
@@ -378,33 +379,36 @@ export function CartDrawer({
                                     </div>
 
                                     {/* Agreement Section */}
-                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
-                                        <div className="flex items-start gap-2">
-                                            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                                            <div className="text-xs text-yellow-800 dark:text-yellow-200">
-                                                <p className="font-medium mb-1 sm:mb-2">Syarat & Ketentuan:</p>
-                                                <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 text-xs">
-                                                    <li>Menjaga barang dengan baik</li>
-                                                    <li>Mengembalikan sesuai jadwal</li>
-                                                    <li>Mengganti rugi jika rusak/hilang</li>
-                                                    <li>Untuk keperluan akademik</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center space-x-2 mt-3 sm:mt-4">
-                                            <Checkbox
-                                                id="cart-agreement"
-                                                checked={agreementAccepted}
-                                                onCheckedChange={(checked) => setAgreementAccepted(checked as boolean)}
-                                            />
-                                            <label
-                                                htmlFor="cart-agreement"
-                                                className="text-xs font-medium text-yellow-800 dark:text-yellow-200 cursor-pointer"
-                                            >
-                                                Saya menyetujui syarat dan ketentuan *
-                                            </label>
-                                        </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="cart-agreement"
+                                            checked={agreementAccepted}
+                                            onCheckedChange={(checked) => setAgreementAccepted(checked as boolean)}
+                                        />
+                                        <label
+                                            htmlFor="cart-agreement"
+                                            className="text-xs sm:text-sm font-medium text-foreground cursor-pointer flex items-center gap-1"
+                                        >
+                                            Saya menyetujui syarat dan ketentuan *
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground hover:text-foreground transition-colors cursor-help" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top" className="max-w-xs">
+                                                        <div className="space-y-1 text-xs">
+                                                            <p className="font-semibold mb-2">Syarat & Ketentuan:</p>
+                                                            <ul className="list-disc list-inside space-y-1">
+                                                                <li>Menjaga barang dengan baik</li>
+                                                                <li>Mengembalikan sesuai jadwal</li>
+                                                                <li>Mengganti rugi jika rusak/hilang</li>
+                                                                <li>Untuk keperluan akademik</li>
+                                                            </ul>
+                                                        </div>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </label>
                                     </div>
 
                                     {/* Action Buttons */}
@@ -432,7 +436,7 @@ export function CartDrawer({
                                             variant="outline"
                                             size="default"
                                             onClick={handleClearCartAndClose}
-                                            className="w-full h-10 sm:h-11 text-xs sm:text-sm text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30"
+                                            className="w-full h-10 sm:h-11 text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600 font-medium"
                                         >
                                             <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                                             Kosongkan Keranjang
