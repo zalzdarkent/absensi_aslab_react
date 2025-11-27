@@ -117,16 +117,16 @@ class PeminjamanBarangController extends Controller
             'sedang_dipinjam' => $peminjamanRecords->whereIn('status', [
                 PeminjamanAset::STATUS_APPROVED,
                 PeminjamanAset::STATUS_BORROWED
-            ])->count(),
-            'sudah_kembali' => $peminjamanRecords->where('status', PeminjamanAset::STATUS_RETURNED)->count(),
-            'bahan_digunakan' => $penggunaanRecords->count(),
-            'menunggu_persetujuan' => $peminjamanRecords->where('status', PeminjamanAset::STATUS_PENDING)->count(),
+            ])->sum('stok'), // Sum of units, not count of transactions
+            'sudah_kembali' => $peminjamanRecords->where('status', PeminjamanAset::STATUS_RETURNED)->sum('stok'), // Sum of returned units
+            'bahan_digunakan' => $penggunaanRecords->sum('jumlah_digunakan'), // Sum of used materials
+            'menunggu_persetujuan' => $peminjamanRecords->where('status', PeminjamanAset::STATUS_PENDING)->sum('stok'), // Sum of pending units
             'terlambat_kembali' => $peminjamanRecords->filter(function ($peminjaman) {
                 // Only check aset that's approved/borrowed and past target return date
                 $isAsetActive = $peminjaman->aset_id && in_array($peminjaman->status, [PeminjamanAset::STATUS_APPROVED, PeminjamanAset::STATUS_BORROWED]);
                 $isOverdue = $peminjaman->target_return_date && Carbon::parse($peminjaman->target_return_date)->isPast();
                 return $isAsetActive && $isOverdue;
-            })->count(),
+            })->sum('stok'), // Sum of overdue units
         ];
 
         return Inertia::render('peminjaman-barang/index', [

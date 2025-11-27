@@ -441,7 +441,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                         <CardContent>
                             <div className="text-xl sm:text-2xl font-bold">{stats.sedang_dipinjam}</div>
                             <p className="text-xs opacity-90">
-                                Belum dikembalikan
+                                Unit barang
                             </p>
                         </CardContent>
                     </Card>
@@ -456,7 +456,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                         <CardContent>
                             <div className="text-xl sm:text-2xl font-bold">{stats.sudah_kembali}</div>
                             <p className="text-xs opacity-90">
-                                Selesai dipinjam
+                                Unit dikembalikan
                             </p>
                         </CardContent>
                     </Card>
@@ -471,7 +471,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                         <CardContent>
                             <div className="text-xl sm:text-2xl font-bold">{stats.terlambat_kembali}</div>
                             <p className="text-xs opacity-90">
-                                Melewati batas waktu
+                                Unit terlambat
                             </p>
                         </CardContent>
                     </Card>
