@@ -101,9 +101,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Peminjaman Barang routes - accessible to all user types (handles both aset and bahan)
         Route::get('/peminjaman-barang/search-items', [PeminjamanBarangController::class, 'searchItems'])->name('peminjaman-barang.search-items');
-        Route::resource('peminjaman-barang', PeminjamanBarangController::class);
-        Route::post('/peminjaman-barang/{id}/approve', [PeminjamanBarangController::class, 'approve'])->name('peminjaman-barang.approve');
-        Route::post('/peminjaman-barang/{id}/return', [PeminjamanBarangController::class, 'return'])->name('peminjaman-barang.return');
+        Route::resource('peminjaman-barang', PeminjamanBarangController::class)->parameters([
+            'peminjaman-barang' => 'id'
+        ])->where([
+            'id' => '[a-zA-Z0-9_]+' // Allow alphanumeric and underscore
+        ]);
+        Route::post('/peminjaman-barang/{id}/approve', [PeminjamanBarangController::class, 'approve'])
+            ->where('id', '[a-zA-Z0-9_]+')
+            ->name('peminjaman-barang.approve');
+        Route::post('/peminjaman-barang/{id}/return', [PeminjamanBarangController::class, 'return'])
+            ->where('id', '[a-zA-Z0-9_]+')
+            ->name('peminjaman-barang.return');
     });
 });
 
