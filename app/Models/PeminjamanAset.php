@@ -34,6 +34,13 @@ class PeminjamanAset extends Model
         'agreement_accepted' => 'boolean'
     ];
 
+    protected $appends = [
+        'status_text',
+        'item_name',
+        'item_code',
+        'item_type'
+    ];
+
     // Status constants
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';

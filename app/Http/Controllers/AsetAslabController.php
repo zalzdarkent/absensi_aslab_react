@@ -130,6 +130,11 @@ class AsetAslabController extends Controller
         $aset = AsetAslab::with(['jenisAset', 'peminjamanAsets.user'])
             ->findOrFail($id);
 
+        // Append status_text untuk setiap peminjaman
+        $aset->peminjamanAsets->each(function ($peminjaman) {
+            $peminjaman->append('status_text');
+        });
+
         return Inertia::render('aset-aslab/show', [
             'aset' => $aset,
         ]);

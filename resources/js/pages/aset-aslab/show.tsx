@@ -14,7 +14,8 @@ interface Peminjaman {
     tanggal_pinjam: string;
     tanggal_kembali: string;
     stok: number;
-    persetujuan: string;
+    status: string;
+    status_text: string;
     user: {
         id: number;
         name: string;
@@ -94,40 +95,50 @@ export default function AsetAslabShow({ aset }: Props) {
             },
         },
         {
-            accessorKey: "persetujuan",
+            accessorKey: "status_text",
             header: "Status",
             cell: ({ row }) => {
-                const status = row.getValue("persetujuan") as string;
+                const status = row.getValue("status_text") as string;
+                const rawStatus = row.original.status;
                 let variant = "";
                 let icon = null;
-                let statusText = "";
+                const statusText = status;
 
-                switch (status?.toLowerCase()) {
+                switch (rawStatus?.toLowerCase()) {
+                    case "approved":
                     case "disetujui":
                         variant = "text-green-700 bg-green-100 border-green-200";
                         icon = <CheckCircle className="h-3 w-3" />;
-                        statusText = "Disetujui";
                         break;
+                    case "pending":
                     case "menunggu":
-                    case "menunggu persetujuan":
+                    case "menunggu_persetujuan":
                         variant = "text-yellow-700 bg-yellow-100 border-yellow-200";
                         icon = <Clock className="h-3 w-3" />;
-                        statusText = "Menunggu Persetujuan";
                         break;
+                    case "rejected":
                     case "ditolak":
                         variant = "text-red-700 bg-red-100 border-red-200";
                         icon = <XCircle className="h-3 w-3" />;
-                        statusText = "Ditolak";
+                        break;
+                    case "borrowed":
+                    case "sedang_dipinjam":
+                        variant = "text-blue-700 bg-blue-100 border-blue-200";
+                        icon = <Clock className="h-3 w-3" />;
+                        break;
+                    case "returned":
+                    case "dikembalikan":
+                        variant = "text-green-700 bg-green-100 border-green-200";
+                        icon = <CheckCircle className="h-3 w-3" />;
                         break;
                     default:
                         variant = "text-gray-600 bg-gray-100 border-gray-200";
-                        statusText = status?.replace(/_/g, ' ') || 'Tidak Diketahui';
                 }
 
                 return (
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${variant}`}>
                         {icon}
-                        {statusText}
+                        {statusText || 'Unknown'}
                     </span>
                 );
             },
