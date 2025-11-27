@@ -106,6 +106,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ])->where([
             'id' => '[a-zA-Z0-9_]+' // Allow alphanumeric and underscore
         ]);
+
+        // Explicitly add DELETE route to ensure it's registered
+        Route::delete('/peminjaman-barang/{id}', [PeminjamanBarangController::class, 'destroy'])
+            ->where('id', '[a-zA-Z0-9_]+')
+            ->name('peminjaman-barang.destroy');
+
         Route::post('/peminjaman-barang/{id}/approve', [PeminjamanBarangController::class, 'approve'])
             ->where('id', '[a-zA-Z0-9_]+')
             ->name('peminjaman-barang.approve');
