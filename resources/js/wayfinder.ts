@@ -35,3 +35,29 @@ export function queryParams(options?: RouteQueryOptions): string {
     const queryString = searchParams.toString();
     return queryString ? `?${queryString}` : '';
 }
+
+/**
+ * Apply URL defaults to route arguments
+ */
+export function applyUrlDefaults(args: any): any {
+    // If args is already an object with values, return as is
+    if (args && typeof args === 'object' && !Array.isArray(args)) {
+        return args;
+    }
+
+    // If args is null/undefined, return empty object
+    if (!args) {
+        return {};
+    }
+
+    // If args is an array, convert to object (for backward compatibility)
+    if (Array.isArray(args)) {
+        return args.reduce((acc, value, index) => {
+            acc[`arg${index}`] = value;
+            return acc;
+        }, {});
+    }
+
+    // For primitive values, wrap in object
+    return { value: args };
+}
