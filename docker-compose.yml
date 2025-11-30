@@ -85,6 +85,18 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-aslab}
+      - DB_USERNAME=${DB_USERNAME:-aslab}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - CACHE_DRIVER=${CACHE_DRIVER:-redis}
     ports:
       - "8080:8080"
     volumes:
