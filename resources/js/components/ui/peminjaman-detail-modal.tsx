@@ -18,6 +18,7 @@ import {
     Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { generateWhatsAppReminderMessage, formatPhoneForWhatsApp } from '@/utils/whatsapp-message-generator';
 
 interface PinjamBarang {
     id: string;
@@ -48,56 +49,6 @@ interface PeminjamanDetailModalProps {
 
 export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onReturn }: PeminjamanDetailModalProps) {
     if (!peminjaman) return null;
-
-    // Format phone number for WhatsApp (remove spaces, dashes, and leading zeros)
-    const formatPhoneForWhatsApp = (phone: string) => {
-        // Remove all non-numeric characters except +
-        let cleaned = phone.replace(/[^\d+]/g, '');
-
-        // If starts with 0, replace with 62 (Indonesia country code)
-        if (cleaned.startsWith('0')) {
-            cleaned = '62' + cleaned.substring(1);
-        }
-
-        // Remove + sign for wa.me format
-        cleaned = cleaned.replace('+', '');
-
-        // If doesn't start with country code, assume Indonesia and add 62
-        if (!cleaned.startsWith('62') && cleaned.length >= 9) {
-            cleaned = '62' + cleaned;
-        }
-
-        return cleaned;
-    };
-
-    // Generate WhatsApp message template
-    const generateWhatsAppMessage = () => {
-        const borrowerName = peminjaman.manual_borrower_name || 'Peminjam';
-        const itemName = (peminjaman.nama_aset && peminjaman.nama_aset !== 'N/A')
-            ? peminjaman.nama_aset
-            : (peminjaman.nama_barang && peminjaman.nama_barang !== 'N/A')
-                ? peminjaman.nama_barang
-                : 'barang';
-        const quantity = peminjaman.jumlah;
-        const borrowDate = formatDate(peminjaman.tanggal_pinjam);
-        const targetDate = peminjaman.target_return_date ? formatDate(peminjaman.target_return_date) : 'belum ditentukan';
-
-        const message = `Halo ${borrowerName},
-
-Kami dari Laboratorium ingin mengingatkan tentang peminjaman barang:
-
-*Detail Peminjaman:*
-- Barang: ${itemName}
-- Jumlah: ${quantity} unit
-- Tanggal Pinjam: ${borrowDate}
-- Target Kembali: ${targetDate}
-
-Mohon segera mengembalikan barang yang dipinjam. Jika ada kendala, silakan hubungi kami.
-
-Terima kasih atas perhatian dan kerjasamanya!`;
-
-        return encodeURIComponent(message);
-    };
 
     const getStatusConfig = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -340,13 +291,13 @@ Terima kasih atas perhatian dan kerjasamanya!`;
                                                     <div className="flex-1">
                                                         <p className="text-sm text-blue-700 dark:text-blue-300">No. Telepon</p>
                                                         <a
-                                                            href={`https://wa.me/${formatPhoneForWhatsApp(peminjaman.manual_borrower_phone)}?text=${generateWhatsAppMessage()}`}
+                                                            href={`https://wa.me/${formatPhoneForWhatsApp(peminjaman.manual_borrower_phone)}?text=${generateWhatsAppReminderMessage(peminjaman)}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="font-medium text-blue-800 dark:text-blue-200 hover:text-blue-600 dark:hover:text-blue-100 hover:underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
                                                         >
                                                             {peminjaman.manual_borrower_phone}
-                                                            <span className="text-xs text-blue-600 dark:text-blue-400">(Kirim Pengingat)</span>
+                                                            <span className="text-xs text-blue-600 dark:text-blue-400">(Hubungi Beliau)</span>
                                                         </a>
                                                     </div>
                                                 </div>
