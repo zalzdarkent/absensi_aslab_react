@@ -57,6 +57,17 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     command: php telegram_polling.php
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-aslab}
+      - DB_USERNAME=${DB_USERNAME:-aslab}
+      - DB_PASSWORD=${DB_PASSWORD}
     volumes:
       - .:/var/www
     depends_on:
