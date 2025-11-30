@@ -49,6 +49,23 @@ services:
     networks:
       - laravel
 
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-telegram-bot
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php telegram_polling.php
+    volumes:
+      - .:/var/www
+    depends_on:
+      - app
+      - mysql
+      - redis
+    networks:
+      - laravel
+
   reverb:
     build:
       context: .
