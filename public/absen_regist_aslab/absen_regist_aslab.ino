@@ -1,519 +1,386 @@
-// --------------------------------------------------------------------
-// Proyek UTS Internet of Things: Smart Home Terintegrasi
-// VERSI FINAL: RTOS + Blynk (Internet) + Local Web Server
-// --------------------------------------------------------------------
-
-// 1. KONFIGURASI BLYNK
-#define BLYNK_TEMPLATE_ID "TMPL6UAC-zx7N"
-#define BLYNK_TEMPLATE_NAME "Smart Home"
-#define BLYNK_AUTH_TOKEN "-nviSBxe4-ZNiRebwh7ejj5fMxX722PL"
-#define BLYNK_PRINT Serial // Aktifkan Serial Monitor untuk Blynk
-
-// 2. LIBRARY
 #include <WiFi.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-#include <DHT.h>
-#include <ESP32Servo.h>
-#include <BlynkSimpleEsp32.h>
-#include <WebServer.h> // Web server lokal
+#include <HTTPClient.h>
+#include <SPI.h>
+#include <MFRC522.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
 
-// 3. KREDENSIAL WIFI & BLYNK
-const char* ssid = "Ara";
-const char* password = "ieqsholeh";
-char auth[] = BLYNK_AUTH_TOKEN;
+// WiFi
+const char *ssid = "narzo 50A";
+const char *password = "aixhwishx";
+  
+// API Endpoints Laravel
+String registrationEndpoint = "http://192.168.10.95:8000/api/rfid/scan-for-registration";
+String attendanceEndpoint = "http://192.168.10.95:8000/api/rfid/scan";
 
-// 4. DEFINISI PIN
-#define DHT_PIN 4
-#define DHT_TYPE DHT22
-#define PIR_PIN 18
-#define LED_PIN 5
-#define TRIG_PIN 19
-#define ECHO_PIN 23
-#define SERVO_PIN 2
+// RFID
+#define RST_PIN 22
+#define SS_PIN 21
+#define MODE_BUTTON_PIN 2  // Pin untuk switch mode
+#define LED_REG_PIN 4      // LED indikator mode registrasi (hijau)
+#define LED_ATT_PIN 5      // LED indikator mode absensi (biru)
+ 
+MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-// 5. INISIALISASI OBJEK
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-DHT dht(DHT_PIN, DHT_TYPE);
-Servo doorServo;
-WebServer server(80); // Web server lokal
+// System Variables
+enum SystemMode {
+  MODE_REGISTRATION,
+  MODE_CHECK_IN,
+  MODE_CHECK_OUT
+};
 
-// 6. VARIABEL GLOBAL (Shared Resources)
-float temperature = NAN, humidity = NAN, distance = 0;
-int motionState = LOW;
-bool manualMode = false;
-int manualLedState = LOW;
-int manualServoPos = 0;
+SystemMode currentMode = MODE_REGISTRATION;
+QueueHandle_t rfidQueue;
+SemaphoreHandle_t wifiMutex;
+String commandEndpoint = "http://192.168.10.95:8000/api/rfid/get-mode-command";
 
-// 7. RTOS HANDLES
-SemaphoreHandle_t sensorDataMutex;
-TaskHandle_t broadcastTaskHandle;
-TaskHandle_t blynkTaskHandle;
+struct RFIDData {
+  String uid;
+  SystemMode mode;
+  unsigned long timestamp;
+};
 
-// 8. DEKLARASI FUNGSI TASK
-void taskBacaSensor(void *pvParameters);
-void taskKontrolLampu(void *pvParameters);
-void taskKontrolPintu(void *pvParameters);
-void taskUpdateLCD(void *pvParameters);
-void taskBroadcastData(void *pvParameters);
-void taskBlynkRun(void *pvParameters);
-void taskWebServer(void *pvParameters);
+// Task Handles
+TaskHandle_t rfidTaskHandle;
+TaskHandle_t networkTaskHandle;
+TaskHandle_t displayTaskHandle;
+TaskHandle_t commandTaskHandle;
 
-// --------------------------------------------------------------------
-// SETUP
-// --------------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
-
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("Smart Home RTOS");
-  lcd.setCursor(0, 1);
-  lcd.print("Connecting WiFi...");
-
-  dht.begin();
-  pinMode(PIR_PIN, INPUT);
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
-  doorServo.attach(SERVO_PIN);
-  doorServo.write(0);
-
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nWiFi connected!");
-  
-  lcd.clear();
-  lcd.print("WiFi Terhubung!");
   delay(1000);
 
-  // Inisialisasi Blynk (client)
-  Blynk.begin(auth, ssid, password);
+  Serial.println("\n=== ESP32 DUAL MODE RFID SYSTEM ===");
 
-  lcd.clear();
-  lcd.print("Blynk Terhubung!");
-  delay(1500);
-  lcd.clear();
+  // Initialize pins
+  pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_REG_PIN, OUTPUT);
+  pinMode(LED_ATT_PIN, OUTPUT);
 
-  // Inisialisasi RTOS
-  sensorDataMutex = xSemaphoreCreateMutex();
-  if (sensorDataMutex == NULL) {
-    Serial.println("Gagal membuat Mutex!"); while(1);
+  // Set initial mode indicators
+  updateModeIndicators();
+
+  // Initialize SPI and RFID
+  SPI.begin(18, 19, 23, 21);  // SCK, MISO, MOSI, SS
+  mfrc522.PCD_Init();
+
+  Serial.println("RFID reader initialized");
+
+  // Test RFID reader
+  if (mfrc522.PCD_PerformSelfTest()) {
+    Serial.println("✓ RFID Reader OK");
+  } else {
+    Serial.println("✗ RFID Reader FAILED");
+  }
+  mfrc522.PCD_Init();  // Re-init after self test
+
+  // Initialize FreeRTOS components
+  rfidQueue = xQueueCreate(10, sizeof(RFIDData));
+  wifiMutex = xSemaphoreCreateMutex();
+
+  // Connect WiFi
+  connectWiFi();
+
+  // Create FreeRTOS Tasks
+  xTaskCreatePinnedToCore(
+    rfidScanTask,     // Task function
+    "RFID_Scan",      // Task name
+    4096,             // Stack size
+    NULL,             // Parameters
+    2,                // Priority
+    &rfidTaskHandle,  // Task handle
+    1                 // Core 1
+  );
+
+  xTaskCreatePinnedToCore(
+    networkTask,         // Task function
+    "Network_Handler",   // Task name
+    8192,                // Stack size
+    NULL,                // Parameters
+    1,                   // Priority
+    &networkTaskHandle,  // Task handle
+    0                    // Core 0
+  );
+
+  xTaskCreatePinnedToCore(
+    displayTask,         // Task function
+    "Display_Status",    // Task name
+    2048,                // Stack size
+    NULL,                // Parameters
+    1,                   // Priority
+    &displayTaskHandle,  // Task handle
+    0                    // Core 0
+  );
+
+  xTaskCreatePinnedToCore(
+    commandTask,         // Task function
+    "Command_Listener",  // Task name
+    4096,                // Stack size
+    NULL,                // Parameters
+    1,                   // Priority
+    &commandTaskHandle,  // Task handle
+    0                    // Core 0
+  );
+
+  Serial.println("\n=== SYSTEM READY ===");
+  printCurrentMode();
+  Serial.println("Listening for web commands to change mode...");
+  Serial.println("===============================================");
+}
+
+void loop() {
+  // Main loop mostly empty, tasks handle everything
+  delay(100);
+}
+
+// WiFi Connection Function
+void connectWiFi() {
+  Serial.println("Connecting to WiFi...");
+  WiFi.mode(WIFI_STA);  // Mode station
+  WiFi.begin(ssid, password);
+
+  unsigned long startAttemptTime = millis();
+
+  // Tunggu sampai 10 detik
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) {
+    Serial.print(".");
+    delay(500);
   }
 
-  // Buat Tasks (sebar ke core agar responsif)
-  xTaskCreatePinnedToCore(taskBacaSensor, "BacaSensor", 4096, NULL, 1, NULL, 1);
-  xTaskCreatePinnedToCore(taskKontrolLampu, "KontrolLampu", 2048, NULL, 2, NULL, 0);
-  xTaskCreatePinnedToCore(taskKontrolPintu, "KontrolPintu", 2048, NULL, 2, NULL, 1);
-  xTaskCreatePinnedToCore(taskUpdateLCD, "UpdateLCD", 4096, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(taskBroadcastData, "BroadcastData", 4096, NULL, 1, &broadcastTaskHandle, 0); 
-  xTaskCreatePinnedToCore(taskBlynkRun, "BlynkRun", 4096, NULL, 1, &blynkTaskHandle, 0); 
-  xTaskCreatePinnedToCore(taskWebServer, "WebServer", 4096, NULL, 1, NULL, 1);
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n✓ WiFi Connected!");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("Signal Strength (RSSI): ");
+    Serial.println(WiFi.RSSI());
+  } else {
+    Serial.print("\n✗ WiFi Failed. Status Code: ");
+    Serial.println(WiFi.status());
+    // Tambahan info
+    if (WiFi.status() == WL_NO_SSID_AVAIL) Serial.println("SSID not found!");
+    else if (WiFi.status() == WL_CONNECT_FAILED) Serial.println("Password salah!");
+    else if (WiFi.status() == WL_IDLE_STATUS) Serial.println("Idle, belum connect.");
+    else if (WiFi.status() == WL_DISCONNECTED) Serial.println("Disconnected.");
+  }
+}
 
-  // SETUP ROUTES WEB (dijalankan dari taskWebServer)
-  // (Handler di-setup di dalam fungsi setupWebHandlers() dipanggil dari setup() supaya sudah terdaftar)
-  // tapi kita definisikan lambdas langsung di sini:
-  server.on("/", HTTP_GET, []() {
-    // Halaman web sederhana (HTML + JS)
-    String page = R"rawliteral(
-      <!doctype html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>Smart Home - Lokal</title>
-        <style>
-          body{font-family:Arial,Helvetica,sans-serif;padding:10px}
-          .card{border-radius:8px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
-          button{padding:8px 12px;border-radius:6px;border:none;cursor:pointer}
-        </style>
-      </head>
-      <body>
-        <h2>Smart Home (Lokal)</h2>
-        <div class="card">
-          <div><b>Suhu:</b> <span id="temp">...</span> °C</div>
-          <div><b>Kelembaban:</b> <span id="hum">...</span> %</div>
-          <div><b>Jarak:</b> <span id="dist">...</span> cm</div>
-          <div><b>Gerak:</b> <span id="motion">...</span></div>
-          <div><b>Mode:</b> <span id="mode">...</span></div>
-          <div><b>Lampu:</b> <span id="led">...</span></div>
-          <div><b>Pintu:</b> <span id="door">...</span></div>
-        </div>
+// Update LED indicators based on current mode
+void updateModeIndicators() {
+  if (currentMode == MODE_REGISTRATION) {
+    digitalWrite(LED_REG_PIN, HIGH);  // Green LED ON
+    digitalWrite(LED_ATT_PIN, LOW);   // Blue LED OFF
+  } else {
+    digitalWrite(LED_REG_PIN, LOW);   // Green LED OFF
+    digitalWrite(LED_ATT_PIN, HIGH);  // Blue LED ON
+  }
+}
 
-        <div class="card">
-          <button onclick="setMode(0)">Mode: OTOMATIS</button>
-          <button onclick="setMode(1)">Mode: MANUAL</button>
-          <button onclick="setLed(1)">Lampu ON</button>
-          <button onclick="setLed(0)">Lampu OFF</button>
-          <button onclick="setDoor(1)">Buka Pintu</button>
-          <button onclick="setDoor(0)">Tutup Pintu</button>
-        </div>
+// Print current mode to serial
+void printCurrentMode() {
+  Serial.println("\n=== MODE CHANGED ===");
+  if (currentMode == MODE_REGISTRATION) {
+    Serial.println("🔧 REGISTRATION MODE");
+    Serial.println("Scan cards to register new RFID");
+  } else if (currentMode == MODE_CHECK_IN) {
+    Serial.println("📋 CHECK-IN MODE");
+    Serial.println("Scan registered cards for check-in");
+  } else {
+    Serial.println("📤 CHECK-OUT MODE");
+    Serial.println("Scan registered cards for check-out");
+  }
+  Serial.println("====================");
+}
 
-        <script>
-          async function fetchStatus(){
-            try{
-              const res = await fetch('/status');
-              const j = await res.json();
-              document.getElementById('temp').innerText = isNaN(j.temperature)? '...' : j.temperature.toFixed(1);
-              document.getElementById('hum').innerText = isNaN(j.humidity)? '...' : j.humidity.toFixed(1);
-              document.getElementById('dist').innerText = j.distance.toFixed(0);
-              document.getElementById('motion').innerText = j.motion==1? 'DETEKSI' : 'TIDAK';
-              document.getElementById('mode').innerText = j.manualMode? 'MANUAL' : 'OTOMATIS';
-              document.getElementById('led').innerText = j.led==1? 'ON' : 'OFF';
-              document.getElementById('door').innerText = j.door==1? 'TERBUKA' : 'TERTUTUP';
-            }catch(e){
-              console.log('err',e);
+// FreeRTOS Task: RFID Scanning
+void rfidScanTask(void *pvParameters) {
+  RFIDData rfidData;
+
+  while (true) {
+    // Cek kartu RFID
+    if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+
+      // Ambil UID RFID
+      String uid = "";
+      for (byte i = 0; i < mfrc522.uid.size; i++) {
+        if (mfrc522.uid.uidByte[i] < 0x10) {
+          uid += "0";
+        }
+        uid += String(mfrc522.uid.uidByte[i], HEX);
+      }
+      uid.toUpperCase();
+
+      // Prepare data for queue
+      rfidData.uid = uid;
+      rfidData.mode = currentMode;
+      rfidData.timestamp = millis();
+
+      // Send to queue
+      if (xQueueSend(rfidQueue, &rfidData, pdMS_TO_TICKS(100)) == pdPASS) {
+        Serial.println("\n=== KARTU TERDETEKSI ===");
+        Serial.println("UID: " + uid);
+        String modeStr = (currentMode == MODE_REGISTRATION) ? "REGISTRATION" : (currentMode == MODE_CHECK_IN) ? "CHECK-IN"
+                                                                                                              : "CHECK-OUT";
+        Serial.println("Mode: " + modeStr);
+        Serial.println("========================");
+      }
+
+      // Halt PICC and stop encryption
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
+
+      vTaskDelay(pdMS_TO_TICKS(2000));  // Prevent spam scanning
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(100));  // Task delay
+  }
+}
+
+// FreeRTOS Task: Network Handler
+void networkTask(void *pvParameters) {
+  RFIDData receivedData;
+
+  while (true) {
+    // Wait for RFID data from queue
+    if (xQueueReceive(rfidQueue, &receivedData, pdMS_TO_TICKS(1000)) == pdPASS) {
+
+      // Take WiFi mutex
+      if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(5000)) == pdPASS) {
+
+        if (WiFi.status() == WL_CONNECTED) {
+          String endpoint = (receivedData.mode == MODE_REGISTRATION) ? registrationEndpoint : attendanceEndpoint;
+
+          sendRFIDData(receivedData.uid, endpoint, receivedData.mode);
+        } else {
+          Serial.println("✗ WiFi Disconnected - Reconnecting...");
+          WiFi.reconnect();
+        }
+
+        // Release WiFi mutex
+        xSemaphoreGive(wifiMutex);
+      }
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(100));  // Task delay
+  }
+}
+
+// FreeRTOS Task: Display Status
+void displayTask(void *pvParameters) {
+  unsigned long lastStatusTime = 0;
+
+  while (true) {
+    unsigned long currentTime = millis();
+
+    // Status check setiap 15 detik
+    if (currentTime - lastStatusTime > 15000) {
+      Serial.println("\n[STATUS] System running...");
+      String modeStr = (currentMode == MODE_REGISTRATION) ? "REGISTRATION" : (currentMode == MODE_CHECK_IN) ? "CHECK-IN"
+                                                                                                            : "CHECK-OUT";
+      Serial.println("Mode: " + modeStr);
+      Serial.println("WiFi: " + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected"));
+      Serial.println("Free Heap: " + String(ESP.getFreeHeap()) + " bytes");
+      Serial.println("Queue Messages: " + String(uxQueueMessagesWaiting(rfidQueue)));
+
+      lastStatusTime = currentTime;
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(5000));  // Check every 5 seconds
+  }
+}
+
+// Send RFID data to server
+void sendRFIDData(String uid, String endpoint, SystemMode mode) {
+  HTTPClient http;
+  http.setTimeout(5000);
+  http.begin(endpoint);
+  http.addHeader("Content-Type", "application/json");
+
+  String jsonData = "{\"rfid_code\":\"" + uid + "\"}";
+
+  if (mode == MODE_CHECK_IN || mode == MODE_CHECK_OUT) {
+    // For attendance, also send timestamp and type
+    String attendanceType = (mode == MODE_CHECK_IN) ? "check_in" : "check_out";
+    jsonData = "{\"rfid_code\":\"" + uid + "\",\"type\":\"" + attendanceType + "\",\"timestamp\":\"" + String(millis()) + "\"}";
+  }
+
+  Serial.println("Sending to: " + endpoint);
+  Serial.println("JSON Data: " + jsonData);
+
+  int httpResponseCode = http.POST(jsonData);
+
+  if (httpResponseCode > 0) {
+    String response = http.getString();
+    Serial.println("Response Code: " + String(httpResponseCode));
+    Serial.println("Response: " + response);
+
+    if (httpResponseCode == 200) {
+      if (mode == MODE_REGISTRATION) {
+        Serial.println("✓ RFID tersedia untuk registrasi");
+      } else if (mode == MODE_CHECK_IN) {
+        Serial.println("✓ Check-in berhasil dicatat");
+      } else {
+        Serial.println("✓ Check-out berhasil dicatat");
+      }
+    } else {
+      if (mode == MODE_REGISTRATION) {
+        Serial.println("✗ RFID sudah terdaftar atau error");
+      } else {
+        Serial.println("✗ RFID tidak terdaftar atau error absensi");
+      }
+    }
+  } else {
+    Serial.print("HTTP Error code: ");
+    Serial.println(httpResponseCode);
+  }
+
+  http.end();
+}
+
+// FreeRTOS Task: Command Listener
+void commandTask(void *pvParameters) {
+  while (true) {
+    // Check for mode commands from web every 3 seconds
+    if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(3000)) == pdPASS) {
+
+      if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        http.setTimeout(3000);
+        http.begin(commandEndpoint);
+
+        int httpResponseCode = http.GET();
+
+        if (httpResponseCode == 200) {
+          String response = http.getString();
+
+          // Parse JSON response to get mode command
+          if (response.indexOf("\"mode\":\"registration\"") > -1) {
+            if (currentMode != MODE_REGISTRATION) {
+              currentMode = MODE_REGISTRATION;
+              updateModeIndicators();
+              printCurrentMode();
+            }
+          } else if (response.indexOf("\"mode\":\"check_in\"") > -1) {
+            if (currentMode != MODE_CHECK_IN) {
+              currentMode = MODE_CHECK_IN;
+              updateModeIndicators();
+              printCurrentMode();
+            }
+          } else if (response.indexOf("\"mode\":\"check_out\"") > -1) {
+            if (currentMode != MODE_CHECK_OUT) {
+              currentMode = MODE_CHECK_OUT;
+              updateModeIndicators();
+              printCurrentMode();
             }
           }
-          async function setMode(m){
-            await fetch('/set?mode='+m);
-            fetchStatus();
-          }
-          async function setLed(s){
-            await fetch('/set?led='+s);
-            fetchStatus();
-          }
-          async function setDoor(s){
-            await fetch('/set?door='+s);
-            fetchStatus();
-          }
-          setInterval(fetchStatus, 1000);
-          fetchStatus();
-        </script>
-      </body>
-      </html>
-    )rawliteral";
-    server.send(200, "text/html", page);
-  });
+        }
 
-  server.on("/status", HTTP_GET, [](){
-    // Kirim JSON status
-    bool lm;
-    float t,h,d;
-    int m,led,door;
-    if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-      lm = manualMode;
-      t = temperature;
-      h = humidity;
-      d = distance;
-      m = motionState;
-      led = (manualLedState == HIGH) ? 1 : 0;
-      door = (manualServoPos == 90) ? 1 : 0;
-      xSemaphoreGive(sensorDataMutex);
-    }
-    String json = "{";
-    json += "\"manualMode\":" + String(lm ? "true":"false") + ",";
-    json += "\"temperature\":" + (isnan(t) ? String("null") : String(t,1)) + ",";
-    json += "\"humidity\":" + (isnan(h) ? String("null") : String(h,1)) + ",";
-    json += "\"distance\":" + String(d,0) + ",";
-    json += "\"motion\":" + String(m) + ",";
-    json += "\"led\":" + String(led) + ",";
-    json += "\"door\":" + String(door);
-    json += "}";
-    server.send(200, "application/json", json);
-  });
-
-  // Endpoint untuk mengubah state via web (mode, led, door)
-  server.on("/set", HTTP_GET, [](){
-    bool changed = false;
-    if (server.hasArg("mode")) {
-      String v = server.arg("mode");
-      if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-        manualMode = (v == "1");
-        xSemaphoreGive(sensorDataMutex);
+        http.end();
       }
-      changed = true;
-      Serial.printf("Web: set mode = %s\n", v.c_str());
-    }
-    if (server.hasArg("led")) {
-      String v = server.arg("led");
-      if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-        manualMode = true;
-        manualLedState = (v == "1") ? HIGH : LOW;
-        xSemaphoreGive(sensorDataMutex);
-      }
-      changed = true;
-      Serial.printf("Web: set led = %s\n", v.c_str());
-    }
-    if (server.hasArg("door")) {
-      String v = server.arg("door");
-      if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-        manualMode = true;
-        manualServoPos = (v == "1") ? 90 : 0;
-        xSemaphoreGive(sensorDataMutex);
-      }
-      changed = true;
-      Serial.printf("Web: set door = %s\n", v.c_str());
+
+      xSemaphoreGive(wifiMutex);
     }
 
-    if (changed) {
-      // beri tahu broadcast task agar sinkron ke Blynk
-      xTaskNotifyGive(broadcastTaskHandle);
-      server.send(200, "text/plain", "OK");
-    } else {
-      server.send(400, "text/plain", "No args");
-    }
-  });
-
-  server.begin();
-  Serial.println("Web server started at: " + WiFi.localIP().toString());
-}
-
-// --------------------------------------------------------------------
-// LOOP UTAMA
-// --------------------------------------------------------------------
-void loop() {
-  // Kosong: semua kerja di tasks
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
-}
-
-// --------------------------------------------------------------------
-// TASK 1: BACA SENSOR
-// --------------------------------------------------------------------
-void taskBacaSensor(void *pvParameters) {
-  (void) pvParameters;
-  long localDuration;
-  
-  for (;;) {
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
-    int m = digitalRead(PIR_PIN);
-
-    digitalWrite(TRIG_PIN, LOW); delayMicroseconds(2);
-    digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
-    digitalWrite(TRIG_PIN, LOW);
-    localDuration = pulseIn(ECHO_PIN, HIGH);
-    float d = localDuration * 0.034 / 2;
-
-    if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-      if (!isnan(h) && !isnan(t)) {
-        humidity = h;
-        temperature = t;
-      }
-      distance = d;
-      motionState = m;
-      xSemaphoreGive(sensorDataMutex);
-    }
-    
-    Serial.printf("S: %.1fC, H: %.1f%%, D: %.0fcm, M: %d\n", t, h, d, m);
-    xTaskNotifyGive(broadcastTaskHandle); // Beri tahu task broadcast (untuk kirim ke Blynk)
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(3000));  // Check every 3 seconds
   }
-}
-
-// --------------------------------------------------------------------
-// TASK 2: KONTROL LAMPU
-// --------------------------------------------------------------------
-void taskKontrolLampu(void *pvParameters) {
-  (void) pvParameters;
-  float localTemp;
-  int localMotion;
-  bool localManualMode;
-  int localManualState;
-  static int lastLedState = -1;
-
-  for (;;) {
-    if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-      localTemp = temperature;
-      localMotion = motionState;
-      localManualMode = manualMode;
-      localManualState = manualLedState;
-      xSemaphoreGive(sensorDataMutex);
-    }
-    int currentLedState;
-    if (localManualMode) {
-      currentLedState = localManualState;
-    } else {
-      currentLedState = LOW;
-      if (localMotion == HIGH && localTemp < 25) {
-        currentLedState = HIGH;
-      }
-    }
-    if (currentLedState != lastLedState) {
-      digitalWrite(LED_PIN, currentLedState);
-      Serial.printf("Kontrol Lampu: Mode %s -> LED %s\n",
-                    localManualMode ? "MANUAL" : "OTOMATIS",
-                    currentLedState == HIGH ? "ON" : "OFF");
-      lastLedState = currentLedState;
-    }
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-  }
-}
-
-// --------------------------------------------------------------------
-// TASK 3: KONTROL PINTU
-// --------------------------------------------------------------------
-void taskKontrolPintu(void *pvParameters) {
-  (void) pvParameters;
-  float localDist;
-  int localMotion;
-  bool localManualMode;
-  int localManualPos;
-  static int lastServoPos = -1;
-
-  for (;;) {
-    if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-      localDist = distance;
-      localMotion = motionState;
-      localManualMode = manualMode;
-      localManualPos = manualServoPos;
-      xSemaphoreGive(sensorDataMutex);
-    }
-    int currentServoPos;
-    if (localManualMode) {
-      currentServoPos = localManualPos;
-    } else {
-      currentServoPos = 0;
-      if (localMotion == HIGH && localDist < 20) {
-        currentServoPos = 90;
-      }
-    }
-    if (currentServoPos != lastServoPos) {
-      doorServo.write(currentServoPos);
-      Serial.printf("Kontrol Pintu: Mode %s -> Pintu %s\n",
-                    localManualMode ? "MANUAL" : "OTOMATIS",
-                    currentServoPos == 90 ? "TERBUKA" : "TERTUTUP");
-      lastServoPos = currentServoPos;
-    }
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-  }
-}
-
-// --------------------------------------------------------------------
-// TASK 4: TAMPILKAN DATA KE LCD
-// --------------------------------------------------------------------
-void taskUpdateLCD(void *pvParameters) {
-  (void) pvParameters;
-  float localTemp, localHum;
-  bool localManual;
-
-  for (;;) {
-    if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-      localTemp = temperature;
-      localHum = humidity;
-      localManual = manualMode;
-      xSemaphoreGive(sensorDataMutex);
-    }
-    String tempStr = isnan(localTemp) ? "..." : String(localTemp, 1);
-    String humStr = isnan(localHum) ? "..." : String(localHum, 1);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("S:" + tempStr + "C ");
-    lcd.print("H:" + humStr + "%");
-    lcd.setCursor(0, 1);
-    lcd.print(localManual ? "Mode: MANUAL" : "Mode: OTOMATIS");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
-
-// --------------------------------------------------------------------
-// TASK 5: BROADCAST DATA (KIRIM KE BLYNK)
-// --------------------------------------------------------------------
-void taskBroadcastData(void *pvParameters) {
-  (void) pvParameters;
-  for(;;) {
-    // Tidur sampai ada notifikasi dari sensor atau web/blynk
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-    // Ambil data terbaru (mutexed)
-    float localTemp, localHum;
-    int localLedState, localServoPos;
-    bool localManualMode;
-    
-    if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-      localTemp = temperature;
-      localHum = humidity;
-      localManualMode = manualMode;
-      localLedState = (manualLedState == HIGH) ? 1 : 0;
-      localServoPos = manualServoPos;
-      xSemaphoreGive(sensorDataMutex);
-    }
-
-    // Kirim ke Klien Blynk (Internet)
-    if (Blynk.connected()) {
-      Blynk.virtualWrite(V0, localManualMode ? 1 : 0); // V0: Tombol Mode (1=Manual, 0=Auto)
-      Blynk.virtualWrite(V1, localLedState); // V1: Status Kontrol Lampu
-      Blynk.virtualWrite(V4, (localServoPos == 90 ? 1 : 0)); // V4: Status Kontrol Pintu
-      Blynk.virtualWrite(V2, localTemp);    // V2: Suhu Ruangan
-      Blynk.virtualWrite(V3, localHum);     // V3: Kelembaban Ruangan
-    }
-    
-    Serial.println("Broadcast: Data disinkronkan ke Blynk");
-  }
-}
-
-// --------------------------------------------------------------------
-// TASK 6: BLYNK RUN (TASK BARU)
-// --------------------------------------------------------------------
-void taskBlynkRun(void *pvParameters) {
-  (void) pvParameters;
-  for(;;) {
-    if (WiFi.status() == WL_CONNECTED) {
-      if (!Blynk.connected()) {
-        Serial.println("Blynk terputus, mencoba menghubungkan kembali...");
-        Blynk.connect();
-      } else {
-        Blynk.run();
-      }
-    } else {
-      Serial.println("WiFi terputus, menunda Blynk.");
-    }
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-  }
-}
-
-// --------------------------------------------------------------------
-// TASK 7: WEB SERVER (jalankan handleClient di task khusus)
-// --------------------------------------------------------------------
-void taskWebServer(void *pvParameters) {
-  (void) pvParameters;
-  for(;;) {
-    server.handleClient(); // proses request HTTP
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-}
-
-// --------------------------------------------------------------------
-// FUNGSI EVENT HANDLER BLYNK (REVISI V-PIN)
-// --------------------------------------------------------------------
-
-// V0: Tombol Ganti Mode (BARU)
-BLYNK_WRITE(V0) {
-  int state = param.asInt();
-  if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-    manualMode = (state == 1) ? true : false;
-    xSemaphoreGive(sensorDataMutex);
-  }
-  xTaskNotifyGive(broadcastTaskHandle); // Beri tahu task broadcast
-  Serial.printf("Perintah dari Blynk: Mode diubah ke %s\n", manualMode ? "MANUAL" : "OTOMATIS");
-}
-
-// V1: Kontrol Lampu
-BLYNK_WRITE(V1) {
-  int state = param.asInt();
-  if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-    manualMode = true; // Otomatis pindah ke mode manual
-    manualLedState = (state == 1) ? HIGH : LOW;
-    xSemaphoreGive(sensorDataMutex);
-  }
-  xTaskNotifyGive(broadcastTaskHandle); // Beri tahu task broadcast
-  Serial.println("Perintah dari Blynk: Lampu");
-}
-
-// V4: Kontrol Pintu
-BLYNK_WRITE(V4) {
-  int state = param.asInt();
-  if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE) {
-    manualMode = true; // Otomatis pindah ke mode manual
-    manualServoPos = (state == 1) ? 90 : 0;
-    xSemaphoreGive(sensorDataMutex);
-  }
-  xTaskNotifyGive(broadcastTaskHandle); // Beri tahu task broadcast
-  Serial.println("Perintah dari Blynk: Pintu");
 }
