@@ -14,7 +14,8 @@ import {
     UserCheck,
     X,
     FileCheck,
-    FileClock
+    FileClock,
+    Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -47,6 +48,27 @@ interface PeminjamanDetailModalProps {
 
 export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onReturn }: PeminjamanDetailModalProps) {
     if (!peminjaman) return null;
+
+    // Format phone number for WhatsApp (remove spaces, dashes, and leading zeros)
+    const formatPhoneForWhatsApp = (phone: string) => {
+        // Remove all non-numeric characters except +
+        let cleaned = phone.replace(/[^\d+]/g, '');
+
+        // If starts with 0, replace with 62 (Indonesia country code)
+        if (cleaned.startsWith('0')) {
+            cleaned = '62' + cleaned.substring(1);
+        }
+
+        // Remove + sign for wa.me format
+        cleaned = cleaned.replace('+', '');
+
+        // If doesn't start with country code, assume Indonesia and add 62
+        if (!cleaned.startsWith('62') && cleaned.length >= 9) {
+            cleaned = '62' + cleaned;
+        }
+
+        return cleaned;
+    };
 
     const getStatusConfig = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -285,10 +307,18 @@ export function PeminjamanDetailModal({ peminjaman, isOpen, onOpenChange, onRetu
                                             )}
                                             {peminjaman.manual_borrower_phone && (
                                                 <div className="flex items-center gap-3">
-                                                    <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                                    <div>
+                                                    <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                    <div className="flex-1">
                                                         <p className="text-sm text-blue-700 dark:text-blue-300">No. Telepon</p>
-                                                        <p className="font-medium text-blue-800 dark:text-blue-200">{peminjaman.manual_borrower_phone}</p>
+                                                        <a
+                                                            href={`https://wa.me/${formatPhoneForWhatsApp(peminjaman.manual_borrower_phone)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="font-medium text-blue-800 dark:text-blue-200 hover:text-blue-600 dark:hover:text-blue-100 hover:underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                                                        >
+                                                            {peminjaman.manual_borrower_phone}
+                                                            <span className="text-xs text-blue-600 dark:text-blue-400">(Buka WhatsApp)</span>
+                                                        </a>
                                                     </div>
                                                 </div>
                                             )}
