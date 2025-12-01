@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
-import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle, Clock, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle, Clock, ArrowUpDown, TrendingUp } from 'lucide-react';
+import { Label, Pie, PieChart } from "recharts"
+import {
+    ChartConfig,
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+} from "@/components/ui/chart"
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -256,6 +263,29 @@ export default function AsetAslabShow({ aset }: Props) {
         }
     };
 
+    // Calculate chart data
+    // User requested "Riwayat Peminjaman" vs "Stok Tersedia"
+    const totalRiwayat = aset.peminjaman_asets?.length || 0;
+
+    const chartData = [
+        { browser: "tersedia", visitors: aset.stok, fill: "url(#gradientTersedia)" },
+        { browser: "riwayat", visitors: totalRiwayat, fill: "url(#gradientRiwayat)" },
+    ]
+
+    const chartConfig = {
+        visitors: {
+            label: "Total",
+        },
+        tersedia: {
+            label: "Stok Tersedia",
+            color: "var(--chart-2)",
+        },
+        riwayat: {
+            label: "Peminjaman ",
+            color: "var(--chart-1)",
+        },
+    } satisfies ChartConfig
+
     return (
         <AppLayout>
             <Head title={`Detail Aset - ${aset.nama_aset}`} />
@@ -424,26 +454,79 @@ export default function AsetAslabShow({ aset }: Props) {
                                 </CardContent>
                             </Card>
 
-                            {/* Quick Stats */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Statistik</CardTitle>
+                            {/* Quick Stats Chart */}
+                            <Card className="flex flex-col">
+                                <CardHeader className="items-center pb-0">
+                                    <CardTitle>Statistik Aset</CardTitle>
+                                    <CardDescription>Ketersediaan vs Peminjaman</CardDescription>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-500">Total Peminjaman</span>
-                                        <span className="font-medium">
-                                            {aset.peminjaman_asets?.length || 0}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-500">Stok Tersedia</span>
-                                        <span className="font-medium">{aset.stok}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-500">Status</span>
-                                        <span className="font-medium">{getStatusText(aset.status)}</span>
-                                    </div>
+                                <CardContent className="flex-1 pb-0">
+                                    <ChartContainer
+                                        config={chartConfig}
+                                        className="mx-auto aspect-square max-h-[250px]"
+                                    >
+                                        <PieChart>
+                                            <defs>
+                                                <linearGradient id="gradientTersedia" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="var(--color-tersedia)" stopOpacity={1} />
+                                                    <stop offset="100%" stopColor="var(--color-tersedia)" stopOpacity={0.8} />
+                                                </linearGradient>
+                                                <linearGradient id="gradientRiwayat" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="var(--color-riwayat)" stopOpacity={1} />
+                                                    <stop offset="100%" stopColor="var(--color-riwayat)" stopOpacity={0.8} />
+                                                </linearGradient>
+                                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                                    <feGaussianBlur stdDeviation="2" result="blur" />
+                                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                                </filter>
+                                            </defs>
+                                            <ChartTooltip
+                                                cursor={false}
+                                                content={<ChartTooltipContent hideLabel />}
+                                            />
+                                            <Pie
+                                                data={chartData}
+                                                dataKey="visitors"
+                                                nameKey="browser"
+                                                innerRadius={85}
+                                                outerRadius={110}
+                                                strokeWidth={0}
+                                                cornerRadius={8}
+                                                paddingAngle={4}
+                                                style={{ filter: 'url(#glow)' }}
+                                            >
+                                                <Label
+                                                    content={({ viewBox }) => {
+                                                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                            return (
+                                                                <text
+                                                                    x={viewBox.cx}
+                                                                    y={viewBox.cy}
+                                                                    textAnchor="middle"
+                                                                    dominantBaseline="middle"
+                                                                >
+                                                                    <tspan
+                                                                        x={viewBox.cx}
+                                                                        y={viewBox.cy}
+                                                                        className="fill-foreground text-2xl font-bold"
+                                                                    >
+                                                                        {getStatusText(aset.status)}
+                                                                    </tspan>
+                                                                    <tspan
+                                                                        x={viewBox.cx}
+                                                                        y={(viewBox.cy || 0) + 28}
+                                                                        className="fill-muted-foreground text-sm"
+                                                                    >
+                                                                        Kondisi
+                                                                    </tspan>
+                                                                </text>
+                                                            )
+                                                        }
+                                                    }}
+                                                />
+                                            </Pie>
+                                        </PieChart>
+                                    </ChartContainer>
                                 </CardContent>
                             </Card>
                         </div>
