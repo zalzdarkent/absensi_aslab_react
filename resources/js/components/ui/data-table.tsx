@@ -50,6 +50,7 @@ interface DataTableProps<TData, TValue> {
   highlightId?: string | number;
   highlightKey?: string;
   getRowId?: (originalRow: TData, index: number, parent?: any) => string;
+  defaultSorting?: SortingState;
 }
 
 export function DataTable<TData, TValue>({
@@ -63,8 +64,9 @@ export function DataTable<TData, TValue>({
   highlightId,
   highlightKey = "id",
   getRowId,
+  defaultSorting = [],
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(defaultSorting);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});

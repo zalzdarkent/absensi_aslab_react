@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
-import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle, Clock, ArrowUpDown } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -21,6 +21,7 @@ interface Peminjaman {
         name: string;
         email: string;
     };
+    manual_borrower_name?: string;
 }
 
 interface Aset {
@@ -61,17 +62,54 @@ export default function AsetAslabShow({ aset }: Props) {
     const peminjamanColumns: ColumnDef<Peminjaman>[] = [
         {
             accessorKey: "user.name",
-            header: "Peminjam",
-            cell: ({ row }) => (
-                <div>
-                    <div className="font-medium">{row.original.user.name}</div>
-                    <div className="text-sm text-gray-500">{row.original.user.email}</div>
-                </div>
-            ),
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Peminjam
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => {
+                const manualName = row.original.manual_borrower_name;
+                const registeredName = row.original.user.name;
+                const email = row.original.user.email;
+
+                if (manualName) {
+                    return (
+                        <div className="flex flex-col">
+                            <span className="font-medium text-blue-600 dark:text-blue-400">{manualName}</span>
+                            <span className="text-[10px] text-muted-foreground italic">Manual (via {registeredName})</span>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div>
+                        <div className="font-medium">{registeredName}</div>
+                        <div className="text-sm text-gray-500">{email}</div>
+                    </div>
+                );
+            },
         },
         {
             accessorKey: "stok",
-            header: "Jumlah",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Jumlah
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
             cell: ({ row }) => (
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                     {row.getValue("stok")} unit
@@ -80,7 +118,18 @@ export default function AsetAslabShow({ aset }: Props) {
         },
         {
             accessorKey: "tanggal_pinjam",
-            header: "Tanggal Pinjam",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Tanggal Pinjam
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
             cell: ({ row }) => {
                 const tanggal = row.getValue("tanggal_pinjam") as string;
                 return new Date(tanggal).toLocaleDateString('id-ID');
@@ -96,7 +145,18 @@ export default function AsetAslabShow({ aset }: Props) {
         },
         {
             accessorKey: "status_text",
-            header: "Status",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="h-8 px-2"
+                    >
+                        Status
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
             cell: ({ row }) => {
                 const status = row.getValue("status_text") as string;
                 const rawStatus = row.original.status;
@@ -330,6 +390,7 @@ export default function AsetAslabShow({ aset }: Props) {
                                             columns={peminjamanColumns}
                                             data={aset.peminjaman_asets}
                                             searchPlaceholder="Cari nama peminjam..."
+                                            defaultSorting={[{ id: "tanggal_pinjam", desc: true }]}
                                         />
                                     ) : (
                                         <div className="text-center py-8">
