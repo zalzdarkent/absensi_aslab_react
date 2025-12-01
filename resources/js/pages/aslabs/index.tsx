@@ -7,6 +7,15 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
 import { createAslabColumns } from '@/components/tables/aslab-columns';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+} from "@/components/ui/dialog"
 
 interface User {
   id: number;
@@ -35,49 +44,73 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function AslabsIndex({ aslabs }: Pick<Props, 'aslabs'>) {
   const [selectedRows, setSelectedRows] = useState<User[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState<'activate' | 'deactivate' | 'delete' | null>(null);
   const columns = createAslabColumns();
 
-  const handleBulkAction = (action: string) => {
+  const handleBulkAction = (action: 'activate' | 'deactivate' | 'delete') => {
     if (selectedRows.length === 0) {
       alert('Pilih minimal satu aslab terlebih dahulu');
       return;
     }
+    setModalAction(action);
+    setIsModalOpen(true);
+  };
 
-    switch (action) {
+  const confirmBulkAction = () => {
+
+    switch (modalAction) {
       case 'activate':
-        if (confirm(`Aktifkan ${selectedRows.length} aslab yang dipilih?`)) {
-          // Implementation for bulk activate
-          selectedRows.forEach(aslab => {
-            if (!aslab.is_active) {
-              router.patch(`/aslabs/${aslab.id}/toggle-status`, {}, {
-                preserveScroll: true,
-              });
-            }
-          });
-        }
-        break;
-      case 'deactivate':
-        if (confirm(`Nonaktifkan ${selectedRows.length} aslab yang dipilih?`)) {
-          // Implementation for bulk deactivate
-          selectedRows.forEach(aslab => {
-            if (aslab.is_active) {
-              router.patch(`/aslabs/${aslab.id}/toggle-status`, {}, {
-                preserveScroll: true,
-              });
-            }
-          });
-        }
-        break;
-      case 'delete':
-        if (confirm(`Hapus ${selectedRows.length} aslab yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) {
-          // Implementation for bulk delete
-          selectedRows.forEach(aslab => {
-            router.delete(`/aslabs/${aslab.id}`, {
+        selectedRows.forEach(aslab => {
+          if (!aslab.is_active) {
+            router.patch(`/aslabs/${aslab.id}/toggle-status`, {}, {
               preserveScroll: true,
             });
-          });
-        }
+          }
+        });
         break;
+      case 'deactivate':
+        selectedRows.forEach(aslab => {
+          if (aslab.is_active) {
+            router.patch(`/aslabs/${aslab.id}/toggle-status`, {}, {
+              preserveScroll: true,
+            });
+          }
+        });
+        break;
+      case 'delete':
+        selectedRows.forEach(aslab => {
+          router.delete(`/aslabs/${aslab.id}`, {
+            preserveScroll: true,
+          });
+        });
+        break;
+    }
+    setIsModalOpen(false);
+  };
+
+  const getModalContent = () => {
+    switch (modalAction) {
+      case 'activate':
+        return {
+          title: 'Aktifkan Aslab',
+          description: `Apakah Anda yakin ingin mengaktifkan ${selectedRows.length} aslab yang dipilih?`,
+          confirmText: 'Aktifkan',
+        };
+      case 'deactivate':
+        return {
+          title: 'Nonaktifkan Aslab',
+          description: `Apakah Anda yakin ingin menonaktifkan ${selectedRows.length} aslab yang dipilih?`,
+          confirmText: 'Nonaktifkan',
+        };
+      case 'delete':
+        return {
+          title: 'Hapus Aslab',
+          description: `Apakah Anda yakin ingin menghapus ${selectedRows.length} aslab yang dipilih? Tindakan ini tidak dapat dibatalkan.`,
+          confirmText: 'Hapus',
+        };
+      default:
+        return { title: '', description: '', confirmText: '' };
     }
   };
 
@@ -156,6 +189,28 @@ export default function AslabsIndex({ aslabs }: Pick<Props, 'aslabs'>) {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{getModalContent().title}</DialogTitle>
+            <DialogDescription>
+              {getModalContent().description}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Batal</Button>
+            </DialogClose>
+            <Button 
+              variant={modalAction === 'delete' ? 'destructive' : 'default'}
+              onClick={confirmBulkAction}
+            >
+              {getModalContent().confirmText}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

@@ -12,6 +12,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface User {
     id: number;
@@ -150,12 +160,17 @@ export const createUserColumns = (): ColumnDef<User>[] => [
     cell: ({ row }) => {
       const user = row.original;
 
+      const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
       const handleDelete = () => {
-        if (confirm(`Apakah Anda yakin ingin menghapus ${user.name}?`)) {
-          router.delete(`/kelola-user/${user.id}`, {
-            preserveScroll: true,
-          });
-        }
+        setIsDeleteModalOpen(true);
+      };
+
+      const confirmDelete = () => {
+        router.delete(`/kelola-user/${user.id}`, {
+          preserveScroll: true,
+        });
+        setIsDeleteModalOpen(false);
       };
 
       return (
@@ -191,6 +206,26 @@ export const createUserColumns = (): ColumnDef<User>[] => [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Hapus User</DialogTitle>
+                <DialogDescription>
+                  Apakah Anda yakin ingin menghapus <strong>{user.name}</strong>?
+                  Tindakan ini tidak dapat dibatalkan.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Batal</Button>
+                </DialogClose>
+                <Button variant="destructive" onClick={confirmDelete}>
+                  Hapus
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       );
     },

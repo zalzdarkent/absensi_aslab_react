@@ -12,6 +12,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface User {
   id: number;
@@ -126,6 +136,8 @@ export const createAslabColumns = (): ColumnDef<User>[] => [
     cell: ({ row }) => {
       const aslab = row.original;
 
+      const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
       const handleToggleStatus = () => {
         router.patch(`/aslabs/${aslab.id}/toggle-status`, {}, {
           preserveScroll: true,
@@ -133,11 +145,14 @@ export const createAslabColumns = (): ColumnDef<User>[] => [
       };
 
       const handleDelete = () => {
-        if (confirm(`Apakah Anda yakin ingin menghapus ${aslab.name}?`)) {
-          router.delete(`/aslabs/${aslab.id}`, {
-            preserveScroll: true,
-          });
-        }
+        setIsDeleteModalOpen(true);
+      };
+
+      const confirmDelete = () => {
+        router.delete(`/aslabs/${aslab.id}`, {
+          preserveScroll: true,
+        });
+        setIsDeleteModalOpen(false);
       };
 
       return (
@@ -186,6 +201,26 @@ export const createAslabColumns = (): ColumnDef<User>[] => [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Hapus Aslab</DialogTitle>
+                <DialogDescription>
+                  Apakah Anda yakin ingin menghapus <strong>{aslab.name}</strong>?
+                  Tindakan ini tidak dapat dibatalkan.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Batal</Button>
+                </DialogClose>
+                <Button variant="destructive" onClick={confirmDelete}>
+                  Hapus
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       );
     },

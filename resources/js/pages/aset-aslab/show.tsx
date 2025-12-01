@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,15 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+} from "@/components/ui/dialog"
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -55,14 +64,19 @@ interface Props {
 }
 
 export default function AsetAslabShow({ aset }: Props) {
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
     const handleDelete = () => {
-        if (confirm(`Apakah Anda yakin ingin menghapus aset "${aset.nama_aset}"?`)) {
-            router.delete(`/aset-aslab/${aset.id}`, {
-                onSuccess: () => {
-                    router.visit('/aset-aslab');
-                },
-            });
-        }
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = () => {
+        router.delete(`/aset-aslab/${aset.id}`, {
+            onSuccess: () => {
+                setIsDeleteModalOpen(false);
+                router.visit('/aset-aslab');
+            },
+        });
     };
 
     // Define columns for peminjaman DataTable
@@ -532,6 +546,26 @@ export default function AsetAslabShow({ aset }: Props) {
                         </div>
                     </div>
                 </div>
+
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Hapus Aset</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin menghapus aset <strong>{aset.nama_aset}</strong>?
+                            Tindakan ini tidak dapat dibatalkan dan akan menghapus semua riwayat peminjaman terkait.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Batal</Button>
+                        </DialogClose>
+                        <Button variant="destructive" onClick={confirmDelete}>
+                            Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }
