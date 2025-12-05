@@ -30,6 +30,9 @@ class User extends Authenticatable
         'piket_day',
         'telegram_chat_id',
         'telegram_notifications',
+        'google_id',
+        'github_id',
+        'avatar',
     ];
 
     /**

@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,32 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    // Google OAuth Routes
+    Route::get('auth/google', [SocialAuthController::class, 'redirectToGoogle'])
+        ->name('auth.google.redirect');
+
+    Route::get('auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])
+        ->name('auth.google.callback');
+
+    Route::get('auth/google/select-role', [SocialAuthController::class, 'showRoleSelection'])
+        ->name('auth.google.select-role');
+
+    Route::post('auth/google/complete-registration', [SocialAuthController::class, 'completeRegistration'])
+        ->name('auth.google.complete');
+
+    // GitHub OAuth Routes
+    Route::get('auth/github', [SocialAuthController::class, 'redirectToGithub'])
+        ->name('auth.github.redirect');
+
+    Route::get('auth/github/callback', [SocialAuthController::class, 'handleGithubCallback'])
+        ->name('auth.github.callback');
+
+    Route::get('auth/github/select-role', [SocialAuthController::class, 'showGithubRoleSelection'])
+        ->name('auth.github.select-role');
+
+    Route::post('auth/github/complete-registration', [SocialAuthController::class, 'completeGithubRegistration'])
+        ->name('auth.github.complete');
 });
 
 Route::middleware('auth')->group(function () {
