@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,17 +32,23 @@ class SocialAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
 
-            // Check if user already exists
+            // Validate that we have an email
+            if (!$googleUser->email) {
+                return redirect()->route('login')
+                    ->with('error', 'Email tidak tersedia dari Google. Pastikan email Anda dapat diakses.');
+            }
+
+            // Check if user already exists by email OR google_id
             $user = User::where('email', $googleUser->email)
                 ->orWhere('google_id', $googleUser->id)
                 ->first();
 
             if ($user) {
-                // Update existing user with Google info if not already linked
+                // Link Google account if not already linked
                 if (!$user->google_id) {
                     $user->update([
                         'google_id' => $googleUser->id,
-                        'avatar' => $googleUser->avatar,
+                        'avatar' => $googleUser->avatar ?? $user->avatar,
                         'email_verified_at' => $user->email_verified_at ?? now(),
                     ]);
                 }
@@ -49,7 +56,8 @@ class SocialAuthController extends Controller
                 // Login the user
                 Auth::login($user, true);
 
-                return redirect()->intended(route('dashboard', absolute: false));
+                return redirect()->intended(route('dashboard', absolute: false))
+                    ->with('success', 'Berhasil masuk dengan Google!');
             }
 
             // New user - store data in session and redirect to role selection
@@ -65,6 +73,7 @@ class SocialAuthController extends Controller
             return redirect()->route('auth.google.select-role');
 
         } catch (\Exception $e) {
+            Log::error('Google OAuth Error: ' . $e->getMessage());
             return redirect()->route('login')
                 ->with('error', 'Terjadi kesalahan saat login dengan Google. Silakan coba lagi.');
         }
@@ -137,17 +146,23 @@ class SocialAuthController extends Controller
         try {
             $githubUser = Socialite::driver('github')->user();
 
-            // Check if user already exists
+            // Validate that we have an email (GitHub users can hide their email)
+            if (!$githubUser->email) {
+                return redirect()->route('login')
+                    ->with('error', 'Email tidak tersedia dari GitHub. Pastikan email Anda bersifat publik di pengaturan GitHub.');
+            }
+
+            // Check if user already exists by email OR github_id
             $user = User::where('email', $githubUser->email)
                 ->orWhere('github_id', $githubUser->id)
                 ->first();
 
             if ($user) {
-                // Update existing user with GitHub info if not already linked
+                // Link GitHub account if not already linked
                 if (!$user->github_id) {
                     $user->update([
                         'github_id' => $githubUser->id,
-                        'avatar' => $githubUser->avatar,
+                        'avatar' => $githubUser->avatar ?? $user->avatar,
                         'email_verified_at' => $user->email_verified_at ?? now(),
                     ]);
                 }
@@ -155,14 +170,15 @@ class SocialAuthController extends Controller
                 // Login the user
                 Auth::login($user, true);
 
-                return redirect()->intended(route('dashboard', absolute: false));
+                return redirect()->intended(route('dashboard', absolute: false))
+                    ->with('success', 'Berhasil masuk dengan GitHub!');
             }
 
             // New user - store data in session and redirect to role selection
             session([
                 'github_user' => [
                     'github_id' => $githubUser->id,
-                    'name' => $githubUser->name ?? $githubUser->nickname,
+                    'name' => $githubUser->name ?? $githubUser->nickname ?? 'User',
                     'email' => $githubUser->email,
                     'avatar' => $githubUser->avatar,
                 ]
@@ -171,6 +187,7 @@ class SocialAuthController extends Controller
             return redirect()->route('auth.github.select-role');
 
         } catch (\Exception $e) {
+            Log::error('GitHub OAuth Error: ' . $e->getMessage());
             return redirect()->route('login')
                 ->with('error', 'Terjadi kesalahan saat login dengan GitHub. Silakan coba lagi.');
         }

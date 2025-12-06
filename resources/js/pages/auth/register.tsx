@@ -17,33 +17,28 @@ export default function Register() {
             <Head title="Daftar - Sistem Absensi Aslab" />
 
             <Card className="w-full max-w-md mx-auto">
-                <CardHeader className="text-center space-y-4">
+                <CardHeader className="text-center space-y-2 pb-4">
                     <div className="flex justify-center">
                         <img
                             src="/img/logo_aslab.png"
                             alt="Logo Aslab"
-                            className="h-16 w-16 object-contain"
+                            className="h-12 w-12 object-contain"
                         />
                     </div>
-                    <div>
-                        <CardTitle className="text-2xl font-bold">Pendaftaran Aslab</CardTitle>
-                        <CardDescription className="mt-2">
-                            Lengkapi data di bawah untuk mendaftar sebagai asisten laboratorium
-                        </CardDescription>
-                    </div>
+                    <CardTitle className="text-xl font-bold">Registrasi</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4">
                     <Form
                         {...RegisteredUserController.store.form()}
                         resetOnSuccess={['password', 'password_confirmation']}
                         disableWhileProcessing
-                        className="space-y-6"
+                        className="space-y-4"
                     >
                         {({ processing, errors }) => (
                             <>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name">Nama Lengkap</Label>
+                                <div className="space-y-3">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="name" className="text-sm">Nama Lengkap</Label>
                                         <Input
                                             id="name"
                                             type="text"
@@ -57,8 +52,8 @@ export default function Register() {
                                         <InputError message={errors.name} />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email">Alamat Email</Label>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="email" className="text-sm">Email</Label>
                                         <Input
                                             id="email"
                                             type="email"
@@ -66,26 +61,26 @@ export default function Register() {
                                             tabIndex={2}
                                             autoComplete="email"
                                             name="email"
-                                            placeholder="contoh@student.unsika.ac.id"
+                                            placeholder="email@student.unsika.ac.id"
                                         />
                                         <InputError message={errors.email} />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password">Password</Label>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="password" className="text-sm">Password</Label>
                                         <PasswordStrengthInput
                                             id="password"
                                             name="password"
                                             required
                                             tabIndex={3}
                                             autoComplete="new-password"
-                                            placeholder="Masukkan Password"
+                                            placeholder="Password"
                                         />
                                         <InputError message={errors.password} />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="password_confirmation" className="text-sm">Konfirmasi Password</Label>
                                         <Input
                                             id="password_confirmation"
                                             type="password"
@@ -93,7 +88,7 @@ export default function Register() {
                                             tabIndex={4}
                                             autoComplete="new-password"
                                             name="password_confirmation"
-                                            placeholder="Ulangi password"
+                                            placeholder="Konfirmasi password"
                                         />
                                         <InputError message={errors.password_confirmation} />
                                     </div>
@@ -104,21 +99,21 @@ export default function Register() {
                                     </Button>
                                 </div>
 
-                                <div className="relative">
+                                <div className="relative my-3">
                                     <div className="absolute inset-0 flex items-center">
                                         <span className="w-full border-t" />
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase">
                                         <span className="bg-background px-2 text-muted-foreground">
-                                            Atau lanjutkan dengan
+                                            Atau
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-2">
                                     <a
                                         href="/auth/google"
-                                        className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                                        className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                                     >
                                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                                             <path
@@ -152,10 +147,10 @@ export default function Register() {
                                     </a>
                                 </div>
 
-                                <div className="text-center text-sm text-muted-foreground">
+                                <div className="text-center text-xs text-muted-foreground pt-1">
                                     Sudah punya akun?{' '}
                                     <TextLink href={login()} tabIndex={6}>
-                                        Masuk di sini
+                                        Masuk
                                     </TextLink>
                                 </div>
                             </>

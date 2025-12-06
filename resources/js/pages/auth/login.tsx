@@ -23,28 +23,23 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             <Head title="Login - Sistem Absensi Aslab" />
 
             <Card className="w-full max-w-md mx-auto">
-                <CardHeader className="text-center space-y-4">
+                <CardHeader className="text-center space-y-2 pb-4">
                     <div className="flex justify-center">
                         <img
                             src="/img/logo_aslab.png"
                             alt="Logo Aslab"
-                            className="h-16 w-16 object-contain"
+                            className="h-12 w-12 object-contain"
                         />
                     </div>
-                    <div>
-                        <CardTitle className="text-2xl font-bold">Masuk</CardTitle>
-                        <CardDescription className="mt-2">
-                            Masukkan email dan password untuk mengakses sistem absensi
-                        </CardDescription>
-                    </div>
+                    <CardTitle className="text-xl font-bold">Masuk</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="space-y-6">
+                <CardContent className="space-y-4">
+                    <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="space-y-4">
                         {({ processing, errors }) => (
                             <>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email">Alamat Email</Label>
+                                <div className="space-y-3">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="email" className="text-sm">Email</Label>
                                         <Input
                                             id="email"
                                             type="email"
@@ -58,11 +53,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         <InputError message={errors.email} />
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
-                                            <Label htmlFor="password">Password</Label>
+                                            <Label htmlFor="password" className="text-sm">Password</Label>
                                             {canResetPassword && (
-                                                <TextLink href={request()} className="text-sm" tabIndex={5}>
+                                                <TextLink href={request()} className="text-xs" tabIndex={5}>
                                                     Lupa password?
                                                 </TextLink>
                                             )}
@@ -79,9 +74,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         <InputError message={errors.password} />
                                     </div>
 
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center space-x-2">
                                         <Checkbox id="remember" name="remember" tabIndex={3} />
-                                        <Label htmlFor="remember" className="text-sm">Ingat saya</Label>
+                                        <Label htmlFor="remember" className="text-xs">Ingat saya</Label>
                                     </div>
 
                                     <Button type="submit" className="w-full" tabIndex={4} disabled={processing} data-test="login-button">
@@ -90,21 +85,21 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     </Button>
                                 </div>
 
-                                <div className="relative">
+                                <div className="relative my-3">
                                     <div className="absolute inset-0 flex items-center">
                                         <span className="w-full border-t" />
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase">
                                         <span className="bg-background px-2 text-muted-foreground">
-                                            Atau lanjutkan dengan
+                                            Atau
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-2">
                                     <a
                                         href="/auth/google"
-                                        className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                                        className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                                     >
                                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                                             <path
@@ -138,10 +133,10 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     </a>
                                 </div>
 
-                                <div className="text-center text-sm text-muted-foreground">
+                                <div className="text-center text-xs text-muted-foreground pt-1">
                                     Belum punya akun?{' '}
                                     <TextLink href={register()} tabIndex={6}>
-                                        Daftar di sini
+                                        Daftar
                                     </TextLink>
                                 </div>
                             </>
