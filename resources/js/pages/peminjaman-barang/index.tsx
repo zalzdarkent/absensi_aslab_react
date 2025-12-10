@@ -391,7 +391,15 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
             },
             cell: ({ row }) => {
                 const tanggal = row.getValue("tanggal_pinjam") as string;
-                return tanggal ? new Date(tanggal).toLocaleDateString('id-ID') : '-';
+                if (!tanggal) return '-';
+                const date = new Date(tanggal);
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                });
             },
         },
         {
@@ -413,12 +421,24 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                     return (
                         <div className="text-xs space-y-1">
                             <div className="font-medium text-green-600 dark:text-green-400">
-                                {new Date(tanggal).toLocaleDateString('id-ID')}
+                                {new Date(tanggal).toLocaleDateString('id-ID', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
                             </div>
                             <div className="text-muted-foreground">Sudah dikembalikan</div>
                             {targetReturnDate && (
                                 <div className="text-xs text-muted-foreground">
-                                    Target: {new Date(targetReturnDate).toLocaleDateString('id-ID')}
+                                    Target: {new Date(targetReturnDate).toLocaleDateString('id-ID', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -433,12 +453,18 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                     return (
                         <div className="text-xs">
                             <div className={`font-medium ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                {targetDate.toLocaleDateString('id-ID')}
+                                {targetDate.toLocaleDateString('id-ID', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
                             </div>
                             <div className={`${isOverdue ? 'text-red-500' : 'text-muted-foreground'}`}>
                                 {status?.toLowerCase() === 'menunggu persetujuan' ? 'Target kembali' :
-                                 status?.toLowerCase() === 'ditolak' ? 'Target kembali' :
-                                 isOverdue ? 'Terlambat' : 'Target kembali'}
+                                    status?.toLowerCase() === 'ditolak' ? 'Target kembali' :
+                                        isOverdue ? 'Terlambat' : 'Target kembali'}
                             </div>
                         </div>
                     );
@@ -661,17 +687,17 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                     </span>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                                    {/* Logic: 
+                                    {/* Logic:
                                         1. If ANY selected item is active (approved/borrowed) -> SHOW Return ONLY.
                                         2. If ALL selected items are completed (returned/rejected/used) -> SHOW Delete ONLY.
                                         3. Otherwise (implies there are pending items) -> SHOW Approve, Reject, Delete.
                                     */}
                                     {(() => {
                                         const statusList = selectedRows.map(row => (row.raw_status || '').toLowerCase());
-                                        
+
                                         const hasActive = statusList.some(s => ['approved', 'borrowed'].includes(s));
                                         const isAllCompleted = statusList.every(s => ['returned', 'rejected', 'used'].includes(s));
-                                        
+
                                         // Priority 1: Active items need to be returned
                                         if (hasActive) {
                                             return (
@@ -700,7 +726,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                                                 </Button>
                                             );
                                         }
-                                        
+
                                         // Priority 3: Pending items (or mixed pending + completed) need approval/rejection
                                         return (
                                             <>

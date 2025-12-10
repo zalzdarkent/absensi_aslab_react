@@ -96,6 +96,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     </div>
                                 </div>
 
+                                {import.meta.env.VITE_APP_ENV !== 'production' && (
                                 <div className="grid grid-cols-2 gap-2">
                                     <a
                                         href="/auth/google"
@@ -132,6 +133,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         <span className="hidden sm:inline">GitHub</span>
                                     </a>
                                 </div>
+                                )}
 
                                 <div className="text-center text-xs text-muted-foreground pt-1">
                                     Belum punya akun?{' '}

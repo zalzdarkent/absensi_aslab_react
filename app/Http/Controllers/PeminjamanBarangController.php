@@ -642,23 +642,24 @@ class PeminjamanBarangController extends Controller
                 throw new \Exception('Target return date is required for aset');
             }
 
-            // Convert target date to start of day for comparison
-            $targetDate = Carbon::parse($item['target_return_date'])->startOfDay();
-            $today = Carbon::today();
+            // Parse datetime and compare with current datetime
+            // Berikan toleransi 1 menit untuk menghindari race condition antara client dan server
+            $targetDateTime = Carbon::parse($item['target_return_date']);
+            $now = Carbon::now()->subMinute(); // Toleransi 1 menit
 
             // Debug logging
-            Log::info('Date validation debug', [
-                'target_date_input' => $item['target_return_date'],
-                'target_date_parsed' => $targetDate->toDateString(),
-                'today' => $today->toDateString(),
-                'is_valid' => $targetDate->gte($today),
-                'comparison' => $targetDate->format('Y-m-d') . ' >= ' . $today->format('Y-m-d')
+            Log::info('DateTime validation debug', [
+                'target_datetime_input' => $item['target_return_date'],
+                'target_datetime_parsed' => $targetDateTime->toDateTimeString(),
+                'now_with_tolerance' => $now->toDateTimeString(),
+                'is_valid' => $targetDateTime->gte($now),
+                'comparison' => $targetDateTime->format('Y-m-d H:i') . ' >= ' . $now->format('Y-m-d H:i')
             ]);
 
-            if ($targetDate->lt($today)) {
-                Log::error('Date validation failed', [
-                    'target_date' => $targetDate->toDateString(),
-                    'today' => $today->toDateString()
+            if ($targetDateTime->lt($now)) {
+                Log::error('DateTime validation failed', [
+                    'target_datetime' => $targetDateTime->toDateTimeString(),
+                    'now_with_tolerance' => $now->toDateTimeString()
                 ]);
                 throw new \Exception('Target return date must not be in the past');
             }

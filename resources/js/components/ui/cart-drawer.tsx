@@ -92,21 +92,29 @@ export function CartDrawer({
             return;
         }
 
-        const today = new Date().toISOString().split('T')[0];
+
+        // Validasi dengan Date object, bukan string comparison
+        const now = new Date();
         console.log('Debug validation:', {
-            today,
+            now: now.toISOString(),
             items: items.map(item => ({
                 name: item.name,
                 targetReturnDate: item.targetReturnDate,
-                isValid: item.targetReturnDate && item.targetReturnDate >= today
+                isValid: item.targetReturnDate && new Date(item.targetReturnDate) >= now
             }))
         });
 
-        const invalidItems = items.filter(item => !item.targetReturnDate || item.targetReturnDate < today);
+        const invalidItems = items.filter(item => {
+            if (!item.targetReturnDate) return true;
+            const targetDate = new Date(item.targetReturnDate);
+            // Berikan toleransi 1 menit untuk menghindari masalah timezone/rounding
+            return targetDate < new Date(now.getTime() - 60000);
+        });
+
         if (invalidItems.length > 0) {
             console.error('Invalid items found:', invalidItems);
             toast.error('Tanggal pengembalian wajib diisi', {
-                description: 'Tanggal pengembalian harus diisi dan tidak boleh lebih awal dari hari ini'
+                description: 'Tanggal pengembalian harus diisi dan tidak boleh lebih awal dari sekarang'
             });
             return;
         }
@@ -302,9 +310,9 @@ export function CartDrawer({
                                                     Target Kembali: <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
-                                                    type="date"
+                                                    type="datetime-local"
                                                     value={item.targetReturnDate}
-                                                    min={new Date().toISOString().split('T')[0]}
+                                                    min={new Date().toISOString().slice(0, 16)}
                                                     onChange={(e) => onUpdateReturnDate(item.id, item.type, e.target.value)}
                                                     className="text-xs sm:text-sm h-8 sm:h-9"
                                                     required

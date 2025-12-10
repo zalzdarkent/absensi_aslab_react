@@ -20,7 +20,7 @@ class PenggunaanBahan extends Model
     ];
 
     protected $casts = [
-        'tanggal_penggunaan' => 'date',
+        'tanggal_penggunaan' => 'datetime',
         'approved_at' => 'datetime'
     ];
 

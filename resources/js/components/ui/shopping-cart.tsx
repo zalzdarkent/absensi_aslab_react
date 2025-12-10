@@ -133,9 +133,9 @@ export function ShoppingCart({
                                 </Label>
                                 <Input
                                     id={`return-date-${item.type}-${item.id}`}
-                                    type="date"
+                                    type="datetime-local"
                                     value={item.targetReturnDate}
-                                    min={new Date().toISOString().split('T')[0]}
+                                    min={new Date().toISOString().slice(0, 16)}
                                     onChange={(e) => onUpdateReturnDate(item.id, item.type, e.target.value)}
                                 />
                             </div>

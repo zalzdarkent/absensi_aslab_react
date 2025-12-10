@@ -27,9 +27,9 @@ class PeminjamanAset extends Model
     ];
 
     protected $casts = [
-        'tanggal_pinjam' => 'date',
-        'tanggal_kembali' => 'date',
-        'target_return_date' => 'date',
+        'tanggal_pinjam' => 'datetime',
+        'tanggal_kembali' => 'datetime',
+        'target_return_date' => 'datetime',
         'approved_at' => 'datetime',
         'agreement_accepted' => 'boolean'
     ];
