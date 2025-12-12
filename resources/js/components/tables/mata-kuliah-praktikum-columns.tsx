@@ -21,9 +21,17 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 
+interface Kelas {
+    id: number;
+    kelas: number;
+    jurusan: 'IF' | 'SI';
+}
+
 interface MataKuliahPraktikum {
     id: number;
     nama: string;
+    kelas_id: number;
+    kelas?: Kelas;
     created_at: string;
     updated_at: string;
 }
@@ -48,6 +56,21 @@ export const createMataKuliahPraktikumColumns = (
         cell: ({ row }) => {
             const nama = row.getValue("nama") as string;
             return <div>{nama}</div>;
+        },
+    },
+    {
+        accessorKey: "kelas",
+        header: "Kelas",
+        cell: ({ row }) => {
+            const kelas = row.original.kelas;
+            if (!kelas) return <div className="text-muted-foreground">-</div>;
+            return (
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                        Kelas {kelas.kelas} - {kelas.jurusan}
+                    </span>
+                </div>
+            );
         },
     },
     {

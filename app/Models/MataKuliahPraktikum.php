@@ -8,7 +8,18 @@ class MataKuliahPraktikum extends Model
 {
     protected $fillable = [
         'nama',
+        'kelas_id',
     ];
+
+    protected $with = ['kelas'];
+
+    /**
+     * Kelas untuk mata kuliah ini
+     */
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
 
     /**
      * Dosen yang mengampu mata kuliah ini

@@ -1,7 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -22,28 +21,12 @@ import { Plus } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
-import { createMataKuliahPraktikumColumns } from '@/components/tables/mata-kuliah-praktikum-columns';
+import { createKelasColumns, type Kelas } from '@/components/tables/kelas-columns';
 import InputError from '@/components/input-error';
 import { FormEvent, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-interface Kelas {
-  id: number;
-  kelas: number;
-  jurusan: 'IF' | 'SI';
-}
-
-interface MataKuliahPraktikum {
-  id: number;
-  nama: string;
-  kelas_id: number;
-  kelas?: Kelas;
-  created_at: string;
-  updated_at: string;
-}
-
 interface Props {
-  mataKuliahs: MataKuliahPraktikum[];
   kelas: Kelas[];
   filters: {
     search: string | null;
@@ -53,17 +36,17 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Absensi Praktikum',
-    },
-    {
-        title: 'Mata Kuliah Praktikum',
-    },
+  {
+    title: 'Absensi Praktikum',
+  },
+  {
+    title: 'Kelas',
+  },
 ];
 
-export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, error }: Pick<Props, 'mataKuliahs' | 'kelas' | 'success' | 'error'>) {
+export default function KelasIndex({ kelas, success, error }: Pick<Props, 'kelas' | 'success' | 'error'>) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingMataKuliah, setEditingMataKuliah] = useState<MataKuliahPraktikum | null>(null);
+  const [editingKelas, setEditingKelas] = useState<Kelas | null>(null);
 
   // Show toast notifications
   useEffect(() => {
@@ -75,24 +58,38 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
     }
   }, [success, error]);
 
-  const { data, setData, post, put, processing, errors, reset } = useForm({
-    nama: '',
-    kelas_id: '',
-  });
+  // Tentukan semester yang tersedia berdasarkan bulan saat ini
+  const getAvailableSemesters = (): number[] => {
+    const currentMonth = new Date().getMonth() + 1; // 1-12
 
-  const openEditModal = (mataKuliah: MataKuliahPraktikum) => {
-    setData({
-      nama: mataKuliah.nama,
-      kelas_id: mataKuliah.kelas_id.toString(),
-    });
-    setEditingMataKuliah(mataKuliah);
+    // Februari (2) - Juli (7): Semester Genap (2, 4, 6)
+    if (currentMonth >= 2 && currentMonth <= 7) {
+      return [2, 4, 6];
+    }
+    // Agustus (8) - Desember (12) & Januari (1): Semester Ganjil (1, 3, 5)
+    return [1, 3, 5];
   };
 
-  const columns = createMataKuliahPraktikumColumns(openEditModal);
+  const availableSemesters = getAvailableSemesters();
+
+  const { data, setData, post, put, processing, errors, reset } = useForm({
+    kelas: '',
+    jurusan: '',
+  });
+
+  const openEditModal = (kelas: Kelas) => {
+    setData({
+      kelas: kelas.kelas.toString(),
+      jurusan: kelas.jurusan,
+    });
+    setEditingKelas(kelas);
+  };
+
+  const columns = createKelasColumns(openEditModal);
 
   const handleCreateSubmit = (e: FormEvent) => {
     e.preventDefault();
-    post('/absensi-praktikum/mata-kuliah-praktikum', {
+    post('/absensi-praktikum/kelas', {
       onSuccess: () => {
         setIsCreateModalOpen(false);
         reset();
@@ -102,10 +99,10 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
 
   const handleEditSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (editingMataKuliah) {
-      put(`/absensi-praktikum/mata-kuliah-praktikum/${editingMataKuliah.id}`, {
+    if (editingKelas) {
+      put(`/absensi-praktikum/kelas/${editingKelas.id}`, {
         onSuccess: () => {
-          setEditingMataKuliah(null);
+          setEditingKelas(null);
           reset();
         },
       });
@@ -119,35 +116,35 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Mata Kuliah Praktikum" />
+      <Head title="Kelas" />
 
       <div className="space-y-6 pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Mata Kuliah Praktikum</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Kelas</h1>
             <p className="text-muted-foreground">
-              Kelola data mata kuliah praktikum
+              Kelola data kelas
             </p>
           </div>
           <Button onClick={openCreateModal}>
             <Plus className="mr-2 h-4 w-4" />
-            Tambah Mata Kuliah
+            Tambah Kelas
           </Button>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Daftar Mata Kuliah Praktikum</CardTitle>
+            <CardTitle>Daftar Kelas</CardTitle>
             <CardDescription>
-              Total: {mataKuliahs.length} mata kuliah
+              Total: {kelas.length} kelas · Semester aktif: {availableSemesters.join(', ')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <DataTable
               columns={columns}
-              data={mataKuliahs}
-              searchPlaceholder="Cari nama mata kuliah..."
-              filename="mata-kuliah-praktikum"
+              data={kelas}
+              searchPlaceholder="Cari semester atau jurusan..."
+              filename="kelas"
             />
           </CardContent>
         </Card>
@@ -157,45 +154,50 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Tambah Mata Kuliah Praktikum</DialogTitle>
+            <DialogTitle>Tambah Kelas</DialogTitle>
             <DialogDescription>
-              Isi form di bawah untuk menambahkan mata kuliah praktikum baru
+              Semester yang dapat ditambahkan: {availableSemesters.join(', ')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="nama">Nama Mata Kuliah *</Label>
-                <Input
-                  id="nama"
-                  type="text"
-                  value={data.nama}
-                  onChange={(e) => setData('nama', e.target.value)}
-                  placeholder="Contoh: Pemrograman Web"
-                  required
-                />
-                <InputError message={errors.nama} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="kelas_id">Kelas *</Label>
+                <Label htmlFor="kelas">Semester *</Label>
                 <Select
-                  value={data.kelas_id}
-                  onValueChange={(value) => setData('kelas_id', value)}
+                  value={data.kelas}
+                  onValueChange={(value) => setData('kelas', value)}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pilih kelas" />
+                    <SelectValue placeholder="Pilih semester" />
                   </SelectTrigger>
                   <SelectContent>
-                    {kelas.map((k) => (
-                      <SelectItem key={k.id} value={k.id.toString()}>
-                        Kelas {k.kelas} - {k.jurusan}
+                    {availableSemesters.map((sem) => (
+                      <SelectItem key={sem} value={sem.toString()}>
+                        Semester {sem}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <InputError message={errors.kelas_id} />
+                <InputError message={errors.kelas} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="jurusan">Jurusan *</Label>
+                <Select
+                  value={data.jurusan}
+                  onValueChange={(value) => setData('jurusan', value)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih jurusan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IF">IF (Informatika)</SelectItem>
+                    <SelectItem value="SI">SI (Sistem Informasi)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <InputError message={errors.jurusan} />
               </div>
             </div>
 
@@ -216,48 +218,53 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
       </Dialog>
 
       {/* Edit Modal */}
-      <Dialog open={!!editingMataKuliah} onOpenChange={(open) => !open && setEditingMataKuliah(null)}>
+      <Dialog open={!!editingKelas} onOpenChange={(open) => !open && setEditingKelas(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Mata Kuliah Praktikum</DialogTitle>
+            <DialogTitle>Edit Kelas</DialogTitle>
             <DialogDescription>
-              Perbarui data mata kuliah praktikum
+              Perbarui data kelas
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-nama">Nama Mata Kuliah *</Label>
-                <Input
-                  id="edit-nama"
-                  type="text"
-                  value={data.nama}
-                  onChange={(e) => setData('nama', e.target.value)}
-                  placeholder="Contoh: Pemrograman Web"
-                  required
-                />
-                <InputError message={errors.nama} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-kelas_id">Kelas *</Label>
+                <Label htmlFor="edit-kelas">Semester *</Label>
                 <Select
-                  value={data.kelas_id}
-                  onValueChange={(value) => setData('kelas_id', value)}
+                  value={data.kelas}
+                  onValueChange={(value) => setData('kelas', value)}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pilih kelas" />
+                    <SelectValue placeholder="Pilih semester" />
                   </SelectTrigger>
                   <SelectContent>
-                    {kelas.map((k) => (
-                      <SelectItem key={k.id} value={k.id.toString()}>
-                        Kelas {k.kelas} - {k.jurusan}
+                    {availableSemesters.map((sem) => (
+                      <SelectItem key={sem} value={sem.toString()}>
+                        Semester {sem}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <InputError message={errors.kelas_id} />
+                <InputError message={errors.kelas} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-jurusan">Jurusan *</Label>
+                <Select
+                  value={data.jurusan}
+                  onValueChange={(value) => setData('jurusan', value)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih jurusan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IF">IF (Informatika)</SelectItem>
+                    <SelectItem value="SI">SI (Sistem Informasi)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <InputError message={errors.jurusan} />
               </div>
             </div>
 
@@ -265,7 +272,7 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setEditingMataKuliah(null)}
+                onClick={() => setEditingKelas(null)}
               >
                 Batal
               </Button>

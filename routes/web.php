@@ -80,6 +80,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Absensi Praktikum routes
         Route::prefix('absensi-praktikum')->name('absensi-praktikum.')->group(function () {
+            // Kelas
+            Route::get('kelas/search', [App\Http\Controllers\KelasController::class, 'search'])->name('kelas.search');
+            Route::resource('kelas', App\Http\Controllers\KelasController::class);
+
             // Mata Kuliah Praktikum
             Route::resource('mata-kuliah-praktikum', App\Http\Controllers\MataKuliahPraktikumController::class);
 

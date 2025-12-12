@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MataKuliahPraktikum;
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -21,9 +22,11 @@ class MataKuliahPraktikumController extends Controller
                 ->orderBy('nama');
 
             $mataKuliahs = $query->get();
+            $kelas = Kelas::orderBy('jurusan')->orderBy('kelas')->get();
 
             return Inertia::render('absensi-praktikum/mata-kuliah/index', [
                 'mataKuliahs' => $mataKuliahs,
+                'kelas' => $kelas,
                 'filters' => [
                     'search' => $search,
                 ],
@@ -43,10 +46,12 @@ class MataKuliahPraktikumController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
+            'kelas_id' => 'required|exists:kelas,id',
         ]);
 
         MataKuliahPraktikum::create([
             'nama' => $request->nama,
+            'kelas_id' => $request->kelas_id,
         ]);
 
         return redirect()->route('absensi-praktikum.mata-kuliah-praktikum.index')
@@ -73,10 +78,12 @@ class MataKuliahPraktikumController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
+            'kelas_id' => 'required|exists:kelas,id',
         ]);
 
         $mataKuliahPraktikum->update([
             'nama' => $request->nama,
+            'kelas_id' => $request->kelas_id,
         ]);
 
         return redirect()->route('absensi-praktikum.mata-kuliah-praktikum.index')

@@ -69,6 +69,11 @@ export function AppSidebar() {
                         icon: GraduationCap,
                         children: [
                             {
+                                title: 'Kelas',
+                                href: '/absensi-praktikum/kelas',
+                                icon: School,
+                            },
+                            {
                                 title: 'Mata Kuliah',
                                 href: '/absensi-praktikum/mata-kuliah-praktikum',
                                 icon: BookOpen,
@@ -78,11 +83,11 @@ export function AppSidebar() {
                                 href: '/absensi-praktikum/dosen-praktikum',
                                 icon: Users,
                             },
-                            {
-                                title: 'Kelas',
-                                href: '/absensi-praktikum/kelas-praktikum',
-                                icon: School,
-                            },
+                            // {
+                            //     title: 'Kelas Praktikum',
+                            //     href: '/absensi-praktikum/kelas-praktikum',
+                            //     icon: School,
+                            // },
                             {
                                 title: 'Absen',
                                 href: '/absensi-praktikum/absensi',
