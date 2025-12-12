@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type User } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon, ClipboardList, PackageIcon, UserSquare2 } from 'lucide-react';
+import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon, ClipboardList, PackageIcon, UserSquare2, BookOpen, GraduationCap, School, ClipboardCheck } from 'lucide-react';
 import AppLogo from './app-logo';
 
 interface NavGroupItem extends NavItem {
@@ -62,6 +62,33 @@ export function AppSidebar() {
                         href: '#',
                         icon: ScanLine,
                         children: attendanceChildren,
+                    },
+                    {
+                        title: 'Absensi Praktikum',
+                        href: '#',
+                        icon: GraduationCap,
+                        children: [
+                            {
+                                title: 'Mata Kuliah',
+                                href: '/absensi-praktikum/mata-kuliah-praktikum',
+                                icon: BookOpen,
+                            },
+                            {
+                                title: 'Dosen',
+                                href: '/absensi-praktikum/dosen-praktikum',
+                                icon: Users,
+                            },
+                            {
+                                title: 'Kelas',
+                                href: '/absensi-praktikum/kelas-praktikum',
+                                icon: School,
+                            },
+                            {
+                                title: 'Absen',
+                                href: '/absensi-praktikum/absensi',
+                                icon: ClipboardCheck,
+                            },
+                        ],
                     },
                 ],
             });

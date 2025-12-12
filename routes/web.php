@@ -78,6 +78,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/jadwal-piket/batch-update', [JadwalPiketController::class, 'batchUpdate'])->name('jadwal-piket.batch-update');
         Route::post('/jadwal-piket/reset', [JadwalPiketController::class, 'reset'])->name('jadwal-piket.reset');
 
+        // Absensi Praktikum routes
+        Route::prefix('absensi-praktikum')->name('absensi-praktikum.')->group(function () {
+            // Mata Kuliah Praktikum
+            Route::resource('mata-kuliah-praktikum', App\Http\Controllers\MataKuliahPraktikumController::class);
+
+            // Dosen Praktikum
+            Route::get('dosen-praktikum/search', [App\Http\Controllers\DosenPraktikumController::class, 'search'])->name('dosen-praktikum.search');
+            Route::resource('dosen-praktikum', App\Http\Controllers\DosenPraktikumController::class);
+
+            // Kelas Praktikum
+            Route::get('kelas-praktikum/search', [App\Http\Controllers\KelasPraktikumController::class, 'search'])->name('kelas-praktikum.search');
+            Route::resource('kelas-praktikum', App\Http\Controllers\KelasPraktikumController::class);
+
+            // Absensi Praktikum
+            Route::resource('absensi', App\Http\Controllers\AbsensiPraktikumController::class)->parameters([
+                'absensi' => 'absensiPraktikum'
+            ]);
+        });
+
         // Aset Aslab routes - Admin and Aslab can manage assets
         Route::get('aset-aslab/generate-kode', [AsetAslabController::class, 'generateKode'])->name('aset-aslab.generate-kode');
         Route::post('aset-aslab-bulk-delete', [AsetAslabController::class, 'bulkDelete'])->name('aset-aslab.bulk-delete');
