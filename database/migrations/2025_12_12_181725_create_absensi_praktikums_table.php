@@ -19,10 +19,10 @@ return new class extends Migration
             $table->string('pertemuan');
             $table->enum('sebagai', ['instruktur', 'asisten']);
             $table->enum('kehadiran_dosen', ['hadir', 'tidak_hadir']);
-            $table->foreignId('kelas_praktikum_id')->constrained()->onDelete('cascade');
+            $table->foreignId('kelas_id')->constrained('kelas')->onDelete('cascade');
             $table->timestamps();
 
-            $table->index(['tanggal', 'kelas_praktikum_id']);
+            $table->index(['tanggal', 'kelas_id']);
             $table->index(['aslab_id', 'tanggal']);
         });
     }
