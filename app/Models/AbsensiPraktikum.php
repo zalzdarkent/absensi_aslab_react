@@ -13,7 +13,7 @@ class AbsensiPraktikum extends Model
         'pertemuan',
         'sebagai',
         'kehadiran_dosen',
-        'kelas_praktikum_id',
+        'kelas_id',
     ];
 
     protected $casts = [
@@ -43,11 +43,11 @@ class AbsensiPraktikum extends Model
     }
 
     /**
-     * Kelas praktikum
+     * Kelas
      */
-    public function kelasPraktikum()
+    public function kelas()
     {
-        return $this->belongsTo(KelasPraktikum::class);
+        return $this->belongsTo(Kelas::class);
     }
 
     /**

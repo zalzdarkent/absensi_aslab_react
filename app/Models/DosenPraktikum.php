@@ -8,7 +8,7 @@ class DosenPraktikum extends Model
 {
     protected $fillable = [
         'nama',
-        'nip',
+        'nidn',
     ];
 
     /**

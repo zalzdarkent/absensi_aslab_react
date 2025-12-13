@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('dosen_praktikums', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->string('nip')->unique();
+            $table->string('nidn')->unique();
             $table->timestamps();
 
-            $table->index('nip');
+            $table->index('nidn');
         });
     }
 

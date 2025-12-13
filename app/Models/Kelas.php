@@ -13,6 +13,10 @@ class Kelas extends Model
         'jurusan',
     ];
 
+    protected $appends = [
+        'display_name',
+    ];
+
     public function mataKuliahPraktikums()
     {
         return $this->hasMany(MataKuliahPraktikum::class, 'kelas_id');

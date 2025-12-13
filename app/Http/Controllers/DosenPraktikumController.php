@@ -19,14 +19,16 @@ class DosenPraktikumController extends Controller
             $query = DosenPraktikum::with('mataKuliahs')
                 ->when($search, function ($q) use ($search) {
                     $q->where('nama', 'like', "%{$search}%")
-                      ->orWhere('nip', 'like', "%{$search}%");
+                      ->orWhere('nidn', 'like', "%{$search}%");
                 })
                 ->orderBy('nama');
 
             $dosens = $query->get();
+            $mataKuliahs = MataKuliahPraktikum::orderBy('nama')->get();
 
             return Inertia::render('absensi-praktikum/dosen/index', [
                 'dosens' => $dosens,
+                'mataKuliahs' => $mataKuliahs,
                 'filters' => [
                     'search' => $search,
                 ],
@@ -50,7 +52,7 @@ class DosenPraktikumController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'nip' => 'required|string|max:255|unique:dosen_praktikums,nip',
+            'nidn' => 'required|string|max:255|unique:dosen_praktikums,nidn',
             'mata_kuliah_ids' => 'required|array|min:1',
             'mata_kuliah_ids.*' => 'exists:mata_kuliah_praktikums,id',
         ]);
@@ -59,7 +61,7 @@ class DosenPraktikumController extends Controller
         try {
             $dosen = DosenPraktikum::create([
                 'nama' => $request->nama,
-                'nip' => $request->nip,
+                'nidn' => $request->nidn,
             ]);
 
             // Sync mata kuliah relationships
@@ -100,7 +102,7 @@ class DosenPraktikumController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'nip' => 'required|string|max:255|unique:dosen_praktikums,nip,' . $dosenPraktikum->id,
+            'nidn' => 'required|string|max:255|unique:dosen_praktikums,nidn,' . $dosenPraktikum->id,
             'mata_kuliah_ids' => 'required|array|min:1',
             'mata_kuliah_ids.*' => 'exists:mata_kuliah_praktikums,id',
         ]);
@@ -109,7 +111,7 @@ class DosenPraktikumController extends Controller
         try {
             $dosenPraktikum->update([
                 'nama' => $request->nama,
-                'nip' => $request->nip,
+                'nidn' => $request->nidn,
             ]);
 
             // Sync mata kuliah relationships
@@ -149,7 +151,7 @@ class DosenPraktikumController extends Controller
         $dosens = DosenPraktikum::with('mataKuliahs')
             ->when($search, function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nip', 'like', "%{$search}%");
+                  ->orWhere('nidn', 'like', "%{$search}%");
             })
             ->orderBy('nama')
             ->limit(20)
@@ -158,7 +160,7 @@ class DosenPraktikumController extends Controller
                 return [
                     'id' => $dosen->id,
                     'nama' => $dosen->nama,
-                    'nip' => $dosen->nip,
+                    'nidn' => $dosen->nidn,
                     'mata_kuliahs' => $dosen->mataKuliahs->pluck('nama')->toArray(),
                     'display_name' => $dosen->nama . ' - ' . $dosen->mataKuliahs->pluck('nama')->join(', '),
                 ];
