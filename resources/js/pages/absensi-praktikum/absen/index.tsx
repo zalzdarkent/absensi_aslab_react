@@ -32,7 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Plus, Check, ChevronsUpDown, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
+import { Plus, Check, ChevronsUpDown, Calendar as CalendarIcon, ChevronDown, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -114,6 +114,8 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
   const [openCreateKelasCombobox, setOpenCreateKelasCombobox] = useState(false);
   const [openEditKelasCombobox, setOpenEditKelasCombobox] = useState(false);
   const [openCalendar, setOpenCalendar] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<AbsensiPraktikum[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   // Show toast notifications
   useEffect(() => {
@@ -170,6 +172,28 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
         },
       });
     }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return;
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    const items = selectedRows.map(row => ({ id: row.id }));
+    const itemCount = items.length;
+    
+    router.post('/absensi-praktikum/absensi/bulk-delete', {
+      items,
+      onSuccess: () => {
+        setIsBulkDeleteModalOpen(false);
+        setSelectedRows([]);
+        toast.success(`${itemCount} data absensi berhasil dihapus`);
+      },
+      onError: (errors) => {
+        toast.error('Gagal menghapus data: ' + (errors.message || 'Terjadi kesalahan'));
+      },
+    });
   };
 
   const openCreateModal = () => {
@@ -341,15 +365,80 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
             </div>
           </CardHeader>
           <CardContent>
-            <DataTable
-              columns={columns}
-              data={absensis}
-              searchPlaceholder="Cari aslab, dosen, atau kelas..."
-              filename="absensi-praktikum"
-            />
+            <div className="space-y-4">
+              {selectedRows.length > 0 && (
+                <div className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                  <div className="text-sm text-muted-foreground">
+                    {selectedRows.length} baris dipilih
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={selectedRows.length === 0}
+                  >
+                    Hapus yang dipilih
+                  </Button>
+                </div>
+              )}
+              <DataTable
+                columns={columns}
+                data={absensis}
+                searchPlaceholder="Cari aslab, dosen, atau kelas..."
+                filename="absensi-praktikum"
+                enableRowSelection={true}
+                onRowSelectionChange={setSelectedRows}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isBulkDeleteModalOpen} onOpenChange={setIsBulkDeleteModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <span>Hapus {selectedRows.length} Data Absensi</span>
+            </DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus {selectedRows.length} data absensi yang dipilih? Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-60 overflow-y-auto">
+            <div className="space-y-2">
+              {selectedRows.map((row) => (
+                <div key={row.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{row.aslab.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(row.tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter className="gap-3 pt-6">
+            <Button
+              variant="outline"
+              onClick={() => setIsBulkDeleteModalOpen(false)}
+              disabled={processing}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmBulkDelete}
+              disabled={processing}
+            >
+              {processing ? 'Menghapus...' : 'Hapus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>

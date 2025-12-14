@@ -122,17 +122,18 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
 
   const handleBulkDelete = () => {
     if (selectedRows.length === 0) return;
-
+    const itemCount = selectedRows.length;
+    
     router.post('/absensi-praktikum/mata-kuliah-praktikum/bulk-delete', {
       items: selectedRows.map(row => ({ id: row.id }))
     }, {
       onSuccess: () => {
         setIsBulkDeleteModalOpen(false);
         setSelectedRows([]);
-        toast.success('Data mata kuliah praktikum berhasil dihapus');
+        toast.success(`${itemCount} data mata kuliah praktikum berhasil dihapus`);
       },
-      onError: () => {
-        toast.error('Gagal menghapus data mata kuliah praktikum');
+      onError: (errors) => {
+        toast.error('Gagal menghapus data: ' + (errors?.message || 'Terjadi kesalahan'));
       }
     });
   };

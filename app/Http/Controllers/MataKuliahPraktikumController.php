@@ -6,6 +6,7 @@ use App\Models\MataKuliahPraktikum;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class MataKuliahPraktikumController extends Controller

@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, X, Check, ChevronsUpDown, Trash2 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
@@ -65,6 +65,8 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
   const [selectedMataKuliahs, setSelectedMataKuliahs] = useState<number[]>([]);
   const [openCombobox, setOpenCombobox] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<DosenPraktikum[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   // Show toast notifications
   useEffect(() => {
@@ -117,6 +119,28 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
         },
       });
     }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return;
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    const items = selectedRows.map(row => ({ id: row.id }));
+    const itemCount = items.length;
+    
+    router.post('/absensi-praktikum/dosen-praktikum/bulk-delete', {
+      items,
+      onSuccess: () => {
+        setIsBulkDeleteModalOpen(false);
+        setSelectedRows([]);
+        toast.success(`${itemCount} data dosen berhasil dihapus`);
+      },
+      onError: (errors: { message?: string }) => {
+        toast.error('Gagal menghapus data: ' + (errors?.message || 'Terjadi kesalahan'));
+      },
+    });
   };
 
   const openCreateModal = () => {
@@ -178,12 +202,76 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
-              columns={columns}
-              data={dosens}
-              searchPlaceholder="Cari nama atau NIDN..."
-              filename="dosen-praktikum"
-            />
+            <div className="space-y-4">
+              {selectedRows.length > 0 && (
+                <div className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                  <div className="text-sm text-muted-foreground">
+                    {selectedRows.length} baris dipilih
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={selectedRows.length === 0}
+                  >
+                    Hapus yang dipilih
+                  </Button>
+                </div>
+              )}
+              <DataTable
+                columns={columns}
+                data={dosens}
+                searchPlaceholder="Cari nama atau NIDN..."
+                filename="dosen-praktikum"
+                enableRowSelection={true}
+                onRowSelectionChange={setSelectedRows}
+              />
+              <Dialog open={isBulkDeleteModalOpen} onOpenChange={setIsBulkDeleteModalOpen}>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                        <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <span>Hapus {selectedRows.length} Data Dosen</span>
+                    </DialogTitle>
+                    <DialogDescription>
+                      Apakah Anda yakin ingin menghapus {selectedRows.length} data dosen yang dipilih? Tindakan ini tidak dapat dibatalkan.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="max-h-60 overflow-y-auto">
+                    <div className="space-y-2">
+                      {selectedRows.map((row) => (
+                        <div key={row.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{row.nama}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {row.nidn}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <DialogFooter className="gap-3 pt-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsBulkDeleteModalOpen(false)}
+                      disabled={processing}
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={confirmBulkDelete}
+                      disabled={processing}
+                    >
+                      {processing ? 'Menghapus...' : 'Hapus'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </CardContent>
         </Card>
       </div>
