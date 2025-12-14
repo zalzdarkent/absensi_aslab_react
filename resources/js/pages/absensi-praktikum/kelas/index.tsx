@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -114,6 +114,26 @@ export default function KelasIndex({ kelas, success, error }: Pick<Props, 'kelas
     setIsCreateModalOpen(true);
   };
 
+  const [selectedRows, setSelectedRows] = useState<Kelas[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return;
+
+    router.post('/absensi-praktikum/kelas/bulk-delete', {
+      items: selectedRows.map(row => ({ id: row.id }))
+    }, {
+      onSuccess: () => {
+        setIsBulkDeleteModalOpen(false);
+        setSelectedRows([]);
+        toast.success('Data kelas berhasil dihapus');
+      },
+      onError: () => {
+        toast.error('Gagal menghapus data kelas');
+      }
+    });
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Kelas" />
@@ -126,10 +146,20 @@ export default function KelasIndex({ kelas, success, error }: Pick<Props, 'kelas
               Kelola data kelas
             </p>
           </div>
-          <Button onClick={openCreateModal}>
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Kelas
-          </Button>
+          <div className="flex gap-2">
+            {selectedRows.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={() => setIsBulkDeleteModalOpen(true)}
+              >
+                Hapus {selectedRows.length} Data
+              </Button>
+            )}
+            <Button onClick={openCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Kelas
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -145,10 +175,41 @@ export default function KelasIndex({ kelas, success, error }: Pick<Props, 'kelas
               data={kelas}
               searchPlaceholder="Cari semester atau jurusan..."
               filename="kelas"
+              enableRowSelection={true}
+              onRowSelectionChange={setSelectedRows}
+              getRowId={(row) => row.id.toString()}
             />
           </CardContent>
         </Card>
       </div>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <Dialog open={isBulkDeleteModalOpen} onOpenChange={setIsBulkDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus Massal</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus {selectedRows.length} data kelas yang dipilih?
+              Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsBulkDeleteModalOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleBulkDelete}
+              disabled={processing}
+            >
+              {processing ? 'Menghapus...' : 'Hapus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>

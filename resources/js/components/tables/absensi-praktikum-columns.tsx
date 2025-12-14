@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash } from 'lucide-react';
+import { Edit, Trash, ArrowUpDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -106,14 +106,34 @@ export function createAbsensiPraktikumColumns(
   return [
     {
       accessorKey: 'aslab.name',
-      header: 'Aslab',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Aslab
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => (
         <div className="font-medium">{row.original.aslab.name}</div>
       ),
     },
     {
       accessorKey: 'tanggal',
-      header: 'Tanggal',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Tanggal
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => (
         <div>
           {new Date(row.original.tanggal).toLocaleDateString('id-ID', {
@@ -126,7 +146,17 @@ export function createAbsensiPraktikumColumns(
     },
     {
       accessorKey: 'dosen_praktikum.nama',
-      header: 'Dosen',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Dosen
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         const dosen = row.original.dosen_praktikum;
         const mataKuliahs = dosen.mata_kuliahs?.map(mk => mk.nama).join(', ') || '';
@@ -143,7 +173,17 @@ export function createAbsensiPraktikumColumns(
     },
     {
       accessorKey: 'pertemuan',
-      header: 'Pertemuan',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Pertemuan
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         const pertemuan = row.original.pertemuan;
         let label = pertemuan;
@@ -159,7 +199,17 @@ export function createAbsensiPraktikumColumns(
     },
     {
       accessorKey: 'sebagai',
-      header: 'Sebagai',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Sebagai
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         const sebagai = row.original.sebagai;
         const variant = sebagai === 'instruktur' ? 'default' : 'secondary';
@@ -173,7 +223,17 @@ export function createAbsensiPraktikumColumns(
     },
     {
       accessorKey: 'kehadiran_dosen',
-      header: 'Kehadiran Dosen',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Kehadiran Dosen
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         const kehadiran = row.original.kehadiran_dosen;
         const variant = kehadiran === 'hadir' ? 'default' : 'destructive';
@@ -187,7 +247,17 @@ export function createAbsensiPraktikumColumns(
     },
     {
       accessorKey: 'kelas.display_name',
-      header: 'Kelas',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Kelas
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => (
         <Badge variant="secondary">
           {row.original.kelas.display_name}

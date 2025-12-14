@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -67,8 +67,14 @@ interface Props {
   aslabs: Aslab[];
   dosens: Dosen[];
   kelasOptions: KelasOption[];
+  tahunOptions: number[];
   filters: {
     search: string | null;
+    semester: string | null;
+    tahun: number | null;
+    aslab_id: string | null;
+    dosen_praktikum_id: string | null;
+    kelas_id: string | null;
   };
   success?: string;
   error?: string;
@@ -100,12 +106,13 @@ const pertemuanOptions = Array.from({ length: 14 }, (_, i) => {
   };
 });
 
-export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasOptions, success, error }: Props) {
+export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasOptions, tahunOptions, success, error, filters }: Props) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAbsensi, setEditingAbsensi] = useState<AbsensiPraktikum | null>(null);
   const [openAslabCombobox, setOpenAslabCombobox] = useState(false);
   const [openDosenCombobox, setOpenDosenCombobox] = useState(false);
-  const [openKelasCombobox, setOpenKelasCombobox] = useState(false);
+  const [openCreateKelasCombobox, setOpenCreateKelasCombobox] = useState(false);
+  const [openEditKelasCombobox, setOpenEditKelasCombobox] = useState(false);
   const [openCalendar, setOpenCalendar] = useState(false);
 
   // Show toast notifications
@@ -171,7 +178,7 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
     setData('kehadiran_dosen', 'hadir');
     setOpenAslabCombobox(false);
     setOpenDosenCombobox(false);
-    setOpenKelasCombobox(false);
+    setOpenCreateKelasCombobox(false);
     setOpenCalendar(false);
     setIsCreateModalOpen(true);
   };
@@ -218,6 +225,120 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
             <CardDescription>
               Total: {absensis.length} absensi
             </CardDescription>
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              <Select
+                defaultValue={filters.semester || 'ganjil'}
+                onValueChange={(value) => {
+                  router.get(
+                    '/absensi-praktikum/absensi',
+                    { ...filters, semester: value },
+                    { preserveState: true, replace: true }
+                  );
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Pilih Semester" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ganjil">Semester Ganjil</SelectItem>
+                  <SelectItem value="genap">Semester Genap</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                defaultValue={filters.tahun?.toString() || new Date().getFullYear().toString()}
+                onValueChange={(value) => {
+                  router.get(
+                    '/absensi-praktikum/absensi',
+                    { ...filters, tahun: value },
+                    { preserveState: true, replace: true }
+                  );
+                }}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Pilih Tahun" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tahunOptions.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.aslab_id || "all"}
+                onValueChange={(value) => {
+                  const val = value === "all" ? null : value;
+                  router.get(
+                    '/absensi-praktikum/absensi',
+                    { ...filters, aslab_id: val },
+                    { preserveState: true, replace: true }
+                  );
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Semua Aslab" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Aslab</SelectItem>
+                  {aslabs.map((aslab) => (
+                    <SelectItem key={aslab.id} value={aslab.id.toString()}>
+                      {aslab.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.dosen_praktikum_id || "all"}
+                onValueChange={(value) => {
+                  const val = value === "all" ? null : value;
+                  router.get(
+                    '/absensi-praktikum/absensi',
+                    { ...filters, dosen_praktikum_id: val },
+                    { preserveState: true, replace: true }
+                  );
+                }}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Semua Dosen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Dosen</SelectItem>
+                  {dosens.map((dosen) => (
+                    <SelectItem key={dosen.id} value={dosen.id.toString()}>
+                      {dosen.display_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.kelas_id || "all"}
+                onValueChange={(value) => {
+                  const val = value === "all" ? null : value;
+                  router.get(
+                    '/absensi-praktikum/absensi',
+                    { ...filters, kelas_id: val },
+                    { preserveState: true, replace: true }
+                  );
+                }}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Semua Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kelas</SelectItem>
+                  {kelasOptions.map((kelas) => (
+                    <SelectItem key={kelas.id} value={kelas.id.toString()}>
+                      Kelas {kelas.kelas} - {kelas.jurusan}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <DataTable
@@ -240,7 +361,7 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateSubmit}>
-            <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4 py-4">
               {/* Aslab Combobox */}
               <div className="space-y-2">
                 <Label>Aslab *</Label>
@@ -449,21 +570,21 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
               </div>
 
               {/* Kelas Combobox */}
-              <div className="space-y-2">
+              <div className="space-y-2 col-span-2">
                 <Label>Kelas *</Label>
-                <Popover open={openKelasCombobox} onOpenChange={setOpenKelasCombobox}>
+                <Popover open={openCreateKelasCombobox} onOpenChange={setOpenCreateKelasCombobox}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
-                      aria-expanded={openKelasCombobox}
+                      aria-expanded={openCreateKelasCombobox}
                       className="w-full justify-between"
                     >
                       {getSelectedKelasName() || "Pilih kelas..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <PopoverContent className="w-[var(--radix-popper-anchor-width)] min-w-[var(--radix-popper-anchor-width)] p-0" align="start">
                     <Command className="[&_[cmdk-group]]:px-0">
                       <CommandInput placeholder="Cari kelas..." />
                       <CommandList className="max-w-none">
@@ -475,7 +596,7 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
                               value={`Kelas ${kelas.kelas} - ${kelas.jurusan}`}
                               onSelect={() => {
                                 setData('kelas_id', kelas.id.toString());
-                                setOpenKelasCombobox(false);
+                                setOpenCreateKelasCombobox(false);
                               }}
                             >
                               <Check
@@ -532,7 +653,7 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
-            <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4 py-4">
               {/* Same form fields as create modal */}
               {/* Aslab Combobox */}
               <div className="space-y-2">
@@ -742,21 +863,21 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
               </div>
 
               {/* Kelas Combobox */}
-              <div className="space-y-2">
+              <div className="space-y-2 col-span-2">
                 <Label>Kelas *</Label>
-                <Popover open={openKelasCombobox} onOpenChange={setOpenKelasCombobox}>
+                <Popover open={openEditKelasCombobox} onOpenChange={setOpenEditKelasCombobox}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
-                      aria-expanded={openKelasCombobox}
+                      aria-expanded={openEditKelasCombobox}
                       className="w-full justify-between"
                     >
                       {getSelectedKelasName() || "Pilih kelas..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <PopoverContent className="w-[var(--radix-popper-anchor-width)] min-w-[var(--radix-popper-anchor-width)] p-0" align="start">
                     <Command className="[&_[cmdk-group]]:px-0">
                       <CommandInput placeholder="Cari kelas..." />
                       <CommandList className="max-w-none">
@@ -768,7 +889,7 @@ export default function AbsensiPraktikumIndex({ absensis, aslabs, dosens, kelasO
                               value={`Kelas ${kelas.kelas} - ${kelas.jurusan}`}
                               onSelect={() => {
                                 setData('kelas_id', kelas.id.toString());
-                                setOpenKelasCombobox(false);
+                                setOpenEditKelasCombobox(false);
                               }}
                             >
                               <Check

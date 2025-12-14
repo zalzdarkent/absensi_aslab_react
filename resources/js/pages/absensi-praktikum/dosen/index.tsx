@@ -146,11 +146,11 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
     });
   };
 
-//   const getSelectedMataKuliahNames = () => {
-//     return mataKuliahs
-//       .filter((mk) => selectedMataKuliahs.includes(mk.id))
-//       .map((mk) => mk.nama);
-//   };
+  //   const getSelectedMataKuliahNames = () => {
+  //     return mataKuliahs
+  //       .filter((mk) => selectedMataKuliahs.includes(mk.id))
+  //       .map((mk) => mk.nama);
+  //   };
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -233,15 +233,49 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
                       variant="outline"
                       role="combobox"
                       aria-expanded={openCombobox}
-                      className="w-full justify-between"
+                      className="w-full justify-between h-auto min-h-10 hover:bg-transparent"
                     >
-                      {selectedMataKuliahs.length > 0
-                        ? `${selectedMataKuliahs.length} selected`
-                        : "Pilih mata kuliah..."}
+                      <div className="flex flex-wrap items-center gap-1 pr-2.5 text-left">
+                        {selectedMataKuliahs.length > 0 ? (
+                          <>
+                            {mataKuliahs
+                              .filter((mk) => selectedMataKuliahs.includes(mk.id))
+                              .slice(0, showAllBadges ? undefined : 2)
+                              .map((mk) => (
+                                <Badge key={mk.id} variant="secondary" className="rounded-sm px-2 py-0.5 text-xs font-normal">
+                                  {mk.nama}
+                                  <div
+                                    className="ml-1.5 rounded-sm hover:bg-muted-foreground/20 cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeMataKuliah(mk.id);
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </div>
+                                </Badge>
+                              ))}
+                            {selectedMataKuliahs.length > 2 && (
+                              <Badge
+                                variant="secondary"
+                                className="rounded-sm px-2 py-0.5 text-xs font-normal cursor-pointer hover:bg-secondary/80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowAllBadges(!showAllBadges);
+                                }}
+                              >
+                                {showAllBadges ? 'Show Less' : `+${selectedMataKuliahs.length - 2} more`}
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Pilih mata kuliah...</span>
+                        )}
+                      </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <PopoverContent className="w-[var(--radix-popper-anchor-width)] p-0" align="start">
                     <Command className="[&_[cmdk-group]]:px-0">
                       <CommandInput placeholder="Cari mata kuliah..." />
                       <CommandList className="max-w-none">
@@ -269,37 +303,6 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
                     </Command>
                   </PopoverContent>
                 </Popover>
-
-                {/* Selected Items */}
-                {selectedMataKuliahs.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {mataKuliahs
-                      .filter((mk) => selectedMataKuliahs.includes(mk.id))
-                      .slice(0, showAllBadges ? undefined : 3)
-                      .map((mk) => (
-                        <Badge key={mk.id} variant="secondary" className="rounded-sm px-2 py-0.5 text-xs font-normal">
-                          {mk.nama}
-                          <button
-                            type="button"
-                            onClick={() => removeMataKuliah(mk.id)}
-                            className="ml-1.5 rounded-sm hover:bg-muted-foreground/20"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    {selectedMataKuliahs.length > 3 && (
-                      <Badge
-                        variant="secondary"
-                        className="rounded-sm px-2 py-0.5 text-xs font-normal cursor-pointer hover:bg-secondary/80"
-                        onClick={() => setShowAllBadges(!showAllBadges)}
-                      >
-                        {showAllBadges ? 'Show Less' : `+${selectedMataKuliahs.length - 3} more`}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-
                 <InputError message={errors.mata_kuliah_ids} />
               </div>
             </div>
@@ -375,15 +378,49 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
                       variant="outline"
                       role="combobox"
                       aria-expanded={openCombobox}
-                      className="w-full justify-between"
+                      className="w-full justify-between h-auto min-h-10 hover:bg-transparent"
                     >
-                      {selectedMataKuliahs.length > 0
-                        ? `${selectedMataKuliahs.length} selected`
-                        : "Pilih mata kuliah..."}
+                      <div className="flex flex-wrap items-center gap-1 pr-2.5 text-left">
+                        {selectedMataKuliahs.length > 0 ? (
+                          <>
+                            {mataKuliahs
+                              .filter((mk) => selectedMataKuliahs.includes(mk.id))
+                              .slice(0, showAllBadges ? undefined : 2)
+                              .map((mk) => (
+                                <Badge key={mk.id} variant="secondary" className="rounded-sm px-2 py-0.5 text-xs font-normal">
+                                  {mk.nama}
+                                  <div
+                                    className="ml-1.5 rounded-sm hover:bg-muted-foreground/20 cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeMataKuliah(mk.id);
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </div>
+                                </Badge>
+                              ))}
+                            {selectedMataKuliahs.length > 2 && (
+                              <Badge
+                                variant="secondary"
+                                className="rounded-sm px-2 py-0.5 text-xs font-normal cursor-pointer hover:bg-secondary/80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowAllBadges(!showAllBadges);
+                                }}
+                              >
+                                {showAllBadges ? 'Show Less' : `+${selectedMataKuliahs.length - 2} more`}
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Pilih mata kuliah...</span>
+                        )}
+                      </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <PopoverContent className="w-[var(--radix-popper-anchor-width)] p-0" align="start">
                     <Command className="[&_[cmdk-group]]:px-0">
                       <CommandInput placeholder="Cari mata kuliah..." />
                       <CommandList className="max-w-none">
@@ -412,35 +449,7 @@ export default function DosenPraktikumIndex({ dosens, mataKuliahs, success, erro
                   </PopoverContent>
                 </Popover>
 
-                {/* Selected Items */}
-                {selectedMataKuliahs.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {mataKuliahs
-                      .filter((mk) => selectedMataKuliahs.includes(mk.id))
-                      .slice(0, showAllBadges ? undefined : 3)
-                      .map((mk) => (
-                        <Badge key={mk.id} variant="secondary" className="rounded-sm px-2 py-0.5 text-xs font-normal">
-                          {mk.nama}
-                          <button
-                            type="button"
-                            onClick={() => removeMataKuliah(mk.id)}
-                            className="ml-1.5 rounded-sm hover:bg-muted-foreground/20"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    {selectedMataKuliahs.length > 3 && (
-                      <Badge
-                        variant="secondary"
-                        className="rounded-sm px-2 py-0.5 text-xs font-normal cursor-pointer hover:bg-secondary/80"
-                        onClick={() => setShowAllBadges(!showAllBadges)}
-                      >
-                        {showAllBadges ? 'Show Less' : `+${selectedMataKuliahs.length - 3} more`}
-                      </Badge>
-                    )}
-                  </div>
-                )}
+
 
                 <InputError message={errors.mata_kuliah_ids} />
               </div>

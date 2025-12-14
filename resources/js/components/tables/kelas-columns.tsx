@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogClose,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, Edit, Trash } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash, ArrowUpDown } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -95,12 +95,32 @@ export function createKelasColumns(
   return [
     {
       accessorKey: 'kelas',
-      header: 'Semester',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Semester
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => <div className="font-medium">Semester {row.getValue('kelas')}</div>,
     },
     {
       accessorKey: 'jurusan',
-      header: 'Jurusan',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Jurusan
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         const jurusan = row.getValue('jurusan') as string;
         return (

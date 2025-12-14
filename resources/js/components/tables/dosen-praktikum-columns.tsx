@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogClose,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, Edit, Trash } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash, ArrowUpDown } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -101,12 +101,32 @@ export function createDosenPraktikumColumns(
   return [
     {
       accessorKey: 'nama',
-      header: 'Nama Dosen',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Nama Dosen
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => <div className="font-medium">{row.getValue('nama')}</div>,
     },
     {
       accessorKey: 'nidn',
-      header: 'NIDN',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            NIDN
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => <div className="text-muted-foreground">{row.getValue('nidn')}</div>,
     },
     {

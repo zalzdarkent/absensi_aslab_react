@@ -97,4 +97,27 @@ class KelasController extends Controller
 
         return response()->json($kelas);
     }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:kelas,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $ids = collect($request->items)->pluck('id');
+            Kelas::whereIn('id', $ids)->delete();
+
+            DB::commit();
+
+            return redirect()->back()
+                ->with('success', count($ids) . ' Kelas berhasil dihapus');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('KelasController@bulkDelete error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
 }

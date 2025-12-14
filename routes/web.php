@@ -82,13 +82,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('absensi-praktikum')->name('absensi-praktikum.')->group(function () {
             // Kelas
             Route::get('kelas/search', [App\Http\Controllers\KelasController::class, 'search'])->name('kelas.search');
+            Route::post('kelas/bulk-delete', [App\Http\Controllers\KelasController::class, 'bulkDelete'])->name('kelas.bulk-delete');
             Route::resource('kelas', App\Http\Controllers\KelasController::class);
 
             // Mata Kuliah Praktikum
+            Route::post('mata-kuliah-praktikum/bulk-delete', [App\Http\Controllers\MataKuliahPraktikumController::class, 'bulkDelete'])->name('mata-kuliah-praktikum.bulk-delete');
             Route::resource('mata-kuliah-praktikum', App\Http\Controllers\MataKuliahPraktikumController::class);
 
             // Dosen Praktikum
             Route::get('dosen-praktikum/search', [App\Http\Controllers\DosenPraktikumController::class, 'search'])->name('dosen-praktikum.search');
+            Route::post('dosen-praktikum/bulk-delete', [App\Http\Controllers\DosenPraktikumController::class, 'bulkDelete'])->name('dosen-praktikum.bulk-delete');
             Route::resource('dosen-praktikum', App\Http\Controllers\DosenPraktikumController::class);
 
             // Kelas Praktikum
@@ -96,6 +99,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('kelas-praktikum', App\Http\Controllers\KelasPraktikumController::class);
 
             // Absensi Praktikum
+            Route::post('absensi/bulk-delete', [App\Http\Controllers\AbsensiPraktikumController::class, 'bulkDelete'])->name('absensi.bulk-delete');
             Route::resource('absensi', App\Http\Controllers\AbsensiPraktikumController::class)->parameters([
                 'absensi' => 'absensiPraktikum'
             ]);

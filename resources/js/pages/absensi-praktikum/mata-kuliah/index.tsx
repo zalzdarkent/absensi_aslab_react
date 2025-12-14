@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -53,12 +53,12 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Absensi Praktikum',
-    },
-    {
-        title: 'Mata Kuliah Praktikum',
-    },
+  {
+    title: 'Absensi Praktikum',
+  },
+  {
+    title: 'Mata Kuliah Praktikum',
+  },
 ];
 
 export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, error }: Pick<Props, 'mataKuliahs' | 'kelas' | 'success' | 'error'>) {
@@ -117,6 +117,26 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
     setIsCreateModalOpen(true);
   };
 
+  const [selectedRows, setSelectedRows] = useState<MataKuliahPraktikum[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return;
+
+    router.post('/absensi-praktikum/mata-kuliah-praktikum/bulk-delete', {
+      items: selectedRows.map(row => ({ id: row.id }))
+    }, {
+      onSuccess: () => {
+        setIsBulkDeleteModalOpen(false);
+        setSelectedRows([]);
+        toast.success('Data mata kuliah praktikum berhasil dihapus');
+      },
+      onError: () => {
+        toast.error('Gagal menghapus data mata kuliah praktikum');
+      }
+    });
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Mata Kuliah Praktikum" />
@@ -129,10 +149,20 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
               Kelola data mata kuliah praktikum
             </p>
           </div>
-          <Button onClick={openCreateModal}>
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Mata Kuliah
-          </Button>
+          <div className="flex gap-2">
+            {selectedRows.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={() => setIsBulkDeleteModalOpen(true)}
+              >
+                Hapus {selectedRows.length} Data
+              </Button>
+            )}
+            <Button onClick={openCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Mata Kuliah
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -148,10 +178,41 @@ export default function MataKuliahPraktikumIndex({ mataKuliahs, kelas, success, 
               data={mataKuliahs}
               searchPlaceholder="Cari nama mata kuliah..."
               filename="mata-kuliah-praktikum"
+              enableRowSelection={true}
+              onRowSelectionChange={setSelectedRows}
+              getRowId={(row) => row.id.toString()}
             />
           </CardContent>
         </Card>
       </div>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <Dialog open={isBulkDeleteModalOpen} onOpenChange={setIsBulkDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus Massal</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus {selectedRows.length} data mata kuliah praktikum yang dipilih?
+              Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsBulkDeleteModalOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleBulkDelete}
+              disabled={processing}
+            >
+              {processing ? 'Menghapus...' : 'Hapus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>

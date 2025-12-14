@@ -102,4 +102,27 @@ class MataKuliahPraktikumController extends Controller
             return back()->with('error', 'Gagal menghapus Mata Kuliah Praktikum: ' . $e->getMessage());
         }
     }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:mata_kuliah_praktikums,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $ids = collect($request->items)->pluck('id');
+            MataKuliahPraktikum::whereIn('id', $ids)->delete();
+
+            DB::commit();
+
+            return redirect()->back()
+                ->with('success', count($ids) . ' Mata Kuliah Praktikum berhasil dihapus');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('MataKuliahPraktikumController@bulkDelete error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
 }

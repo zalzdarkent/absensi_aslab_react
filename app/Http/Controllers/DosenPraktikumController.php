@@ -168,4 +168,27 @@ class DosenPraktikumController extends Controller
 
         return response()->json($dosens);
     }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:dosen_praktikums,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $ids = collect($request->items)->pluck('id');
+            DosenPraktikum::whereIn('id', $ids)->delete();
+
+            DB::commit();
+
+            return redirect()->back()
+                ->with('success', count($ids) . ' Dosen Praktikum berhasil dihapus');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('DosenPraktikumController@bulkDelete error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
 }
