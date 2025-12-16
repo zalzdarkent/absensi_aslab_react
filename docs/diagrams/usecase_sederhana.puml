@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Admin
+actor Aslab
+actor Mahasiswa
+actor Dosen
+
+rectangle "Lab Management System" {
+
+  usecase UC_Login as "Login"
+  usecase UC_Register as "Register"
+
+  usecase UC_Dashboard as "View Dashboard"
+  usecase UC_Attendance as "Manage Attendance"
+  usecase UC_Inventory as "Manage Inventory"
+  usecase UC_Borrow as "Borrow Asset"
+  usecase UC_Return as "Return Asset"
+  usecase UC_Report as "Generate Report"
+  usecase UC_Schedule as "Manage Schedule"
+  usecase UC_Notification as "Send Notification"
+}
+
+' ===== Admin =====
+Admin --> UC_Login
+Admin --> UC_Dashboard
+Admin --> UC_Inventory
+Admin --> UC_Report
+Admin --> UC_Schedule
+
+' ===== Aslab =====
+Aslab --> UC_Login
+Aslab --> UC_Dashboard
+Aslab --> UC_Attendance
+Aslab --> UC_Borrow
+Aslab --> UC_Return
+
+' ===== Mahasiswa =====
+Mahasiswa --> UC_Register
+Mahasiswa --> UC_Login
+Mahasiswa --> UC_Borrow
+
+' ===== Dosen =====
+Dosen --> UC_Register
+Dosen --> UC_Login
+Dosen --> UC_Borrow
+
+UC_Attendance .> UC_Notification : <<include>>
+UC_Schedule .> UC_Notification : <<include>>
+
+@enduml

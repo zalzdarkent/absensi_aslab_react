@@ -8,6 +8,8 @@ actor "User / Aslab" as Aslab
 actor "Inventory Manager" as InvMgr
 actor "RFID Scanner (Hardware)" as Scanner
 actor "Telegram Service (Bot)" as Telegram
+actor Mahasiswa
+actor Dosen
 
 rectangle "Lab Management Web App" {
   usecase UC_Login as "Login / Authentication"
@@ -23,6 +25,8 @@ rectangle "Lab Management Web App" {
   usecase UC_UseMaterial as "Record Material Usage"
   usecase UC_GenerateReport as "Generate / Export Report"
   usecase UC_ConfigureNotifications as "Configure Notifications (Telegram / Webhook)"
+  usecase UC_ManageSchedule as "Manage Schedule (CRUD)"
+  usecase UC_AutoSchedule as "Automated Duty Scheduling"
   usecase UC_SendTelegram as "Enqueue Telegram Notification"
 }
 
@@ -33,12 +37,18 @@ Admin --> UC_ManageUsers
 Admin --> UC_ManageAssets
 Admin --> UC_GenerateReport
 Admin --> UC_ConfigureNotifications
+Admin --> UC_ManageSchedule
+Admin --> UC_AutoSchedule
 
 Aslab --> UC_Login
 Aslab --> UC_ViewDashboard
 Aslab --> UC_ViewAttendance
 Aslab --> UC_ScanRFID
 Aslab --> UC_BorrowAsset
+Mahasiswa --> UC_Login
+Mahasiswa --> UC_BorrowAsset
+Dosen --> UC_Login
+Dosen --> UC_BorrowAsset
 
 InvMgr --> UC_Login
 InvMgr --> UC_ViewDashboard
@@ -49,6 +59,7 @@ InvMgr --> UC_ManageMaterials
 InvMgr --> UC_UseMaterial
 
 Scanner --> UC_ScanRFID
+Admin --> UC_ManageSchedule
 
 UC_ScanRFID .> UC_SendTelegram : "includes / triggers"
 UC_BorrowAsset .> UC_ManageAssets : "includes: update stock"
@@ -56,6 +67,7 @@ UC_ReturnAsset .> UC_ManageAssets : "includes: update stock"
 UC_UseMaterial .> UC_ManageMaterials : "includes: decrease stock"
 UC_GenerateReport .> UC_ViewAttendance : "uses"
 UC_GenerateReport .> UC_ManageAssets : "uses"
+UC_AutoSchedule .> UC_SendTelegram : "includes: notify assigned users"
 UC_SendTelegram ..> Telegram : "send notification via bot"
 
 ' note right of UC_SendTelegram

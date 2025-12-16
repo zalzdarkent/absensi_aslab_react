@@ -12,6 +12,7 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
 - ✅ **ERD (Entity Relationship Diagram)**
   - Tabel Users (dengan field RFID, role, telegram_chat_id)
   - Tabel Attendances (check_in, check_out, status)
+  - Tabel Schedules / Penjadwalan (jadwal_piket, periode, assigned_user_id)
   - Tabel AsetAslab
   - Tabel PeminjamanAset
   - Tabel Bahan
@@ -33,6 +34,7 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
 - ✅ **UI Wireframe/Mockup** (Low-Fidelity)
   - Halaman Login
   - Dashboard
+  - Halaman Penjadwalan Piket (otomatis & manual)
   - Attendance Scanner
   - User Management
   - Asset Management (CRUD + Stock Overview)
@@ -46,6 +48,7 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
   - Model AsetAslab
   - Model PeminjamanAset
   - Model Bahan
+  - Model Schedule / Penjadwalan
   - Model Report (opsional)
   - Controller utama (AuthController, AttendanceController, UserController, AsetAslabController)
   - Service (TelegramService, AttendanceService, InventoryService)
@@ -55,6 +58,7 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
   2. Flow RFID Scan → Validation → Create Attendance → Telegram Notification
   3. Flow Peminjaman Aset → Approve → Update Stock
   4. Flow Asset Checkout / Return
+  5. Flow Penjadwalan Piket Otomatis → Assign User → Notify via Telegram
 
 ---
 
@@ -69,11 +73,13 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
   - Peminjaman Aset (Form & History)
   - Material Usage screens
   - Report/Export Page
+  - Penjadwalan Piket (view jadwal, hasil penjadwalan otomatis, override manual)
 
 - ✅ **Activity Diagram**
   - Business Process: Proses Absensi Harian
   - Business Process: Peminjaman Aset (Pinjam → Setujui → Kembalikan)
   - Business Process: Penggunaan Bahan (Pakai → Kurangi Stok → Laporan)
+  - Business Process: Penjadwalan Piket Otomatis (generate → assign → notify → confirm)
 
 - ✅ **Component Diagram**
   - Frontend (React + Inertia.js)
@@ -91,6 +97,7 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
   - Test Case Execution untuk modul utama (Absensi, Aset, Peminjaman, Bahan)
   - Expected vs Actual Result
   - Success/Failure Status dan catatan perbaikan
+  - Test Case Execution untuk modul Penjadwalan (algoritma pembagian tugas, override manual, notif)
 
 - ✅ **Deployment Diagram**
   - Server Architecture
@@ -137,6 +144,22 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
   - `app/Http/Controllers/AttendanceController.php`
   - `app/Services/AttendanceService.php`
   - `test_rfid_api.php`
+
+#### 4. **Automated Duty Scheduling (Penjadwalan Piket Otomatis)**
+- **UI:**
+  - Halaman Penjadwalan: konfigurasi aturan, periode, override manual
+  - Tampilan Kalender / List Jadwal
+- **UML:**
+  - Sequence Diagram: Generate Schedule → Assign Users → Notify Assigned Users
+  - Activity Diagram: Penjadwalan Otomatis (generate → assign → notify → confirm)
+  - Class Diagram: Schedule Model, ScheduleService, ScheduleController
+- **Lokasi File:**
+  - `resources/js/pages/scheduling/` (mis. schedule.tsx)
+  - `app/Http/Controllers/ScheduleController.php`
+  - `app/Services/ScheduleService.php`
+  - `app/Models/Schedule.php`
+
+#### 5. **Dashboard & Analytics**
 
 #### 4. **Dashboard & Analytics**
 - **UI:** 
@@ -374,6 +397,7 @@ _Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium �
 1. User Management (UI + Class Diagram)
 2. Asset Management (UI saja)
 3. Material Management (UI saja)
+4. Automated Duty Scheduling / Penjadwalan Piket (UI + Sequence/Activity Diagram)
 
 ### 🟢 PRIORITAS RENDAH (Sebutkan Saja)
 1. Export/Download Features
