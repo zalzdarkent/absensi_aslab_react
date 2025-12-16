@@ -1,5 +1,7 @@
 # Panduan Dokumentasi Skripsi - Bab 4 (Hasil dan Implementasi)
-## Metodologi Prototype - Sistem Absensi RFID Asisten Laboratorium
+## Metodologi Prototype - Sistem Manajemen Laboratorium (Absensi, Aset, Peminjaman, Bahan, dan Fitur Lainnya)
+
+_Catatan: Dokumen ini membahas keseluruhan web aplikasi manajemen laboratorium — bukan hanya sistem absensi. Modul yang didokumentasikan meliputi Absensi (RFID), Manajemen Aset, Peminjaman Aset, Manajemen Bahan, Dashboard & Analytics, Integrasi Telegram, serta fitur pendukung lain seperti laporan, export, dan konfigurasi._
 
 ---
 
@@ -8,19 +10,21 @@
 ### 1️⃣ ANALISIS KEBUTUHAN
 **Tampilkan:**
 - ✅ **ERD (Entity Relationship Diagram)**
-  - Tabel Users (dengan field RFID)
+  - Tabel Users (dengan field RFID, role, telegram_chat_id)
   - Tabel Attendances (check_in, check_out, status)
   - Tabel AsetAslab
   - Tabel PeminjamanAset
   - Tabel Bahan
   - Tabel PenggunaanBahan
+  - Tabel Reports / Exports (opsional)
   - Relasi antar tabel (1:N, N:M)
 
 - ✅ **Use Case Diagram**
   - Actor: Admin
   - Actor: User/Aslab
-  - Actor: RFID Scanner
-  - Use cases: Login, Register, Scan RFID, Manage Users, View Dashboard, dll
+  - Actor: Inventory Manager / Lab Staff
+  - Actor: RFID Scanner / Hardware
+  - Use cases: Login, Register, Scan RFID, Manage Users, Manage Assets, Pinjam/Kembalikan Aset, Kelola Bahan, Lihat Dashboard, Generate Report
 
 ---
 
@@ -31,6 +35,10 @@
   - Dashboard
   - Attendance Scanner
   - User Management
+  - Asset Management (CRUD + Stock Overview)
+  - Peminjaman Aset (Form & History)
+  - Material Usage (Form & History)
+  - Report/Export Page
 
 - ✅ **Class Diagram**
   - Model User
@@ -38,13 +46,15 @@
   - Model AsetAslab
   - Model PeminjamanAset
   - Model Bahan
-  - Controller utama (AuthController, AttendanceController, UserController)
-  - Service (TelegramService, AttendanceService)
+  - Model Report (opsional)
+  - Controller utama (AuthController, AttendanceController, UserController, AsetAslabController)
+  - Service (TelegramService, AttendanceService, InventoryService)
 
-- ✅ **Sequence Diagram** (Pilih 2-3 flow penting)
+- ✅ **Sequence Diagram** (Pilih 2-4 flow penting)
   1. Flow Login Authentication
-  2. Flow RFID Scan → Create Attendance → Telegram Notification
-  3. Flow User Management (CRUD)
+  2. Flow RFID Scan → Validation → Create Attendance → Telegram Notification
+  3. Flow Peminjaman Aset → Approve → Update Stock
+  4. Flow Asset Checkout / Return
 
 ---
 
@@ -52,16 +62,18 @@
 **Tampilkan:**
 - ✅ **UI Screenshots** (High-Fidelity - Hasil Implementasi)
   - Login/Register Page
-  - Dashboard dengan charts
+  - Dashboard dengan charts (attendance + inventory)
   - Attendance Scanner Interface
   - User Management (CRUD)
-  - Asset Management (CRUD)
+  - Asset Management (CRUD, stock details)
+  - Peminjaman Aset (Form & History)
+  - Material Usage screens
   - Report/Export Page
 
 - ✅ **Activity Diagram**
   - Business Process: Proses Absensi Harian
-  - Business Process: Peminjaman Aset
-  - Business Process: Penggunaan Bahan
+  - Business Process: Peminjaman Aset (Pinjam → Setujui → Kembalikan)
+  - Business Process: Penggunaan Bahan (Pakai → Kurangi Stok → Laporan)
 
 - ✅ **Component Diagram**
   - Frontend (React + Inertia.js)
@@ -69,15 +81,16 @@
   - Database (MySQL)
   - External Service (Telegram Bot)
   - RFID Hardware Integration
+  - Optional: Background Worker / Queue (Redis/Queue Worker)
 
 ---
 
 ### 4️⃣ PENGUJIAN & EVALUASI SISTEM
 **Tampilkan:**
 - ✅ **Screenshot Testing dengan Evidence**
-  - Test Case Execution
+  - Test Case Execution untuk modul utama (Absensi, Aset, Peminjaman, Bahan)
   - Expected vs Actual Result
-  - Success/Failure Status
+  - Success/Failure Status dan catatan perbaikan
 
 - ✅ **Deployment Diagram**
   - Server Architecture

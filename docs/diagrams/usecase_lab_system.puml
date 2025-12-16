@@ -1,0 +1,66 @@
+@startuml
+' Use Case Diagram for Lab Management Web App
+left to right direction
+skinparam packageStyle rectangle
+
+actor Admin
+actor "User / Aslab" as Aslab
+actor "Inventory Manager" as InvMgr
+actor "RFID Scanner (Hardware)" as Scanner
+actor "Telegram Service (Bot)" as Telegram
+
+rectangle "Lab Management Web App" {
+  usecase UC_Login as "Login / Authentication"
+  usecase UC_Register as "Register"
+  usecase UC_ViewDashboard as "View Dashboard"
+  usecase UC_ViewAttendance as "View Attendance History"
+  usecase UC_ScanRFID as "Scan RFID (Create Attendance)"
+  usecase UC_ManageUsers as "Manage Users (CRUD)"
+  usecase UC_ManageAssets as "Manage Assets (CRUD)"
+  usecase UC_BorrowAsset as "Borrow Asset"
+  usecase UC_ReturnAsset as "Return Asset"
+  usecase UC_ManageMaterials as "Manage Materials (CRUD)"
+  usecase UC_UseMaterial as "Record Material Usage"
+  usecase UC_GenerateReport as "Generate / Export Report"
+  usecase UC_ConfigureNotifications as "Configure Notifications (Telegram / Webhook)"
+  usecase UC_SendTelegram as "Enqueue Telegram Notification"
+}
+
+Admin --> UC_Login
+Admin --> UC_Register
+Admin --> UC_ViewDashboard
+Admin --> UC_ManageUsers
+Admin --> UC_ManageAssets
+Admin --> UC_GenerateReport
+Admin --> UC_ConfigureNotifications
+
+Aslab --> UC_Login
+Aslab --> UC_ViewDashboard
+Aslab --> UC_ViewAttendance
+Aslab --> UC_ScanRFID
+Aslab --> UC_BorrowAsset
+
+InvMgr --> UC_Login
+InvMgr --> UC_ViewDashboard
+InvMgr --> UC_ManageAssets
+InvMgr --> UC_BorrowAsset
+InvMgr --> UC_ReturnAsset
+InvMgr --> UC_ManageMaterials
+InvMgr --> UC_UseMaterial
+
+Scanner --> UC_ScanRFID
+
+UC_ScanRFID .> UC_SendTelegram : "includes / triggers"
+UC_BorrowAsset .> UC_ManageAssets : "includes: update stock"
+UC_ReturnAsset .> UC_ManageAssets : "includes: update stock"
+UC_UseMaterial .> UC_ManageMaterials : "includes: decrease stock"
+UC_GenerateReport .> UC_ViewAttendance : "uses"
+UC_GenerateReport .> UC_ManageAssets : "uses"
+UC_SendTelegram ..> Telegram : "send notification via bot"
+
+' note right of UC_SendTelegram
+'   Telegram notifications are typically
+'   enqueued and processed by a background worker
+' end note
+
+@enduml
