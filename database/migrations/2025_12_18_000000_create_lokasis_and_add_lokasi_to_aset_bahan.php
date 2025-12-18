@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Buat tabel lokasis hanya jika belum ada
         if (!Schema::hasTable('lokasis')) {
             Schema::create('lokasis', function (Blueprint $table) {
                 $table->id();
@@ -17,23 +16,21 @@ return new class extends Migration
             });
         }
 
-        // Tambah kolom lokasi_id ke aset_aslabs jika belum ada
+        // aset_aslabs: tambah kolom lokasi_id TANPA FK, boleh null
         if (Schema::hasTable('aset_aslabs') && !Schema::hasColumn('aset_aslabs', 'lokasi_id')) {
             Schema::table('aset_aslabs', function (Blueprint $table) {
-                $table->foreignId('lokasi_id')
-                    ->after('jenis_id')
-                    ->constrained('lokasis')
-                    ->onDelete('restrict');
+                $table->unsignedBigInteger('lokasi_id')
+                    ->nullable()
+                    ->after('jenis_id');
             });
         }
 
-        // Tambah kolom lokasi_id ke bahan jika belum ada
+        // bahan: tambah kolom lokasi_id TANPA FK, boleh null
         if (Schema::hasTable('bahan') && !Schema::hasColumn('bahan', 'lokasi_id')) {
             Schema::table('bahan', function (Blueprint $table) {
-                $table->foreignId('lokasi_id')
-                    ->after('nama')
-                    ->constrained('lokasis')
-                    ->onDelete('restrict');
+                $table->unsignedBigInteger('lokasi_id')
+                    ->nullable()
+                    ->after('nama');
             });
         }
     }
@@ -42,14 +39,12 @@ return new class extends Migration
     {
         if (Schema::hasTable('aset_aslabs') && Schema::hasColumn('aset_aslabs', 'lokasi_id')) {
             Schema::table('aset_aslabs', function (Blueprint $table) {
-                $table->dropForeign(['lokasi_id']);
                 $table->dropColumn('lokasi_id');
             });
         }
 
         if (Schema::hasTable('bahan') && Schema::hasColumn('bahan', 'lokasi_id')) {
             Schema::table('bahan', function (Blueprint $table) {
-                $table->dropForeign(['lokasi_id']);
                 $table->dropColumn('lokasi_id');
             });
         }
