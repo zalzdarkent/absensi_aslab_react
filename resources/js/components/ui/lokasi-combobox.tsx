@@ -14,7 +14,7 @@ interface LokasiComboboxProps {
     value: string;
     onValueChange: (value: string) => void;
     placeholder?: string;
-    lokasiOptions: LokasiOption[];
+    lokasiOptions?: LokasiOption[];
     className?: string;
     disabled?: boolean;
     onAddNew?: () => void;
@@ -24,7 +24,7 @@ export function LokasiCombobox({
     value,
     onValueChange,
     placeholder = 'Pilih lokasi...',
-    lokasiOptions,
+    lokasiOptions = [],
     className,
     disabled = false,
     onAddNew,
@@ -35,9 +35,11 @@ export function LokasiCombobox({
     const inputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
 
-    const selectedLokasi = lokasiOptions.find((lokasi) => lokasi.id.toString() === value);
+    const safeOptions = lokasiOptions ?? [];
 
-    const filteredLokasi = lokasiOptions.filter((lokasi) =>
+    const selectedLokasi = safeOptions.find((lokasi) => lokasi.id.toString() === value);
+
+    const filteredLokasi = safeOptions.filter((lokasi) =>
         lokasi.nama_lokasi.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
