@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DragDropImageUpload } from '@/components/ui/drag-drop-image-upload';
 import { JenisCombobox } from '@/components/ui/jenis-combobox';
+import { LokasiCombobox } from '@/components/ui/lokasi-combobox';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -20,20 +21,30 @@ interface JenisAset {
     nama_jenis_aset: string;
 }
 
+interface Lokasi {
+    id: number;
+    nama_lokasi: string;
+}
+
 interface Props {
     jenisAsets: JenisAset[];
     success?: string;
     newJenisAset?: JenisAset;
+    lokasis: Lokasi[];
+    newLokasi?: Lokasi;
 }
 
-export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: Props) {
+export default function AsetAslabCreate({ jenisAsets, success, newJenisAset, lokasis, newLokasi }: Props) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isLokasiDialogOpen, setIsLokasiDialogOpen] = useState(false);
     const [jenisAsetList, setJenisAsetList] = useState<JenisAset[]>(jenisAsets);
+    const [lokasiList, setLokasiList] = useState<Lokasi[]>(lokasis);
 
     const { data, setData, post, processing, errors } = useForm({
         nama_aset: '',
         jenis_id: '',
+        lokasi_id: '',
         kode_aset: '',
         nomor_seri: '',
         stok: 1,
@@ -45,6 +56,11 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
     // Form for adding new jenis aset
     const { data: jenisData, setData: setJenisData, post: postJenis, processing: jenisProcessing, errors: jenisErrors } = useForm({
         nama_jenis_aset: '',
+    });
+
+    const { data: lokasiData, setData: setLokasiData, post: postLokasi, processing: lokasiProcessing, errors: lokasiErrors } = useForm({
+        nama_lokasi: '',
+        redirect_to: '/aset-aslab/create',
     });
 
     // debounce timer ref for nama_aset changes
@@ -74,10 +90,30 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
             // Auto select the new jenis aset
             setData('jenis_id', newJenisAset.id.toString());
 
-            // Show success toast
+            // Close modal & show success toast
+            setIsDialogOpen(false);
             toast.success(success);
         }
     }, [newJenisAset, success, setData]);
+
+    // Handle new lokasi from redirect
+    useEffect(() => {
+        if (newLokasi && success) {
+            setLokasiList(prev => {
+                const exists = prev.find(item => item.id === newLokasi.id);
+                if (!exists) {
+                    return [...prev, newLokasi];
+                }
+                return prev;
+            });
+
+            setData('lokasi_id', newLokasi.id.toString());
+
+            // Close modal & show success toast
+            setIsLokasiDialogOpen(false);
+            toast.success(success);
+        }
+    }, [newLokasi, success, setData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -161,6 +197,21 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
         });
     };
 
+    const handleLokasiSubmit = () => {
+        if (!lokasiData.nama_lokasi.trim()) {
+            return;
+        }
+
+        postLokasi('/lokasi', {
+            onSuccess: () => {
+                // redirect handled by backend
+            },
+            onError: (errors) => {
+                console.log('Error adding lokasi:', errors);
+            },
+        });
+    };
+
     return (
         <AppLayout>
             <Head title="Tambah Aset Aslab" />
@@ -222,6 +273,18 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
                                                         disabled={processing}
                                                     />
                                                     <InputError message={errors.jenis_id} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="lokasi_id">Lokasi *</Label>
+                                                    <LokasiCombobox
+                                                        value={data.lokasi_id}
+                                                        onValueChange={(value) => setData('lokasi_id', value)}
+                                                        placeholder="Cari dan pilih lokasi..."
+                                                        lokasiOptions={lokasiList}
+                                                        onAddNew={() => setIsLokasiDialogOpen(true)}
+                                                        disabled={processing}
+                                                    />
+                                                    <InputError message={errors.lokasi_id} />
                                                 </div>
                                             </div>
 
@@ -378,6 +441,43 @@ export default function AsetAslabCreate({ jenisAsets, success, newJenisAset }: P
                                 </Button>
                                 <Button type="button" onClick={handleJenisSubmit} disabled={jenisProcessing}>
                                     {jenisProcessing ? 'Menyimpan...' : 'Simpan'}
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Dialog for adding new lokasi */}
+                <Dialog open={isLokasiDialogOpen} onOpenChange={setIsLokasiDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Tambah Lokasi Baru</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="nama_lokasi">Nama Lokasi *</Label>
+                                <Input
+                                    id="nama_lokasi"
+                                    type="text"
+                                    value={lokasiData.nama_lokasi}
+                                    onChange={(e) => setLokasiData('nama_lokasi', e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleLokasiSubmit();
+                                        }
+                                    }}
+                                    placeholder="Contoh: Lab Kimia"
+                                    required
+                                />
+                                <InputError message={lokasiErrors.nama_lokasi} />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                                <Button type="button" variant="outline" onClick={() => setIsLokasiDialogOpen(false)}>
+                                    Batal
+                                </Button>
+                                <Button type="button" onClick={handleLokasiSubmit} disabled={lokasiProcessing}>
+                                    {lokasiProcessing ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </div>
                         </div>

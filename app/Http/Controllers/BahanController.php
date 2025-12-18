@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bahan;
+use App\Models\Lokasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -11,20 +12,27 @@ class BahanController extends Controller
 {
     public function create()
     {
-        return Inertia::render('bahan/create');
+        $lokasis = Lokasi::orderBy('nama_lokasi', 'asc')->get();
+
+        return Inertia::render('bahan/create', [
+            'lokasis' => $lokasis,
+            'success' => session('success'),
+            'newLokasi' => session('newLokasi'),
+        ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'nama' => 'required|string|max:255',
+            'lokasi_id' => 'required|exists:lokasis,id',
             'jenis_bahan' => 'required|string|max:100',
             'stok' => 'required|integer|min:0',
             'catatan' => 'nullable|string|max:1000',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->only(['nama', 'jenis_bahan', 'stok', 'catatan']);
+        $data = $request->only(['nama', 'lokasi_id', 'jenis_bahan', 'stok', 'catatan']);
 
         // Handle image upload
         if ($request->hasFile('gambar')) {
@@ -39,6 +47,8 @@ class BahanController extends Controller
 
     public function show(Bahan $bahan)
     {
+        $bahan->load('lokasi');
+
         return Inertia::render('bahan/show', [
             'bahan' => $bahan,
         ]);
@@ -46,8 +56,14 @@ class BahanController extends Controller
 
     public function edit(Bahan $bahan)
     {
+        $bahan->load('lokasi');
+        $lokasis = Lokasi::orderBy('nama_lokasi', 'asc')->get();
+
         return Inertia::render('bahan/edit', [
             'bahan' => $bahan,
+            'lokasis' => $lokasis,
+            'success' => session('success'),
+            'newLokasi' => session('newLokasi'),
         ]);
     }
 
@@ -55,13 +71,14 @@ class BahanController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
+            'lokasi_id' => 'required|exists:lokasis,id',
             'jenis_bahan' => 'required|string|max:100',
             'stok' => 'required|integer|min:0',
             'catatan' => 'nullable|string|max:1000',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->only(['nama', 'jenis_bahan', 'stok', 'catatan']);
+        $data = $request->only(['nama', 'lokasi_id', 'jenis_bahan', 'stok', 'catatan']);
 
         // Handle image upload
         if ($request->hasFile('gambar')) {

@@ -10,6 +10,7 @@ class AsetAslab extends Model
     protected $fillable = [
         'nama_aset',
         'jenis_id',
+        'lokasi_id',
         'kode_aset',
         'nomor_seri',
         'stok',
@@ -22,6 +23,11 @@ class AsetAslab extends Model
     public function jenisAset()
     {
         return $this->belongsTo(JenisAsetAslab::class, 'jenis_id');
+    }
+
+    public function lokasi()
+    {
+        return $this->belongsTo(Lokasi::class, 'lokasi_id');
     }
 
     // Relasi ke PeminjamanAset (one to many)

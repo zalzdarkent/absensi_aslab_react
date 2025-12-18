@@ -19,6 +19,10 @@ import { Link, router } from '@inertiajs/react';
 interface Bahan {
     id: number;
     nama: string;
+    lokasi?: {
+        id: number;
+        nama_lokasi: string;
+    };
     jenis_bahan: string;
     stok: number;
     catatan?: string;
@@ -134,6 +138,17 @@ export default function BahanShow({ bahan }: Props) {
                                         <div className="mt-1">
                                             <Badge variant="secondary" className="text-sm">
                                                 {bahan.jenis_bahan}
+                                            </Badge>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Lokasi
+                                        </label>
+                                        <div className="mt-1">
+                                            <Badge variant="outline" className="text-sm">
+                                                {bahan.lokasi?.nama_lokasi || '-'}
                                             </Badge>
                                         </div>
                                     </div>

@@ -9,6 +9,7 @@ class Bahan extends Model
     protected $table = 'bahan';
     protected $fillable = [
         'nama',
+        'lokasi_id',
         'jenis_bahan',
         'stok',
         'catatan',
@@ -19,5 +20,10 @@ class Bahan extends Model
     public function penggunaanBahans()
     {
         return $this->hasMany(PenggunaanBahan::class, 'bahan_id');
+    }
+
+    public function lokasi()
+    {
+        return $this->belongsTo(Lokasi::class, 'lokasi_id');
     }
 }

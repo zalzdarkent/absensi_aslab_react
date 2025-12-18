@@ -10,6 +10,7 @@ use App\Http\Controllers\PeminjamanBarangController;
 use App\Http\Controllers\BahanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\LokasiController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -112,6 +113,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Jenis Aset Aslab routes
         Route::post('jenis-aset-aslab', [JenisAsetAslabController::class, 'store'])->name('jenis-aset-aslab.store');
+
+        // Lokasi routes
+        Route::post('lokasi', [LokasiController::class, 'store'])->name('lokasi.store');
 
         // Bahan routes - Admin and Aslab can manage bahan
         Route::get('bahan/create', [BahanController::class, 'create'])->name('bahan.create');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AsetAslab;
 use App\Models\Bahan;
 use App\Models\JenisAsetAslab;
+use App\Models\Lokasi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -76,11 +77,14 @@ class AsetAslabController extends Controller
     public function create()
     {
         $jenisAsets = JenisAsetAslab::orderBy('nama_jenis_aset', 'asc')->get();
+        $lokasis = Lokasi::orderBy('nama_lokasi', 'asc')->get();
 
         return Inertia::render('aset-aslab/create', [
             'jenisAsets' => $jenisAsets,
+            'lokasis' => $lokasis,
             'success' => session('success'),
             'newJenisAset' => session('newJenisAset'),
+            'newLokasi' => session('newLokasi'),
         ]);
     }
 
@@ -127,7 +131,7 @@ class AsetAslabController extends Controller
 
     public function show($id)
     {
-        $aset = AsetAslab::with(['jenisAset', 'peminjamanAsets.user'])
+        $aset = AsetAslab::with(['jenisAset', 'lokasi', 'peminjamanAsets.user'])
             ->findOrFail($id);
 
         // Append status_text untuk setiap peminjaman
@@ -142,12 +146,16 @@ class AsetAslabController extends Controller
 
     public function edit($id)
     {
-        $aset = AsetAslab::with('jenisAset')->findOrFail($id);
+        $aset = AsetAslab::with(['jenisAset', 'lokasi'])->findOrFail($id);
         $jenisAsets = JenisAsetAslab::orderBy('nama_jenis_aset', 'asc')->get();
+        $lokasis = Lokasi::orderBy('nama_lokasi', 'asc')->get();
 
         return Inertia::render('aset-aslab/edit', [
             'aset' => $aset,
             'jenisAsets' => $jenisAsets,
+            'lokasis' => $lokasis,
+            'success' => session('success'),
+            'newLokasi' => session('newLokasi'),
         ]);
     }
 

@@ -56,6 +56,10 @@ interface Aset {
         id: number;
         nama_jenis_aset: string;
     };
+    lokasi?: {
+        id: number;
+        nama_lokasi: string;
+    };
     peminjaman_asets: Peminjaman[];
 }
 
@@ -313,11 +317,17 @@ export default function AsetAslabShow({ aset }: Props) {
                             Kembali
                         </Link>
                     </Button>
-                    <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{aset.nama_aset}</h1>
                             <p className="text-gray-600 dark:text-gray-400 mt-1">
-                                {aset.jenis_aset.nama_jenis_aset} • {aset.kode_aset}
+                                        {aset.jenis_aset.nama_jenis_aset} • {aset.kode_aset}
+                                        {aset.lokasi && (
+                                            <>
+                                                {' • '}
+                                                <span className="font-medium">{aset.lokasi.nama_lokasi}</span>
+                                            </>
+                                        )}
                             </p>
                         </div>
                         <div className="flex gap-3">
@@ -370,6 +380,13 @@ export default function AsetAslabShow({ aset }: Props) {
                                                 <div>
                                                     <p className="text-sm text-gray-500">Jenis Aset</p>
                                                     <p className="font-medium">{aset.jenis_aset.nama_jenis_aset}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <Package className="h-4 w-4 text-gray-400" />
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Lokasi</p>
+                                                    <p className="font-medium">{aset.lokasi?.nama_lokasi || '-'}</p>
                                                 </div>
                                             </div>
                                         </div>

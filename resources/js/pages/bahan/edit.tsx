@@ -17,9 +17,15 @@ import {
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 
+import { LokasiCombobox } from '@/components/ui/lokasi-combobox';
+
 interface Bahan {
     id: number;
     nama: string;
+    lokasi?: {
+        id: number;
+        nama_lokasi: string;
+    };
     jenis_bahan: string;
     stok: number;
     catatan?: string;
@@ -28,21 +34,48 @@ interface Bahan {
 
 interface Props {
     bahan: Bahan;
+    lokasis: { id: number; nama_lokasi: string }[];
+    success?: string;
+    newLokasi?: { id: number; nama_lokasi: string };
 }
 
-export default function BahanEdit({ bahan }: Props) {
+export default function BahanEdit({ bahan, lokasis, success, newLokasi }: Props) {
     const [previewImage, setPreviewImage] = useState<string | null>(
         bahan.gambar ? `/storage/${bahan.gambar}` : null
     );
+    const [lokasiList, setLokasiList] = useState<{ id: number; nama_lokasi: string }[]>(lokasis);
+    const [isLokasiDialogOpen, setIsLokasiDialogOpen] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
         nama: bahan.nama || '',
+        lokasi_id: bahan.lokasi ? bahan.lokasi.id : '',
         jenis_bahan: bahan.jenis_bahan || '',
         stok: bahan.stok || 0,
         catatan: bahan.catatan || '',
         gambar: null as File | null,
         _method: 'PUT'
     });
+
+    const { data: lokasiData, setData: setLokasiData, post: postLokasi, processing: lokasiProcessing, errors: lokasiErrors } = useForm({
+        nama_lokasi: '',
+        redirect_to: `/bahan/${bahan.id}/edit`,
+    });
+
+    React.useEffect(() => {
+        if (newLokasi && success) {
+            setLokasiList(prev => {
+                const exists = prev.find(item => item.id === newLokasi.id);
+                if (!exists) {
+                    return [...prev, newLokasi];
+                }
+                return prev;
+            });
+
+            setData('lokasi_id', newLokasi.id.toString());
+            setIsLokasiDialogOpen(false);
+            toast.success(success);
+        }
+    }, [newLokasi, success, setData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,6 +88,21 @@ export default function BahanEdit({ bahan }: Props) {
                 console.error('Update errors:', errors);
                 toast.error('Terjadi kesalahan saat memperbarui bahan');
             }
+        });
+    };
+
+    const handleLokasiSubmit = () => {
+        if (!lokasiData.nama_lokasi.trim()) {
+            return;
+        }
+
+        postLokasi('/lokasi', {
+            onSuccess: () => {
+                // redirect handled by backend
+            },
+            onError: (errors) => {
+                console.error('Error adding lokasi:', errors);
+            },
         });
     };
 
@@ -143,6 +191,21 @@ export default function BahanEdit({ bahan }: Props) {
                                             placeholder="Masukkan jenis bahan"
                                         />
                                         {errors.jenis_bahan && <p className="text-red-500 text-sm mt-1">{errors.jenis_bahan}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="lokasi_id">Lokasi *</Label>
+                                        <LokasiCombobox
+                                            value={data.lokasi_id?.toString()}
+                                            onValueChange={(value) => setData('lokasi_id', value)}
+                                            placeholder="Cari dan pilih lokasi..."
+                                            lokasiOptions={lokasiList}
+                                            onAddNew={() => setIsLokasiDialogOpen(true)}
+                                            disabled={processing}
+                                        />
+                                        {errors.lokasi_id && <p className="text-red-500 text-sm mt-1">{errors.lokasi_id}</p>}
                                     </div>
                                 </div>
 
@@ -280,6 +343,42 @@ export default function BahanEdit({ bahan }: Props) {
                     </div>
                 </form>
             </div>
+            <Dialog open={isLokasiDialogOpen} onOpenChange={setIsLokasiDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Lokasi Baru</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="nama_lokasi">Nama Lokasi *</Label>
+                            <Input
+                                id="nama_lokasi"
+                                type="text"
+                                value={lokasiData.nama_lokasi}
+                                onChange={(e) => setLokasiData('nama_lokasi', e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleLokasiSubmit();
+                                    }
+                                }}
+                                placeholder="Contoh: Lab Kimia"
+                                required
+                            />
+                            {lokasiErrors.nama_lokasi && <p className="text-red-500 text-sm mt-1">{lokasiErrors.nama_lokasi}</p>}
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setIsLokasiDialogOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button type="button" onClick={handleLokasiSubmit} disabled={lokasiProcessing}>
+                                {lokasiProcessing ? 'Menyimpan...' : 'Simpan'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }
+

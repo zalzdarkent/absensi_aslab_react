@@ -12,19 +12,37 @@ import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
 
-interface Props {
-    success?: string;
+import { LokasiCombobox } from '@/components/ui/lokasi-combobox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+interface Lokasi {
+    id: number;
+    nama_lokasi: string;
 }
 
-export default function BahanCreate({ success }: Props) {
+interface Props {
+    success?: string;
+    lokasis: Lokasi[];
+    newLokasi?: Lokasi;
+}
+
+export default function BahanCreate({ success, lokasis, newLokasi }: Props) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [lokasiList, setLokasiList] = useState<Lokasi[]>(lokasis);
+    const [isLokasiDialogOpen, setIsLokasiDialogOpen] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
         nama: '',
+        lokasi_id: '',
         jenis_bahan: '',
         stok: 1,
         catatan: '',
         gambar: null as File | null,
+    });
+
+    const { data: lokasiData, setData: setLokasiData, post: postLokasi, processing: lokasiProcessing, errors: lokasiErrors } = useForm({
+        nama_lokasi: '',
+        redirect_to: '/bahan/create',
     });
 
     // Show success toast
@@ -34,11 +52,28 @@ export default function BahanCreate({ success }: Props) {
         }
     }, [success]);
 
+    useEffect(() => {
+        if (newLokasi && success) {
+            setLokasiList(prev => {
+                const exists = prev.find(item => item.id === newLokasi.id);
+                if (!exists) {
+                    return [...prev, newLokasi];
+                }
+                return prev;
+            });
+
+            setData('lokasi_id', newLokasi.id.toString());
+            setIsLokasiDialogOpen(false);
+            toast.success(success);
+        }
+    }, [newLokasi, success, setData]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         const formData = new FormData();
         formData.append('nama', data.nama);
+        formData.append('lokasi_id', data.lokasi_id);
         formData.append('jenis_bahan', data.jenis_bahan);
         formData.append('stok', data.stok.toString());
         formData.append('catatan', data.catatan);
@@ -64,6 +99,21 @@ export default function BahanCreate({ success }: Props) {
 
     const handleNamaChange = (value: string) => {
         setData('nama', value);
+    };
+
+    const handleLokasiSubmit = () => {
+        if (!lokasiData.nama_lokasi.trim()) {
+            return;
+        }
+
+        postLokasi('/lokasi', {
+            onSuccess: () => {
+                // redirect handled by backend
+            },
+            onError: (errors) => {
+                console.error('Error adding lokasi:', errors);
+            },
+        });
     };
 
     return (
@@ -127,6 +177,21 @@ export default function BahanCreate({ success }: Props) {
                                                         required
                                                     />
                                                     <InputError message={errors.jenis_bahan} />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="lokasi_id">Lokasi *</Label>
+                                                    <LokasiCombobox
+                                                        value={data.lokasi_id}
+                                                        onValueChange={(value) => setData('lokasi_id', value)}
+                                                        placeholder="Cari dan pilih lokasi..."
+                                                        lokasiOptions={lokasiList}
+                                                        onAddNew={() => setIsLokasiDialogOpen(true)}
+                                                        disabled={processing}
+                                                    />
+                                                    <InputError message={errors.lokasi_id} />
                                                 </div>
                                             </div>
 
@@ -203,6 +268,42 @@ export default function BahanCreate({ success }: Props) {
                     </Card>
                 </div>
             </div>
+            <Dialog open={isLokasiDialogOpen} onOpenChange={setIsLokasiDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Lokasi Baru</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="nama_lokasi">Nama Lokasi *</Label>
+                            <Input
+                                id="nama_lokasi"
+                                type="text"
+                                value={lokasiData.nama_lokasi}
+                                onChange={(e) => setLokasiData('nama_lokasi', e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleLokasiSubmit();
+                                    }
+                                }}
+                                placeholder="Contoh: Lab Kimia"
+                                required
+                            />
+                            <InputError message={lokasiErrors.nama_lokasi} />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setIsLokasiDialogOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button type="button" onClick={handleLokasiSubmit} disabled={lokasiProcessing}>
+                                {lokasiProcessing ? 'Menyimpan...' : 'Simpan'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }
+
