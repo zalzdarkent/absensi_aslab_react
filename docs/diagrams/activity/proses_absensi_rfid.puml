@@ -1,0 +1,33 @@
+@startuml Proses Absensi RFID
+!theme plain
+
+title Activity Diagram - Proses Absensi RFID
+
+start
+:User Scan RFID Card;
+
+:Validasi RFID & User;
+
+if (RFID Valid?) then (Tidak)
+  :Tampilkan Error\nRFID Tidak Terdaftar;
+  stop
+else (Ya)
+  :Cek Status Absensi Hari Ini;
+endif
+
+if (Sudah Check-in?) then (Belum)
+  :Simpan Check-in;
+  :Tampilkan Sukses\nSelamat Datang;
+  stop
+else (Sudah)
+  if (Sudah Check-out?) then (Belum)
+    :Simpan Check-out;
+    :Tampilkan Sukses\nSampai Jumpa;
+    stop
+  else (Sudah)
+    :Tampilkan Error\nSudah Absen Lengkap;
+    stop
+  endif
+endif
+
+@enduml

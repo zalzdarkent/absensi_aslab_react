@@ -1,0 +1,33 @@
+@startuml Generate Jadwal Piket Otomatis
+!theme plain
+
+title Activity Diagram - Generate Jadwal Piket Otomatis
+
+start
+:Admin Request Generate Jadwal;
+
+:Reset Jadwal Piket Lama;
+
+:Ambil Semua Aslab Aktif;
+
+if (Ada Aslab?) then (Tidak)
+  :Tampilkan Error\nTidak Ada Aslab Aktif;
+  stop
+else (Ya)
+  :Shuffle Aslab (Random);
+  :Distribusi ke Hari\n(Senin - Jumat);
+  :Simpan Jadwal ke Database;
+  :Tampilkan Sukses\nJadwal Berhasil Di-generate;
+endif
+
+if (Perlu Edit Manual?) then (Ya)
+  :Admin Update Jadwal Manual;
+  :Simpan Perubahan;
+  :Tampilkan Jadwal Final;
+else (Tidak)
+  :Tampilkan Jadwal Final;
+endif
+
+stop
+
+@enduml

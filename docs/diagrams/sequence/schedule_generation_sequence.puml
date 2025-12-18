@@ -1,0 +1,48 @@
+@startuml Automated Schedule Generation
+!theme plain
+skinparam maxMessageSize 120
+
+title Sequence Diagram - Generate Jadwal Piket Otomatis
+
+actor "Admin" as Admin
+participant "Controller" as Controller
+database "Database" as DB
+
+Admin -> Controller: Request Generate Jadwal Otomatis
+activate Controller
+
+Controller -> DB: Reset Jadwal Piket Lama
+activate DB
+DB --> Controller: All Cleared
+deactivate DB
+
+Controller -> DB: Ambil Semua Aslab Aktif
+activate DB
+DB --> Controller: List Aslab
+deactivate DB
+
+Controller -> Controller: Shuffle Aslab (Random)\nDistribusi ke Hari (Senin-Jumat)
+
+Controller -> DB: Update Jadwal Piket per Aslab
+activate DB
+DB --> Controller: Success
+deactivate DB
+
+Controller --> Admin: Jadwal Berhasil Di-generate
+
+deactivate Controller
+
+alt Update Manual (Opsional)
+    Admin -> Controller: Update Jadwal Manual\n(user_id, hari_baru)
+    activate Controller
+
+    Controller -> DB: Update Jadwal Piket User
+    activate DB
+    DB --> Controller: Success
+    deactivate DB
+
+    Controller --> Admin: Jadwal Berhasil Diubah
+    deactivate Controller
+end
+
+@enduml

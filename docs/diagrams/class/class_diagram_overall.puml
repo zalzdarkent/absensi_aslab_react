@@ -1,0 +1,113 @@
+@startuml
+
+' Define classes based on ERD and code structure
+class User {
+    + int id
+    + string name
+    + string email
+    + string password
+    + string rfid_code
+    + string prodi
+    + int semester
+    + string role
+    + bool is_active
+    + string piket_day
+    + string telegram_chat_id
+    + bool telegram_notifications
+    + string google_id
+    + string github_id
+    + string avatar
+}
+
+class Attendance {
+    + int id
+    + int user_id
+    + string type
+    + datetime timestamp
+    + date date
+    + string notes
+}
+
+class AsetAslab {
+    + int id
+    + string nama_aset
+    + int jenis_id
+    + string kode_aset
+    + string nomor_seri
+    + int stok
+    + string status
+    + string catatan
+    + string gambar
+}
+
+class PeminjamanAset {
+    + int id
+    + int aset_id
+    + int user_id
+    + int stok
+    + datetime tanggal_pinjam
+    + datetime tanggal_kembali
+    + string status
+    + int approved_by
+    + datetime approved_at
+    + string approval_note
+    + string keterangan
+}
+
+class Bahan {
+    + int id
+    + string nama
+    + string jenis_bahan
+    + int stok
+    + string catatan
+    + string gambar
+}
+
+class PenggunaanBahan {
+    + int id
+    + int bahan_id
+    + int user_id
+    + datetime tanggal_penggunaan
+    + int jumlah_digunakan
+    + string keperluan
+    + string catatan
+}
+
+class Schedule {
+    + int id
+    + int user_id
+    + string piket_day
+    + datetime start_time
+    + datetime end_time
+    + string status
+}
+
+class ManualAttendance {
+    + int id
+    + int user_id
+    + datetime timestamp
+    + string notes
+    + string status
+}
+
+class AttendanceHistory {
+    + int id
+    + int user_id
+    + datetime date
+    + string status
+    + string notes
+}
+
+' Define relationships based on ERD
+User "1" -- "*" Attendance : owns
+User "1" -- "*" PeminjamanAset : borrows
+User "1" -- "*" PenggunaanBahan : uses
+User "1" -- "*" Schedule : assigned
+User "1" -- "*" ManualAttendance : records
+User "1" -- "*" AttendanceHistory : logs
+
+AsetAslab "1" -- "*" PeminjamanAset : includes
+Bahan "1" -- "*" PenggunaanBahan : contains
+Schedule "1" -- "*" AttendanceHistory : tracks
+
+@enduml

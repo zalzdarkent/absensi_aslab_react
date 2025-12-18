@@ -1,0 +1,38 @@
+@startuml RFID Attendance System
+!theme plain
+skinparam maxMessageSize 120
+
+title Sequence Diagram - Sistem Absensi RFID
+
+actor "RFID Scanner" as Scanner
+participant "Controller" as Controller
+database "Database" as DB
+
+Scanner -> Controller: Scan RFID Code
+activate Controller
+
+Controller -> DB: Validasi User & Cek Status Absensi
+activate DB
+DB --> Controller: Data User & Status
+deactivate DB
+
+alt RFID Tidak Valid
+    Controller --> Scanner: Error: RFID tidak terdaftar
+
+else Belum Check-in
+    Controller -> DB: Simpan Check-in
+    DB --> Controller: Success
+    Controller --> Scanner: Berhasil Check-in
+
+else Sudah Check-in, Belum Check-out
+    Controller -> DB: Simpan Check-out
+    DB --> Controller: Success
+    Controller --> Scanner: Berhasil Check-out
+
+else Sudah Lengkap
+    Controller --> Scanner: Error: Sudah absen hari ini
+end
+
+deactivate Controller
+
+@enduml

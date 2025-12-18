@@ -1,0 +1,31 @@
+@startuml Pendataan Aset dan Bahan
+!theme plain
+
+title Activity Diagram - Pendataan Aset dan Bahan
+
+start
+:Admin dan Aslab Masuk Halaman Pendataan;
+
+:Input Data Aset/Bahan\n(nama, jenis, stok, status);
+
+if (Upload Gambar?) then (Ya)
+  :Upload File Gambar;
+else (Tidak)
+  :Gunakan Gambar Default;
+endif
+
+:Validasi Input Data;
+
+if (Data Valid?) then (Tidak)
+  :Tampilkan Error;
+  stop
+else (Ya)
+  :Generate Kode Otomatis;
+  :Simpan ke Database & Storage;
+  :Tampilkan Sukses;
+endif
+
+:Lihat Daftar Aset/Bahan;
+stop
+
+@enduml

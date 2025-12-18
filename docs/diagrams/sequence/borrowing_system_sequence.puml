@@ -1,0 +1,61 @@
+@startuml Borrowing System
+!theme plain
+skinparam maxMessageSize 120
+
+title Sequence Diagram - Sistem Peminjaman Aset/Bahan
+
+actor "User" as User
+participant "Controller" as Controller
+database "Database" as DB
+actor "Admin" as Admin
+
+User -> Controller: Request Pinjam Aset/Bahan\n(pilih item, jumlah)
+activate Controller
+
+Controller -> Controller: Validasi Input & Stok
+
+Controller -> DB: Lock & Kurangi Stok
+activate DB
+DB --> Controller: Success/Stock Reserved
+deactivate DB
+
+Controller -> DB: Simpan Peminjaman (status: pending)
+activate DB
+DB --> Controller: Record Created
+deactivate DB
+
+Controller --> User: Peminjaman Berhasil Diajukan
+
+deactivate Controller
+
+Admin -> Controller: Request Approve/Reject Peminjaman
+activate Controller
+
+Controller -> DB: Update Status Peminjaman
+activate DB
+
+alt Approve
+    DB --> Controller: Status: Approved
+    Controller --> Admin: Peminjaman Disetujui
+
+else Reject
+    DB -> DB: Kembalikan Stok
+    DB --> Controller: Status: Rejected
+    Controller --> Admin: Peminjaman Ditolak
+end
+
+deactivate DB
+deactivate Controller
+
+User -> Controller: Kembalikan Aset
+activate Controller
+
+Controller -> DB: Update Status & Tambah Stok Kembali
+activate DB
+DB --> Controller: Success
+deactivate DB
+
+Controller --> User: Pengembalian Berhasil
+deactivate Controller
+
+@enduml

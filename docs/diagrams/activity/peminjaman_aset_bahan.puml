@@ -1,0 +1,36 @@
+@startuml Peminjaman Aset dan Bahan
+!theme plain
+
+title Activity Diagram - Peminjaman Aset dan Bahan
+
+start
+:User Pilih Aset/Bahan\n& Input Jumlah;
+
+:Validasi Stok;
+
+if (Stok Cukup?) then (Tidak)
+  :Tampilkan Error;
+  stop
+else (Ya)
+  :Kurangi Stok\n& Simpan Peminjaman (Pending);
+endif
+
+:Admin Review;
+
+if (Approve?) then (Reject)
+  :Kembalikan Stok\n& Notifikasi User;
+  stop
+else (Approve)
+  :Update Status Approved\n& Notifikasi User;
+endif
+
+if (Tipe Aset?) then (Ya)
+  :User Kembalikan Aset;
+  :Tambah Stok Kembali;
+else (Bahan Habis Pakai)
+  :Selesai;
+endif
+
+stop
+
+@enduml

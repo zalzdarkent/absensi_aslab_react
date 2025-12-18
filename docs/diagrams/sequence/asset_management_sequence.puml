@@ -1,0 +1,41 @@
+﻿@startuml Asset Management System
+!theme plain
+skinparam maxMessageSize 120
+
+title Sequence Diagram - Manajemen Aset (CRUD)
+
+actor "Admin" as Admin
+participant "Controller" as Controller
+database "Database" as DB
+
+Admin -> Controller: Request Operasi Aset\n(Create/Read/Update/Delete)
+activate Controller
+
+Controller -> Controller: Validasi Input & Auth
+
+alt Create (Tambah)
+    Controller -> Controller: Generate Kode Aset
+    Controller -> DB: Simpan Data + Gambar
+    DB --> Controller: Success
+    Controller --> Admin: Berhasil Ditambahkan
+
+else Read (Lihat)
+    Controller -> DB: Ambil Data Aset
+    DB --> Controller: Data Aset + History
+    Controller --> Admin: Tampilkan Detail
+
+else Update (Edit)
+    Controller -> DB: Update Data Aset
+    DB --> Controller: Success
+    Controller --> Admin: Berhasil Diupdate
+
+else Delete (Hapus)
+    Controller -> Controller: Hapus Gambar
+    Controller -> DB: Delete Data
+    DB --> Controller: Success
+    Controller --> Admin: Berhasil Dihapus
+end
+
+deactivate Controller
+
+@enduml
