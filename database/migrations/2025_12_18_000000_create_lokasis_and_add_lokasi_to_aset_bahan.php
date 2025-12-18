@@ -6,49 +6,56 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('lokasis', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_lokasi')->unique();
-            $table->timestamps();
-        });
+        // Buat tabel lokasis hanya jika belum ada
+        if (!Schema::hasTable('lokasis')) {
+            Schema::create('lokasis', function (Blueprint $table) {
+                $table->id();
+                $table->string('nama_lokasi')->unique();
+                $table->timestamps();
+            });
+        }
 
-        Schema::table('aset_aslabs', function (Blueprint $table) {
-            $table->foreignId('lokasi_id')
-                ->after('jenis_id')
-                ->constrained('lokasis')
-                ->onDelete('restrict');
-        });
+        // Tambah kolom lokasi_id ke aset_aslabs jika belum ada
+        if (Schema::hasTable('aset_aslabs') && !Schema::hasColumn('aset_aslabs', 'lokasi_id')) {
+            Schema::table('aset_aslabs', function (Blueprint $table) {
+                $table->foreignId('lokasi_id')
+                    ->after('jenis_id')
+                    ->constrained('lokasis')
+                    ->onDelete('restrict');
+            });
+        }
 
-        Schema::table('bahan', function (Blueprint $table) {
-            $table->foreignId('lokasi_id')
-                ->after('nama')
-                ->constrained('lokasis')
-                ->onDelete('restrict');
-        });
+        // Tambah kolom lokasi_id ke bahan jika belum ada
+        if (Schema::hasTable('bahan') && !Schema::hasColumn('bahan', 'lokasi_id')) {
+            Schema::table('bahan', function (Blueprint $table) {
+                $table->foreignId('lokasi_id')
+                    ->after('nama')
+                    ->constrained('lokasis')
+                    ->onDelete('restrict');
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('aset_aslabs', function (Blueprint $table) {
-            $table->dropForeign(['lokasi_id']);
-            $table->dropColumn('lokasi_id');
-        });
+        if (Schema::hasTable('aset_aslabs') && Schema::hasColumn('aset_aslabs', 'lokasi_id')) {
+            Schema::table('aset_aslabs', function (Blueprint $table) {
+                $table->dropForeign(['lokasi_id']);
+                $table->dropColumn('lokasi_id');
+            });
+        }
 
-        Schema::table('bahan', function (Blueprint $table) {
-            $table->dropForeign(['lokasi_id']);
-            $table->dropColumn('lokasi_id');
-        });
+        if (Schema::hasTable('bahan') && Schema::hasColumn('bahan', 'lokasi_id')) {
+            Schema::table('bahan', function (Blueprint $table) {
+                $table->dropForeign(['lokasi_id']);
+                $table->dropColumn('lokasi_id');
+            });
+        }
 
-        Schema::dropIfExists('lokasis');
+        if (Schema::hasTable('lokasis')) {
+            Schema::drop('lokasis');
+        }
     }
 };
-
-
