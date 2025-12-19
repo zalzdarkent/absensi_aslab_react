@@ -16,6 +16,14 @@ import {
 } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 import { LokasiCombobox } from '@/components/ui/lokasi-combobox';
 

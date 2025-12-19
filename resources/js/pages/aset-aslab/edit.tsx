@@ -13,6 +13,14 @@ import { ArrowLeft, Upload, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface JenisAset {
     id: number;

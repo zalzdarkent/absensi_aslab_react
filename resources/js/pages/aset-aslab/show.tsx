@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
-import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle, Clock, ArrowUpDown, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Package, Calendar, Hash, Barcode, CheckCircle, AlertTriangle, XCircle, Clock, ArrowUpDown } from 'lucide-react';
 import { Label, Pie, PieChart } from "recharts"
 import {
     ChartConfig,
@@ -317,11 +317,11 @@ export default function AsetAslabShow({ aset }: Props) {
                             Kembali
                         </Link>
                     </Button>
-                            <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{aset.nama_aset}</h1>
                             <p className="text-gray-600 dark:text-gray-400 mt-1">
-                                        {aset.jenis_aset.nama_jenis_aset} • {aset.kode_aset}
+                                {aset.jenis_aset.nama_jenis_aset} • {aset.kode_aset}
                                         {aset.lokasi && (
                                             <>
                                                 {' • '}
