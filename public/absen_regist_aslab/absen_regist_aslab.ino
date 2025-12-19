@@ -1,5 +1,5 @@
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
+#include <WiFiClient.h>
 #include <HTTPClient.h>
 #include <SPI.h>
 #include <MFRC522.h>
@@ -8,12 +8,12 @@
 #include <freertos/queue.h>
 
 // WiFi
-const char *ssid = "narzo 50A";
-const char *password = "aixhwishx";
+const char *ssid = "Asisten Laboratorium";
+const char *password = "2025Labkomp:3";
   
-// API Endpoints Laravel - VPS Production (HTTPS with self-signed cert)
-String registrationEndpoint = "https://36.50.94.112/api/rfid/scan-for-registration";
-String attendanceEndpoint = "https://36.50.94.112/api/rfid/scan";
+// API Endpoints Laravel - VPS Production (http with self-signed cert)
+String registrationEndpoint = "http://36.50.94.112:8081/api/rfid/scan-for-registration";
+String attendanceEndpoint = "http://36.50.94.112:8081/api/rfid/scan";
 
 // RFID
 #define RST_PIN 22
@@ -34,7 +34,7 @@ enum SystemMode {
 SystemMode currentMode = MODE_REGISTRATION;
 QueueHandle_t rfidQueue;
 SemaphoreHandle_t wifiMutex;
-String commandEndpoint = "https://36.50.94.112/api/rfid/get-mode-command";
+String commandEndpoint = "http://36.50.94.112:8081/api/rfid/get-mode-command";
 
 struct RFIDData {
   String uid;
@@ -292,14 +292,10 @@ void displayTask(void *pvParameters) {
 
 // Send RFID data to server
 void sendRFIDData(String uid, String endpoint, SystemMode mode) {
-  WiFiClientSecure *client = new WiFiClientSecure;
-  if(client) {
-    // Disable SSL certificate verification (for self-signed cert)
-    client->setInsecure();
-    
+    WiFiClient client;
     HTTPClient http;
     http.setTimeout(5000);
-    http.begin(*client, endpoint);
+    http.begin(client, endpoint);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Accept", "application/json");
 
@@ -341,9 +337,8 @@ void sendRFIDData(String uid, String endpoint, SystemMode mode) {
     Serial.println(httpResponseCode);
   }
 
-  http.end();
-  delete client;
-  }
+    http.end();
+
 }
 
 // FreeRTOS Task: Command Listener
@@ -353,13 +348,10 @@ void commandTask(void *pvParameters) {
     if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(3000)) == pdPASS) {
 
       if (WiFi.status() == WL_CONNECTED) {
-        WiFiClientSecure *client = new WiFiClientSecure;
-        if(client) {
-          client->setInsecure();
-          
-          HTTPClient http;
-          http.setTimeout(3000);
-          http.begin(*client, commandEndpoint);
+        WiFiClient client;
+        HTTPClient http;
+        http.setTimeout(3000);
+        http.begin(client, commandEndpoint);
 
         int httpResponseCode = http.GET();
 
@@ -389,8 +381,7 @@ void commandTask(void *pvParameters) {
         }
 
         http.end();
-        delete client;
-        }
+
       }
 
       xSemaphoreGive(wifiMutex);
