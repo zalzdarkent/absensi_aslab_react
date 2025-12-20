@@ -98,6 +98,7 @@ class AsetAslabController extends Controller
         $validated = $request->validate([
             'nama_aset' => 'required|string|max:255',
             'jenis_id' => 'required|exists:jenis_aset_aslabs,id',
+            'lokasi_id' => 'required|exists:lokasis,id',
             'kode_aset' => 'required|string|max:255|unique:aset_aslabs,kode_aset',
             'nomor_seri' => 'nullable|string|max:255',
             'stok' => 'required|integer|min:0',
@@ -113,7 +114,7 @@ class AsetAslabController extends Controller
 
         AsetAslab::create([
             ...$validated,
-            'gambar' => $gambarPath ?? 'default-aset.png',
+            'gambar' => $gambarPath,
         ]);
 
         return redirect()->route('aset-aslab.index')->with('success', 'Aset berhasil ditambahkan!');
@@ -167,6 +168,7 @@ class AsetAslabController extends Controller
         $rules = [
             'nama_aset' => 'required|string|max:255',
             'jenis_id' => 'required|exists:jenis_aset_aslabs,id',
+            'lokasi_id' => 'required|exists:lokasis,id',
             'kode_aset' => 'required|string|max:255|unique:aset_aslabs,kode_aset,' . $id,
             'nomor_seri' => 'nullable|string|max:255',
             'stok' => 'required|integer|min:0',

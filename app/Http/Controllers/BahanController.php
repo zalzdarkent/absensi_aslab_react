@@ -37,6 +37,8 @@ class BahanController extends Controller
         // Handle image upload
         if ($request->hasFile('gambar')) {
             $data['gambar'] = $request->file('gambar')->store('bahan', 'public');
+        } else {
+            $data['gambar'] = null;
         }
 
         Bahan::create($data);
