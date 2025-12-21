@@ -11,6 +11,7 @@ use App\Http\Controllers\BahanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\ImportController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -130,6 +131,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('peminjaman-barang-bulk-approve', [PeminjamanBarangController::class, 'bulkApprove'])->name('peminjaman-barang.bulk-approve');
         Route::post('peminjaman-barang-bulk-reject', [PeminjamanBarangController::class, 'bulkReject'])->name('peminjaman-barang.bulk-reject');
         Route::post('peminjaman-barang-bulk-return', [PeminjamanBarangController::class, 'bulkReturn'])->name('peminjaman-barang.bulk-return');
+
+        // Import routes
+        Route::post('import/aset', [ImportController::class, 'importAset'])->name('import.aset');
+        Route::post('import/bahan', [ImportController::class, 'importBahan'])->name('import.bahan');
+        Route::post('import/bulk-images', [ImportController::class, 'bulkUploadImages'])->name('import.bulk-images');
+        Route::post('import/preview', [ImportController::class, 'preview'])->name('import.preview');
     });
 
     // All authenticated users can access peminjaman barang and aset

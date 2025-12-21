@@ -167,11 +167,11 @@ export default function TelegramSetup() {
     };
 
     const openTelegramBot = () => {
-        window.open('https://t.me/AbsenPiketLab_bot', '_blank');
+        window.open('https://t.me/AslabManagementBot', '_blank');
     };
 
     const copyBotUsername = () => {
-        navigator.clipboard.writeText('@AbsenPiketLab_bot');
+        navigator.clipboard.writeText('@AslabManagementBot');
         toast.success('Bot username berhasil disalin!');
     };
 

@@ -9,6 +9,7 @@ import { Plus, Package, CheckCircle, AlertTriangle, XCircle, Trash2, Eye, Edit, 
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from 'sonner';
+import { ImportModal } from '@/components/ImportModal';
 
 interface AsetAslab {
     id: number;
@@ -143,11 +144,10 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
                     <div className="font-medium">
                         {row.getValue("nama_aset")}
                         {/* Add type badge */}
-                        <span className={`ml-2 px-2 py-1 text-xs rounded-full font-medium ${
-                            row.original.type === 'aset'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-purple-100 text-purple-800'
-                        }`}>
+                        <span className={`ml-2 px-2 py-1 text-xs rounded-full font-medium ${row.original.type === 'aset'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-purple-100 text-purple-800'
+                            }`}>
                             {row.original.type === 'aset' ? 'ASET' : 'BAHAN'}
                         </span>
                     </div>
@@ -273,14 +273,15 @@ export default function AsetAslabIndex({ asetAslabs, stats, success }: Props) {
                             Kelola inventaris aset dan bahan laboratorium
                         </p>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-                        <Button variant="outline" asChild className="w-full sm:w-auto">
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                        {/* <ImportModal /> */}
+                        <Button variant="outline" asChild className="flex-1 sm:flex-none">
                             <Link href="/test-bahan">
                                 <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                                 <span className="text-xs sm:text-sm">Tambah Bahan</span>
                             </Link>
                         </Button>
-                        <Button asChild className="w-full sm:w-auto">
+                        <Button asChild className="flex-1 sm:flex-none">
                             <Link href="/aset-aslab/create">
                                 <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                                 <span className="text-xs sm:text-sm">Tambah Aset</span>
