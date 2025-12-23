@@ -241,7 +241,11 @@ class TelegramService
                 $firstName = $message['from']['first_name'] ?? 'User';
 
                 // Handle commands
-                switch ($text) {
+                switch (true) {
+                    case str_starts_with($text, '/feedback'):
+                        $this->handleFeedbackCommand($chatId, $text);
+                        break;
+
                     case '/start':
                         $this->handleStartCommand($chatId, $firstName);
                         break;
@@ -704,8 +708,16 @@ class TelegramService
     /**
      * Handle /feedback command for aslab
      */
-    private function handleFeedbackCommand($chatId, $feedback)
+    private function handleFeedbackCommand($chatId, $text)
     {
+        // Extract feedback text after the command
+        $feedback = trim(str_replace('/feedback', '', $text));
+
+        if (empty($feedback)) {
+            $this->sendMessage($chatId, "❌ <b>Feedback tidak valid!</b>\n\nSilakan kirimkan feedback Anda setelah perintah ini.");
+            return;
+        }
+
         // Simpan feedback ke log untuk sementara
         Log::info("Feedback received from chat_id {$chatId}", [
             'feedback' => $feedback
