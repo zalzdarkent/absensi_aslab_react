@@ -125,6 +125,21 @@ class TelegramService
     }
 
     /**
+     * Log all sent and received messages
+     */
+    private function logMessageActivity($chatId, $messageContent, $direction = 'sent')
+    {
+        $logData = [
+            'chat_id' => $chatId,
+            'message_content' => $messageContent,
+            'direction' => $direction,
+            'timestamp' => now()->toDateTimeString()
+        ];
+
+        Log::info("Message activity logged", $logData);
+    }
+
+    /**
      * Send piket reminder to user
      */
     public function sendPiketReminder($user, $timeType = 'morning')
@@ -242,6 +257,45 @@ class TelegramService
                     case '/jadwal':
                     case '/piket':
                         $this->handleJadwalCommand($chatId);
+                        break;
+
+                    // Admin commands
+                    case '/report':
+                        $this->handleReportCommand($chatId);
+                        break;
+
+                    case '/broadcast':
+                        // For security, we might want to limit this command to specific admin users
+                        // Assuming admin user ID is 123456789
+                        if ($chatId == 123456789) {
+                            // Extract message content after /broadcast command
+                            $messageContent = trim(str_replace('/broadcast', '', $text));
+                            $this->handleBroadcastCommand($chatId, $messageContent);
+                        } else {
+                            $this->sendMessage($chatId, "🚫 Anda tidak memiliki izin untuk menggunakan perintah ini.");
+                        }
+                        break;
+
+                    case '/status_all':
+                        // For security, we might want to limit this command to specific admin users
+                        if ($chatId == 123456789) {
+                            $this->handleStatusAllCommand($chatId);
+                        } else {
+                            $this->sendMessage($chatId, "🚫 Anda tidak memiliki izin untuk menggunakan perintah ini.");
+                        }
+                        break;
+
+                    case '/help':
+                        $this->handleHelpCommand($chatId);
+                        break;
+
+                    case '/feedback':
+                        // Feedback command - expect user to send feedback text after the command
+                        $this->sendMessage($chatId, "📝 Silakan kirimkan feedback Anda setelah perintah ini.");
+                        break;
+
+                    case '/schedule':
+                        $this->handleScheduleCommand($chatId);
                         break;
 
                     default:
@@ -552,5 +606,181 @@ class TelegramService
         $message .= "✅ Jika Anda menerima pesan ini, bot berfungsi dengan baik!";
 
         return $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Send daily attendance report to admin
+     */
+    public function sendDailyReportToAdmin($adminChatId, $reportData)
+    {
+        $message = "📊 <b>Laporan Harian Absensi</b>\n\n";
+        $message .= "👥 <b>Total Aslab Hadir:</b> {$reportData['present']}\n";
+        $message .= "❌ <b>Total Aslab Tidak Hadir:</b> {$reportData['absent']}\n\n";
+        $message .= "📅 <b>Tanggal:</b> " . date('d/m/Y') . "\n\n";
+        $message .= "💡 <i>Pesan otomatis dari Sistem Absensi Aslab</i>";
+
+        return $this->sendMessage($adminChatId, $message);
+    }
+
+    /**
+     * Notify admin about absent aslab
+     */
+    public function notifyAdminAboutAbsence($adminChatId, $absentAslabs)
+    {
+        $message = "🚨 <b>Notifikasi Ketidakhadiran Aslab</b>\n\n";
+        $message .= "Berikut adalah daftar aslab yang tidak hadir hari ini:\n\n";
+
+        foreach ($absentAslabs as $aslab) {
+            $message .= "• {$aslab['name']} ({$aslab['prodi']}, Semester {$aslab['semester']})\n";
+        }
+
+        $message .= "\n💡 <i>Pesan otomatis dari Sistem Absensi Aslab</i>";
+
+        return $this->sendMessage($adminChatId, $message);
+    }
+
+    /**
+     * Handle /report command for admin
+     */
+    private function handleReportCommand($chatId)
+    {
+        // Generate a dummy report for now
+        $reportData = [
+            'present' => 10,
+            'absent' => 2
+        ];
+
+        $this->sendDailyReportToAdmin($chatId, $reportData);
+    }
+
+    /**
+     * Handle /broadcast command for admin
+     */
+    private function handleBroadcastCommand($chatId, $messageContent)
+    {
+        // Fetch all users with telegram_chat_id
+        $users = User::whereNotNull('telegram_chat_id')->get();
+
+        foreach ($users as $user) {
+            $this->sendMessage($user->telegram_chat_id, $messageContent);
+        }
+
+        $this->sendMessage($chatId, "📢 Pesan broadcast berhasil dikirim ke semua aslab.");
+    }
+
+    /**
+     * Handle /status_all command for admin
+     */
+    private function handleStatusAllCommand($chatId)
+    {
+        $users = User::all();
+        $message = "📊 <b>Status Semua Aslab</b>\n\n";
+
+        foreach ($users as $user) {
+            $status = $user->telegram_notifications ? 'Aktif ✅' : 'Nonaktif ❌';
+            $message .= "• {$user->name} ({$user->prodi}, Semester {$user->semester}): {$status}\n";
+        }
+
+        $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Handle /help command for aslab
+     */
+    private function handleHelpCommand($chatId)
+    {
+        $message = "ℹ️ <b>Daftar Command</b>\n\n";
+        $message .= "• /start - Informasi bot dan Chat ID\n";
+        $message .= "• /chatid - Dapatkan Chat ID Anda\n";
+        $message .= "• /status - Cek status notifikasi\n";
+        $message .= "• /jadwal - Lihat jadwal piket Anda\n";
+        $message .= "• /feedback - Kirim feedback ke admin\n";
+        $message .= "• /schedule - Lihat jadwal mingguan\n\n";
+        $message .= "💡 <i>Gunakan command sesuai kebutuhan Anda!</i>";
+
+        $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Handle /feedback command for aslab
+     */
+    private function handleFeedbackCommand($chatId, $feedback)
+    {
+        // Simpan feedback ke log untuk sementara
+        Log::info("Feedback received from chat_id {$chatId}", [
+            'feedback' => $feedback
+        ]);
+
+        $message = "✅ <b>Feedback Anda telah diterima!</b>\n\n";
+        $message .= "Terima kasih atas masukan Anda. Admin akan meninjau feedback ini segera.";
+
+        $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Handle /schedule command for aslab
+     */
+    private function handleScheduleCommand($chatId)
+    {
+        $user = User::where('telegram_chat_id', $chatId)->first();
+
+        if ($user) {
+            $message = "📅 <b>Jadwal Mingguan Anda</b>\n\n";
+            $message .= "👤 <b>Nama:</b> {$user->name}\n";
+            $message .= "📚 <b>Prodi:</b> {$user->prodi}\n";
+            $message .= "🎓 <b>Semester:</b> {$user->semester}\n\n";
+            $message .= "🔔 <b>Hari Piket:</b> {$user->piket_day}\n";
+            $message .= "⏰ <b>Waktu:</b> Sesuai jadwal yang ditentukan\n";
+            $message .= "📍 <b>Lokasi:</b> Laboratorium Asisten\n\n";
+            $message .= "💡 <i>Jangan lupa untuk selalu hadir tepat waktu!</i>";
+        } else {
+            $message = "❌ <b>Belum Terdaftar</b>\n\n";
+            $message .= "Chat ID Anda belum terhubung dengan sistem absensi.\n\n";
+            $message .= "🔗 Silakan hubungkan akun Telegram Anda melalui dashboard sistem absensi.";
+        }
+
+        $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Send motivational message to aslab
+     */
+    public function sendMotivationalMessage($user)
+    {
+        $messages = [
+            "🌟 Tetap semangat dan terus belajar! Kesuksesan dimulai dari langkah kecil.",
+            "💡 Jangan lupa, setiap usaha yang kamu lakukan hari ini adalah investasi untuk masa depan.",
+            "🚀 Jadilah versi terbaik dari dirimu hari ini! Semangat!",
+            "🌈 Hari yang cerah untuk mencapai tujuanmu. Jangan menyerah!",
+            "🔥 Ingat, kerja keras tidak akan mengkhianati hasil. Semangat terus!"
+        ];
+
+        $randomMessage = $messages[array_rand($messages)];
+
+        $message = "📢 <b>Pesan Motivasi</b>\n\n";
+        $message .= "Halo <b>{$user->name}</b>!\n\n";
+        $message .= $randomMessage . "\n\n";
+        $message .= "💡 <i>Pesan dari Sistem Absensi Aslab</i>";
+
+        return $this->sendMessage($user->telegram_chat_id, $message);
+    }
+
+    /**
+     * Broadcast a message to all aslab
+     */
+    public function broadcastMessageToAll($messageContent)
+    {
+        $users = User::whereNotNull('telegram_chat_id')->get();
+
+        foreach ($users as $user) {
+            $this->sendMessage($user->telegram_chat_id, $messageContent);
+        }
+
+        Log::info("Broadcast message sent to all aslab", [
+            'message_content' => $messageContent,
+            'total_recipients' => $users->count()
+        ]);
+
+        return true;
     }
 }
