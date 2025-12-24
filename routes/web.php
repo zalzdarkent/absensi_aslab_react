@@ -162,5 +162,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+// Public route for NFC Picket View
+Route::get('/piket/v/{rfidCode}', [JadwalPiketController::class, 'standaloneView'])->name('piket.standalone');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
