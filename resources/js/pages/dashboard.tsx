@@ -361,6 +361,231 @@ export default function Dashboard({
     }
   };
 
+  // Cek apakah user adalah admin atau aslab
+  const isAdminOrAslab = currentUser.role === 'admin' || currentUser.role === 'aslab';
+
+  // Dashboard untuk Mahasiswa dan Dosen
+  if (!isAdminOrAslab) {
+    return (
+      <AppLayout>
+        <Head title="Dashboard" />
+
+        <PageTransition>
+          <div className="space-y-8 py-6">
+            {/* Hero Section with Gradient Background */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-8 text-white shadow-2xl">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30 shadow-lg">
+                    <Users className="h-8 w-8" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                      Selamat Datang, {currentUser.name}! 👋
+                    </h1>
+                    <p className="text-white/90 font-medium mt-1">
+                      {current_date}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-white/80 text-lg mt-4 max-w-2xl">
+                  {currentUser.role === 'mahasiswa'
+                    ? 'Kelola peminjaman barang dan akses layanan laboratorium dengan mudah.'
+                    : 'Akses sistem manajemen laboratorium dan pantau aktivitas akademik.'}
+                </p>
+              </div>
+              {/* Decorative circles */}
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+              <div className="absolute -left-5 -bottom-5 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            </div>
+
+            {/* Enhanced Info Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Profile Info Card */}
+              <div className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-4 shadow-md">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-3 text-emerald-900 dark:text-emerald-100">Informasi Pribadi</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Nama Lengkap</p>
+                      <p className="font-semibold text-sm">{currentUser.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
+                      <p className="font-semibold text-sm truncate">{currentUser.email}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Academic Info Card */}
+              {(currentUser.prodi || currentUser.semester) && (
+                <div className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4 shadow-md">
+                      <Activity className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-lg mb-3 text-blue-900 dark:text-blue-100">Info Akademik</h3>
+                    <div className="space-y-2">
+                      {currentUser.prodi && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Program Studi</p>
+                          <p className="font-semibold text-sm">{currentUser.prodi}</p>
+                        </div>
+                      )}
+                      {currentUser.semester && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Semester</p>
+                          <p className="font-semibold text-sm">Semester {currentUser.semester}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Role Badge Card */}
+              <div className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-4 shadow-md">
+                    <UserCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-3 text-amber-900 dark:text-amber-100">Status Akun</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Role</p>
+                      <div className="mt-1">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
+                          {currentUser.role === 'mahasiswa' ? '🎓 Mahasiswa' : '👨‍🏫 Dosen'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Status</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <p className="font-semibold text-sm text-green-600 dark:text-green-400">Aktif</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions - Redesigned */}
+            <div>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
+                <h2 className="text-2xl font-bold">Menu Utama</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Peminjaman Barang */}
+                <Link href="/peminjaman-barang" className="group">
+                  <div className="relative overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-violet-500 to-purple-600 p-[2px] hover:border-violet-400 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+                    <div className="relative bg-background rounded-lg p-6 h-full">
+                      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                      <div className="relative z-10">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                          <Activity className="h-7 w-7 text-white" />
+                        </div>
+                        <h3 className="font-bold text-xl mb-2 group-hover:text-violet-600 transition-colors">
+                          Peminjaman Barang
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Ajukan peminjaman atau lihat riwayat peminjaman barang laboratorium
+                        </p>
+                        <div className="mt-4 flex items-center text-violet-600 font-medium text-sm group-hover:gap-2 transition-all">
+                          <span>Akses Sekarang</span>
+                          <span className="ml-1 group-hover:ml-2 transition-all">→</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Profil Saya */}
+                <Link href="/settings/profile" className="group">
+                  <div className="relative overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-blue-500 to-cyan-600 p-[2px] hover:border-blue-400 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+                    <div className="relative bg-background rounded-lg p-6 h-full">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                      <div className="relative z-10">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                          <Users className="h-7 w-7 text-white" />
+                        </div>
+                        <h3 className="font-bold text-xl mb-2 group-hover:text-blue-600 transition-colors">
+                          Profil Saya
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Lihat dan perbarui informasi profil serta data pribadi Anda
+                        </p>
+                        <div className="mt-4 flex items-center text-blue-600 font-medium text-sm group-hover:gap-2 transition-all">
+                          <span>Lihat Profil</span>
+                          <span className="ml-1 group-hover:ml-2 transition-all">→</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Pengaturan */}
+                <Link href="/settings" className="group">
+                  <div className="relative overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-pink-500 to-rose-600 p-[2px] hover:border-pink-400 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+                    <div className="relative bg-background rounded-lg p-6 h-full">
+                      <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-rose-600/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                      <div className="relative z-10">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                          <Activity className="h-7 w-7 text-white" />
+                        </div>
+                        <h3 className="font-bold text-xl mb-2 group-hover:text-pink-600 transition-colors">
+                          Pengaturan
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Kelola pengaturan akun dan preferensi sistem Anda
+                        </p>
+                        <div className="mt-4 flex items-center text-pink-600 font-medium text-sm group-hover:gap-2 transition-all">
+                          <span>Buka Pengaturan</span>
+                          <span className="ml-1 group-hover:ml-2 transition-all">→</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* Info Banner */}
+            <div className="relative overflow-hidden rounded-xl border bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-950/30 dark:via-purple-950/30 dark:to-pink-950/30 p-6 shadow-md">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg4ODgiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
+              <div className="relative z-10 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                  <Activity className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    Sistem Absensi Asisten Laboratorium & Manajemen Inventaris
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Platform terpadu untuk mengelola absensi asisten laboratorium dan inventaris barang.
+                    Untuk bantuan atau informasi lebih lanjut, silakan hubungi administrator sistem.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </PageTransition>
+      </AppLayout>
+    );
+  }
+
+  // Dashboard untuk Admin dan Aslab (tampilan lengkap)
   return (
     <AppLayout>
       <Head title="Dashboard" />
