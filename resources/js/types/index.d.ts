@@ -3,9 +3,9 @@ import { LucideIcon } from 'lucide-react';
 import Echo from 'laravel-echo';
 
 declare global {
-  interface Window {
-    Echo: Echo;
-  }
+    interface Window {
+        Echo: Echo;
+    }
 }
 
 export interface Auth {
@@ -48,6 +48,7 @@ export interface User {
     semester?: number;
     is_active: boolean;
     piket_day?: string;
+    permissions?: string[];
     created_at: string;
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...

@@ -14,13 +14,14 @@ class AslabSeeder extends Seeder
     public function run(): void
     {
         // Create admin user
-        User::create([
+        $admin = User::create([
             'name' => 'Administrator',
             'email' => 'admin@aslab.local',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'is_active' => true,
         ]);
+        $admin->assignRole('admin');
 
         // Create sample aslabs
         $aslabs = [
@@ -82,12 +83,14 @@ class AslabSeeder extends Seeder
                 'prodi' => 'Informatika',
                 'semester' => 7,
                 'role' => 'aslab',
+                'is_active' => true,
                 'is_active' => true, // inactive user for testing
             ],
         ];
 
-        foreach ($aslabs as $aslab) {
-            User::create($aslab);
+        foreach ($aslabs as $aslabData) {
+            $user = User::create($aslabData);
+            $user->assignRole($aslabData['role']);
         }
     }
 }

@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type User } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon, ClipboardList, PackageIcon, UserSquare2, BookOpen, GraduationCap, School, ClipboardCheck } from 'lucide-react';
+import { LayoutGrid, Users, History, ScanLine, CalendarDaysIcon, ClipboardList, PackageIcon, UserSquare2, BookOpen, GraduationCap, School, ClipboardCheck, Shield } from 'lucide-react';
 import AppLogo from './app-logo';
 
 interface NavGroupItem extends NavItem {
@@ -14,9 +14,13 @@ export function AppSidebar() {
     const { auth } = usePage<{ auth: { user: User } }>().props;
     const user = auth.user;
 
-    // Define navigation groups based on user roles
+    // Define navigation groups based on user roles and permissions
     const getNavGroups = (): { label: string; items: NavGroupItem[] }[] => {
         const groups = [];
+        const permissions = user.permissions || [];
+
+        // Helper to check permission
+        const can = (permission: string) => permissions.includes(permission) || user.role === 'admin';
 
         // General - accessible to all logged-in users
         groups.push({
@@ -30,23 +34,28 @@ export function AppSidebar() {
             ],
         });
 
-        // Attendance - only for Admin and Aslab
-        if (user.role === 'admin' || user.role === 'aslab') {
-            const attendanceChildren = [
-                {
+        // Attendance
+        if (can('view_attendance') || can('view_picket_schedule')) {
+            const attendanceChildren = [];
+
+            if (can('view_attendance_history')) {
+                attendanceChildren.push({
                     title: 'Riwayat Absensi',
                     href: '/attendance-history',
                     icon: History,
-                },
-                {
+                });
+            }
+
+            if (can('view_picket_schedule')) {
+                attendanceChildren.push({
                     title: 'Jadwal Piket',
                     href: '/jadwal-piket',
                     icon: CalendarDaysIcon,
-                },
-            ];
+                });
+            }
 
-            // Add manual attendance option only for admin
-            if (user.role === 'admin') {
+            // Add manual attendance option only for those who can manage it (usually admin)
+            if (can('manage_attendance')) {
                 attendanceChildren.unshift({
                     title: 'Absen Piket',
                     href: '/absen-piket',
@@ -54,69 +63,76 @@ export function AppSidebar() {
                 });
             }
 
-            groups.push({
-                label: 'Attendance',
-                items: [
-                    {
-                        title: 'Absensi Piket',
-                        href: '#',
-                        icon: ScanLine,
-                        children: attendanceChildren,
-                    },
-                    {
-                        title: 'Absensi Praktikum',
-                        href: '#',
-                        icon: GraduationCap,
-                        children: [
-                            {
-                                title: 'Kelas',
-                                href: '/absensi-praktikum/kelas',
-                                icon: School,
-                            },
-                            {
-                                title: 'Mata Kuliah',
-                                href: '/absensi-praktikum/mata-kuliah-praktikum',
-                                icon: BookOpen,
-                            },
-                            {
-                                title: 'Dosen',
-                                href: '/absensi-praktikum/dosen-praktikum',
-                                icon: Users,
-                            },
-                            // {
-                            //     title: 'Kelas Praktikum',
-                            //     href: '/absensi-praktikum/kelas-praktikum',
-                            //     icon: School,
-                            // },
-                            {
-                                title: 'Absen',
-                                href: '/absensi-praktikum/absensi',
-                                icon: ClipboardCheck,
-                            },
-                        ],
-                    },
-                ],
-            });
+            const attendanceItems = [];
+
+            if (attendanceChildren.length > 0) {
+                attendanceItems.push({
+                    title: 'Absensi Piket',
+                    href: '#',
+                    icon: ScanLine,
+                    children: attendanceChildren,
+                });
+            }
+
+            // Practical Attendance
+            if (can('view_attendance')) { // Assuming generic view_attendance covers this for now, or add specific perm
+                attendanceItems.push({
+                    title: 'Absensi Praktikum',
+                    href: '#',
+                    icon: GraduationCap,
+                    children: [
+                        {
+                            title: 'Kelas',
+                            href: '/absensi-praktikum/kelas',
+                            icon: School,
+                        },
+                        {
+                            title: 'Mata Kuliah',
+                            href: '/absensi-praktikum/mata-kuliah-praktikum',
+                            icon: BookOpen,
+                        },
+                        {
+                            title: 'Dosen',
+                            href: '/absensi-praktikum/dosen-praktikum',
+                            icon: Users,
+                        },
+                        {
+                            title: 'Absen',
+                            href: '/absensi-praktikum/absensi',
+                            icon: ClipboardCheck,
+                        },
+                    ],
+                });
+            }
+
+            if (attendanceItems.length > 0) {
+                groups.push({
+                    label: 'Attendance',
+                    items: attendanceItems,
+                });
+            }
         }
 
         // Management - different access levels
         const managementItems = [];
 
-        // Pendataan Aset Aslab - Admin and Aslab can access
-        if (user.role === 'admin' || user.role === 'aslab') {
+        // Pendataan Aset Aslab
+        if (can('view_assets')) {
             managementItems.push({
-                title: 'Pendataan Aset Aslab',
+                title: 'Data Aset & Bahan',
                 href: '/aset-aslab',
                 icon: ClipboardList,
             });
         }
 
-        // Peminjaman Barang - All users can access
-        managementItems.push({
-            title: 'Peminjaman Barang',
-            href: '/peminjaman-barang',
-        icon: PackageIcon,
-        });
+        // Peminjaman Barang - All users can typically view loans, but maybe filtered
+        if (can('view_loans')) {
+            managementItems.push({
+                title: 'Peminjaman Barang',
+                href: '/peminjaman-barang',
+                icon: PackageIcon,
+            });
+        }
 
         // Add Management group if there are any items
         if (managementItems.length > 0) {
@@ -126,22 +142,37 @@ export function AppSidebar() {
             });
         }
 
-        // Administration - only for Admin (most sensitive operations)
-        if (user.role === 'admin') {
+        // Administration
+        const adminItems = [];
+
+        if (can('view_users')) {
+            adminItems.push({
+                title: 'Data Aslab',
+                href: '/aslabs',
+                icon: Users,
+            });
+        }
+
+        if (can('manage_users') || can('view_users')) { // Assuming manage_users implies access to user management
+            adminItems.push({
+                title: 'Kelola User',
+                href: '/kelola-user',
+                icon: UserSquare2,
+            });
+        }
+
+        if (can('manage_roles')) {
+            adminItems.push({
+                title: 'Role Management',
+                href: '/roles',
+                icon: Shield,
+            });
+        }
+
+        if (adminItems.length > 0) {
             groups.push({
                 label: 'Administration',
-                items: [
-                    {
-                        title: 'Data Aslab',
-                        href: '/aslabs',
-                        icon: Users,
-                    },
-                    {
-                        title: 'Kelola User',
-                        href: '/kelola-user',
-                        icon: UserSquare2,
-                    },
-                ],
+                items: adminItems,
             });
         }
 

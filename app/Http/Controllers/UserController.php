@@ -48,11 +48,32 @@ class UserController extends Controller
         }
     }
 
+    private function getGroupedPermissions()
+    {
+        $permissions = \Spatie\Permission\Models\Permission::all();
+        $grouped = [];
+        
+        foreach ($permissions as $permission) {
+            // Skip dashboard permission as it's available to everyone
+            if ($permission->name === 'view_dashboard') continue;
+
+            $parts = explode('_', $permission->name, 2);
+            $group = count($parts) > 1 ? $parts[1] : 'others';
+            // Custom grouping adjustments
+            if (str_contains($permission->name, 'attendance') || str_contains($permission->name, 'picket')) $group = 'attendance';
+            
+            $grouped[$group][] = $permission;
+        }
+        
+        return $grouped;
+    }
+
     public function create()
     {
         $roles = ['admin', 'aslab', 'mahasiswa', 'dosen'];
         return Inertia::render('kelola-user/create', [
             'roles' => $roles,
+            'availablePermissions' => $this->getGroupedPermissions(),
             'success' => session('success'),
         ]);
     }
@@ -67,9 +88,11 @@ class UserController extends Controller
             'prodi' => 'nullable|string|max:255',
             'semester' => 'nullable|integer|min:1|max:14',
             'rfid_code' => 'nullable|string|max:255|unique:users,rfid_code',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -80,6 +103,14 @@ class UserController extends Controller
             'is_active' => true,
         ]);
 
+        // Assign Spatie Role
+        $user->assignRole($request->role);
+
+        // Sync extra permissions
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions);
+        }
+
         return redirect()->route('kelola-user.index')
                         ->with('success', 'User berhasil ditambahkan!');
     }
@@ -87,7 +118,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         return Inertia::render('kelola-user/show', [
-            'user' => $user,
+            'user' => $user->load('permissions'),
             'success' => session('success'),
         ]);
     }
@@ -96,8 +127,10 @@ class UserController extends Controller
     {
         $roles = ['admin', 'aslab', 'mahasiswa', 'dosen'];
         return Inertia::render('kelola-user/edit', [
-            'user' => $user,
+            'user' => $user->load('permissions'),
             'roles' => $roles,
+            'availablePermissions' => $this->getGroupedPermissions(),
+            'currentPermissions' => $user->permissions->pluck('name'),
             'success' => session('success'),
         ]);
     }
@@ -112,6 +145,8 @@ class UserController extends Controller
             'semester' => 'nullable|integer|min:1|max:14',
             'rfid_code' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         $updateData = [
@@ -128,6 +163,14 @@ class UserController extends Controller
         }
 
         $user->update($updateData);
+
+        // Sync Spatie Role
+        $user->syncRoles([$request->role]);
+
+        // Sync permissions
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions);
+        }
 
         return redirect()->route('kelola-user.index')
                         ->with('success', 'User berhasil diperbarui!');

@@ -25,13 +25,24 @@ export function useNotifications() {
     const fetchNotifications = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/notifications');
+            const response = await fetch('/notifications', {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
             const data: NotificationResponse = await response.json();
 
-            setNotifications(data.notifications);
-            setUnreadCount(data.unreadCount);
+            if (data && data.notifications) {
+                setNotifications(data.notifications);
+                setUnreadCount(data.unreadCount || 0);
+            } else {
+                setNotifications([]);
+                setUnreadCount(0);
+            }
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
+            setNotifications([]);
+            setUnreadCount(0);
         } finally {
             setLoading(false);
         }
@@ -83,7 +94,7 @@ export function useNotifications() {
         if (!notification.isRead) {
             await markAsRead(notification.id);
         }
-        
+
         // Try using window.location.href as fallback
         try {
             router.visit(notification.url);

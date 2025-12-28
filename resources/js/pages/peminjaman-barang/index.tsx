@@ -92,7 +92,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
     const [isBulkRejectModalOpen, setIsBulkRejectModalOpen] = useState(false);
     const [isBulkReturnModalOpen, setIsBulkReturnModalOpen] = useState(false);
 
-    const canApprove = auth.user.role === 'admin' || auth.user.role === 'aslab';
+    const canApprove = auth.user.permissions?.includes('approve_loans') || auth.user.role === 'admin';
 
     const handleViewDetail = (peminjaman: PinjamBarang) => {
         setSelectedPeminjaman(peminjaman);
