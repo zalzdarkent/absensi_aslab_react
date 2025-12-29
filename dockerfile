@@ -1,8 +1,15 @@
 # Gunakan PHP FPM sebagai base
 FROM php:8.2-fpm
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
+# Set DNS resolver untuk fix network issues
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+
+# Install dependencies dengan retry
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     libpng-dev \
     libjpeg-dev \
@@ -10,10 +17,15 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     zip unzip curl git \
-    nodejs npm \
     vim \
     supervisor \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 18.x dari nodesource
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions yang diperlukan untuk Laravel
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
