@@ -1,5 +1,5 @@
-# Gunakan PHP FPM sebagai base (Debian Bookworm stable)
-FROM php:8.3-fpm-bookworm
+# Gunakan PHP FPM sebagai base
+FROM php:8.2-fpm
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -10,18 +10,9 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     zip unzip curl git \
+    nodejs npm \
     vim \
     supervisor \
-    ca-certificates \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js 20.x dari NodeSource
-RUN mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions yang diperlukan untuk Laravel
