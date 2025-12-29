@@ -1,10 +1,6 @@
 # Gunakan PHP FPM sebagai base
 FROM php:8.2-fpm
 
-# Set DNS resolver untuk fix network issues
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
-    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
-
 # Install dependencies dengan retry
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
