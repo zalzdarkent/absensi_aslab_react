@@ -48,7 +48,7 @@ WORKDIR /var/www
 COPY . .
 
 # Install PHP dependencies untuk production
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 # Set correct permissions BEFORE artisan command
 RUN chown -R www-data:www-data /var/www \
