@@ -18,8 +18,8 @@ RUN apt-get clean && \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 18.x dari nodesource
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+# Install Node.js 22.x dari nodesource
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
