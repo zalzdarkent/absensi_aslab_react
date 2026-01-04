@@ -47,29 +47,6 @@ const ROLE_OPTIONS = [
   { value: 'dosen', label: 'Dosen' },
 ];
 
-const ROLE_PRESETS: Record<string, string[]> = {
-  'admin': [], // Admin usually has all, handled by backend or super-admin check, but we can pre-fill all if we want.
-  'aslab': [
-    'view_dashboard',
-    'view_attendance',
-    'view_attendance_history',
-    'view_picket_schedule',
-    'view_assets',
-    'manage_assets',
-    'view_loans',
-    'approve_loans',
-    'view_users',
-  ],
-  'mahasiswa': [
-    'view_dashboard',
-    'view_picket_schedule',
-    'view_loans',
-  ],
-  'dosen': [
-    'view_dashboard',
-    'view_attendance_history',
-  ],
-};
 
 export default function KelolaUserCreate({ success, availablePermissions }: Props) {
   const [showScanSuccess, setShowScanSuccess] = useState(false);
@@ -224,12 +201,25 @@ export default function KelolaUserCreate({ success, availablePermissions }: Prop
                   <div className="space-y-2">
                     <Label htmlFor="role">Role</Label>
                     <Select value={data.role} onValueChange={(value) => {
-                      // Update role
+                      let newPermissions: string[] = [];
+
+                      if (value === 'admin') {
+                        // Admin: Select all permissions
+                        newPermissions = Object.values(availablePermissions).flat().map(p => p.name);
+                      } else if (value === 'aslab') {
+                        // Aslab: Select all except 'users' and 'roles'
+                        newPermissions = Object.entries(availablePermissions)
+                          .filter(([group]) => group !== 'users' && group !== 'roles')
+                          .flatMap(([_, perms]) => perms.map(p => p.name));
+                      } else if (value === 'mahasiswa' || value === 'dosen') {
+                        // Mahasiswa/Dosen: Only 'loans'
+                        newPermissions = availablePermissions['loans']?.map(p => p.name) || [];
+                      }
+
                       setData(data => ({
                         ...data,
                         role: value,
-                        // Apply preset permissions if available, merging with existing could be complex so we replace
-                        permissions: ROLE_PRESETS[value] || []
+                        permissions: newPermissions
                       }));
                     }}>
                       <SelectTrigger>

@@ -44,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user() ? array_merge($request->user()->toArray(), [
-                    'permissions' => $request->user()->getAllPermissions()->pluck('name'),
+                    'permissions' => $request->user()->getEffectivePermissions(),
                 ]) : null,
             ],
             'csrf_token' => csrf_token(),

@@ -50,9 +50,31 @@ class AslabController extends Controller
         }
     }
 
+    private function getGroupedPermissions()
+    {
+        $permissions = \Spatie\Permission\Models\Permission::all();
+        $grouped = [];
+        
+        foreach ($permissions as $permission) {
+            // Skip dashboard permission as it's available to everyone
+            if ($permission->name === 'view_dashboard') continue;
+
+            $parts = explode('_', $permission->name, 2);
+            $group = count($parts) > 1 ? $parts[1] : 'others';
+            // Custom grouping adjustments
+            if (str_contains($permission->name, 'attendance') || str_contains($permission->name, 'picket')) $group = 'attendance';
+            
+            $grouped[$group][] = $permission;
+        }
+        
+        return $grouped;
+    }
+
     public function create()
     {
-        return Inertia::render('aslabs/create');
+        return Inertia::render('aslabs/create', [
+            'availablePermissions' => $this->getGroupedPermissions(),
+        ]);
     }
 
     public function store(Request $request)
@@ -64,9 +86,11 @@ class AslabController extends Controller
             'prodi' => 'required|string|max:255',
             'semester' => 'required|integer|min:1|max:14',
             'rfid_code' => 'nullable|string|max:255|unique:users,rfid_code',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -76,6 +100,14 @@ class AslabController extends Controller
             'role' => 'aslab',
             'is_active' => true,
         ]);
+
+        // Assign Spatie Role
+        $user->assignRole('aslab');
+
+        // Sync extra permissions
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions);
+        }
 
         return redirect()->route('aslabs.index')
                         ->with('success', 'Aslab berhasil ditambahkan');
@@ -117,7 +149,9 @@ class AslabController extends Controller
     public function edit(User $aslab)
     {
         return Inertia::render('aslabs/edit', [
-            'aslab' => $aslab,
+            'aslab' => $aslab->load('permissions'),
+            'availablePermissions' => $this->getGroupedPermissions(),
+            'currentPermissions' => $aslab->permissions->pluck('name'),
         ]);
     }
 
@@ -130,6 +164,8 @@ class AslabController extends Controller
             'prodi' => 'required|string|max:255',
             'semester' => 'required|integer|min:1|max:14',
             'is_active' => 'boolean',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         $aslab->update([
@@ -145,6 +181,11 @@ class AslabController extends Controller
         if ($request->filled('password')) {
             $request->validate(['password' => 'string|min:8']);
             $aslab->update(['password' => Hash::make($request->password)]);
+        }
+
+        // Sync permissions
+        if ($request->has('permissions')) {
+            $aslab->syncPermissions($request->permissions);
         }
 
         return redirect()->route('aslabs.index')

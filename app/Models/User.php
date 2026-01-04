@@ -19,6 +19,20 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
+    public const ROLE_DEFAULTS = [
+        'aslab' => [
+            'view_dashboard', 'view_attendance', 'view_attendance_history',
+            'view_picket_schedule', 'view_assets', 'manage_assets',
+            'view_loans', 'approve_loans',
+        ],
+        'mahasiswa' => [
+            'view_dashboard', 'view_picket_schedule', 'view_loans',
+        ],
+        'dosen' => [
+            'view_dashboard', 'view_attendance_history',
+        ],
+    ];
+
     /**
      * Send the password reset notification.
      *
@@ -210,6 +224,25 @@ class User extends Authenticatable
     public function hasTelegramConnected(): bool
     {
         return !empty($this->telegram_chat_id);
+    }
+
+    /**
+     * Get effective permissions (database + fallback if empty)
+     */
+    public function getEffectivePermissions()
+    {
+        if ($this->isAdmin()) {
+            return \Spatie\Permission\Models\Permission::all()->pluck('name');
+        }
+
+        $directPermissions = $this->getAllPermissions()->pluck('name');
+
+        if ($directPermissions->isNotEmpty()) {
+            return $directPermissions;
+        }
+
+        // Fallback to hardcoded defaults if no permissions assigned in DB
+        return collect(self::ROLE_DEFAULTS[$this->role] ?? []);
     }
 
     /**

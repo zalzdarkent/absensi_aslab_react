@@ -61,29 +61,6 @@ const ROLE_OPTIONS = [
     { value: 'dosen', label: 'Dosen' },
 ];
 
-const ROLE_PRESETS: Record<string, string[]> = {
-    'admin': [],
-    'aslab': [
-        'view_dashboard',
-        'view_attendance',
-        'view_attendance_history',
-        'view_picket_schedule',
-        'view_assets',
-        'manage_assets',
-        'view_loans',
-        'approve_loans',
-        'view_users',
-    ],
-    'mahasiswa': [
-        'view_dashboard',
-        'view_picket_schedule',
-        'view_loans',
-    ],
-    'dosen': [
-        'view_dashboard',
-        'view_attendance_history',
-    ],
-};
 
 export default function KelolaUserEdit({ user, success, availablePermissions, currentPermissions }: Props) {
     const [showScanSuccess, setShowScanSuccess] = useState(false);
@@ -221,10 +198,25 @@ export default function KelolaUserEdit({ user, success, availablePermissions, cu
                                     <div className="space-y-2">
                                         <Label htmlFor="role">Role</Label>
                                         <Select value={data.role} onValueChange={(value) => {
+                                            let newPermissions: string[] = [];
+
+                                            if (value === 'admin') {
+                                                // Admin: Select all permissions
+                                                newPermissions = Object.values(availablePermissions).flat().map(p => p.name);
+                                            } else if (value === 'aslab') {
+                                                // Aslab: Select all except 'users' and 'roles'
+                                                newPermissions = Object.entries(availablePermissions)
+                                                    .filter(([group]) => group !== 'users' && group !== 'roles')
+                                                    .flatMap(([_, perms]) => perms.map(p => p.name));
+                                            } else if (value === 'mahasiswa' || value === 'dosen') {
+                                                // Mahasiswa/Dosen: Only 'loans'
+                                                newPermissions = availablePermissions['loans']?.map(p => p.name) || [];
+                                            }
+
                                             setData(data => ({
                                                 ...data,
                                                 role: value,
-                                                permissions: ROLE_PRESETS[value] || []
+                                                permissions: newPermissions
                                             }));
                                         }}>
                                             <SelectTrigger>
