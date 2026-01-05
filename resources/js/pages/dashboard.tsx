@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 interface User {
   id: number;
@@ -52,6 +53,7 @@ interface MostActiveAslab {
 
 interface WeeklyChartData {
   date: string;
+  full_date: string;
   count: number;
 }
 
@@ -322,13 +324,20 @@ export default function Dashboard({
   // Fungsi untuk handle klik pada bar chart
   const handleBarClick = (_data: unknown, index: number) => {
     if (index >= 0 && index < chartData.length) {
-      const clickedDate = chartData[index].date;
+      const clickedDate = chartData[index].full_date;
+      // const displayDate = chartData[index].date;
       setSelectedDate(clickedDate);
       setIsLoadingDayDetail(true);
 
-      router.reload({
+      router.post('/dashboard', {
+        period: period,
+        start_date: customStartDate,
+        end_date: customEndDate,
+        detail_date: clickedDate
+      }, {
+        preserveState: true,
+        preserveScroll: true,
         only: ['day_detail_data'],
-        data: { detail_date: clickedDate },
         onSuccess: () => {
           setIsModalOpen(true);
           setIsLoadingDayDetail(false);
@@ -358,6 +367,7 @@ export default function Dashboard({
   // Format data untuk bar chart
   const chartData = weeklyChartData.map((item: WeeklyChartData) => ({
     date: item.date,
+    full_date: item.full_date,
     count: item.count,
   }));
 
@@ -449,6 +459,14 @@ export default function Dashboard({
   // Format tanggal untuk modal
   const formatModalDate = (dateStr: string) => {
     try {
+      if (!dateStr) return '';
+
+      // Jika format Y-m-d
+      if (dateStr.includes('-')) {
+        return format(parseISO(dateStr), 'EEEE, dd MMMM yyyy', { locale: id });
+      }
+
+      // Fallback untuk format d/m
       if (dateStr.includes('/')) {
         const [day, month] = dateStr.split('/');
         const currentYear = new Date().getFullYear();
@@ -846,6 +864,8 @@ export default function Dashboard({
                     searchPlaceholder="Cari nama, prodi..."
                     filename={`absensi-${getPeriodLabel().replace(/\s+/g, '-')}`}
                     enableRowSelection={false}
+                    defaultPageSize={5}
+                    pageSizeOptions={[5, 10, 20, 50]}
                   />
                 </CardContent>
               </Card>
@@ -1027,6 +1047,8 @@ export default function Dashboard({
                     searchPlaceholder="Cari nama aslab..."
                     filename={`absensi-${selectedDate.replace(/\//g, '-')}`}
                     enableRowSelection={false}
+                    defaultPageSize={5}
+                    pageSizeOptions={[5, 10, 20, 50]}
                   />
                 </div>
               )}

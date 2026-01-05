@@ -131,6 +131,7 @@ class DashboardService
                                   ->count();
                 $chartData->push([
                     'date' => $date->format('d/m'),
+                    'full_date' => $date->toDateString(),
                     'count' => $count,
                 ]);
             }
@@ -149,6 +150,7 @@ class DashboardService
                                   ->count();
                 $chartData->push([
                     'date' => $date->format('M Y'),
+                    'full_date' => $date->startOfMonth()->toDateString(),
                     'count' => $count,
                 ]);
             }
@@ -172,21 +174,21 @@ class DashboardService
         Log::info('getDayDetail called with date: ' . $date);
 
         try {
-            // Coba parsing format d/m dulu
-            $carbonDate = Carbon::createFromFormat('d/m', $date);
-            $carbonDate->year = now()->year; // Set to current year
-            $dateString = $carbonDate->toDateString();
-            Log::info('Parsed d/m format', ['original' => $date, 'parsed' => $dateString]);
-        } catch (\Exception $e) {
-            // If date format is already Y-m-d
-            try {
+            // Prioritaskan format Y-m-d (full date)
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
                 $carbonDate = Carbon::createFromFormat('Y-m-d', $date);
                 $dateString = $carbonDate->toDateString();
                 Log::info('Parsed Y-m-d format', ['original' => $date, 'parsed' => $dateString]);
-            } catch (\Exception $e2) {
-                Log::error('Failed to parse date', ['date' => $date, 'error1' => $e->getMessage(), 'error2' => $e2->getMessage()]);
-                throw new \Exception('Invalid date format: ' . $date);
+            } else {
+                // Fallback ke format d/m
+                $carbonDate = Carbon::createFromFormat('d/m', $date);
+                $carbonDate->year = now()->year; // Set to current year
+                $dateString = $carbonDate->toDateString();
+                Log::info('Parsed d/m format', ['original' => $date, 'parsed' => $dateString]);
             }
+        } catch (\Exception $e) {
+            Log::error('Failed to parse date', ['date' => $date, 'error' => $e->getMessage()]);
+            throw new \Exception('Invalid date format: ' . $date);
         }
 
         Log::info('Getting day detail for date', ['date' => $dateString]);
