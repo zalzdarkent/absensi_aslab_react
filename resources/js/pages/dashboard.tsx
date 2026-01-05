@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp } from 'lucide-react';
+import { Users, UserCheck, UserX, Activity, Eye, Calendar, TrendingUp, Filter, RefreshCcw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
 import { DataTable } from '@/components/ui/data-table';
@@ -18,6 +18,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from 'date-fns';
 
 interface User {
   id: number;
@@ -31,6 +40,7 @@ interface TodayAttendance {
   check_in: string | null;
   check_out: string | null;
   status: string;
+  date: string;
 }
 
 interface MostActiveAslab {
@@ -64,6 +74,11 @@ interface Props {
   most_active_aslabs: MostActiveAslab[];
   weekly_chart_data: WeeklyChartData[];
   current_date: string;
+  filters: {
+    start_date: string | null;
+    end_date: string | null;
+    period: string;
+  };
 }
 
 export default function Dashboard({
@@ -71,7 +86,8 @@ export default function Dashboard({
   today_attendances: initialAttendances,
   most_active_aslabs: initialMostActiveAslabs,
   weekly_chart_data: initialWeeklyChartData,
-  current_date
+  current_date,
+  filters
 }: Props) {
   const columns = createTodayAttendanceColumns();
   const { auth } = usePage<{ auth: { user: AuthUser } }>().props;
@@ -86,6 +102,95 @@ export default function Dashboard({
   const [rfidDetected, setRfidDetected] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const rfidIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // State untuk filter
+  const [period, setPeriod] = useState(filters?.period || 'today');
+  const [customStartDate, setCustomStartDate] = useState(filters?.start_date || format(new Date(), 'yyyy-MM-dd'));
+  const [customEndDate, setCustomEndDate] = useState(filters?.end_date || format(new Date(), 'yyyy-MM-dd'));
+
+  // Update state when props change (Inertia navigation)
+  useEffect(() => {
+    setStats(initialStats);
+    setTodayAttendances(initialAttendances);
+    setMostActiveAslabs(initialMostActiveAslabs);
+    setWeeklyChartData(initialWeeklyChartData);
+  }, [initialStats, initialAttendances, initialMostActiveAslabs, initialWeeklyChartData]);
+
+  const handlePeriodChange = (value: string) => {
+    setPeriod(value);
+
+    let start = new Date();
+    let end = new Date();
+
+    switch (value) {
+      case 'today':
+        // Default today
+        break;
+      case 'yesterday':
+        start = subDays(new Date(), 1);
+        end = subDays(new Date(), 1);
+        break;
+      case 'this_week':
+        start = startOfWeek(new Date(), { weekStartsOn: 1 });
+        end = endOfWeek(new Date(), { weekStartsOn: 1 });
+        break;
+      case 'last_week':
+        start = startOfWeek(subDays(new Date(), 7), { weekStartsOn: 1 });
+        end = endOfWeek(subDays(new Date(), 7), { weekStartsOn: 1 });
+        break;
+      case 'this_month':
+        start = startOfMonth(new Date());
+        end = endOfMonth(new Date());
+        break;
+      case 'last_month':
+        start = startOfMonth(subDays(startOfMonth(new Date()), 1));
+        end = endOfMonth(subDays(startOfMonth(new Date()), 1));
+        break;
+      case 'this_year':
+        start = startOfYear(new Date());
+        end = endOfYear(new Date());
+        break;
+      case 'custom':
+        return; // Don't navigate yet
+    }
+
+    if (value !== 'custom') {
+      router.post('/dashboard', {
+        period: value,
+        start_date: format(start, 'yyyy-MM-dd'),
+        end_date: format(end, 'yyyy-MM-dd')
+      }, {
+        preserveState: true,
+        preserveScroll: true,
+      });
+    }
+  };
+
+  const handleApplyCustomFilter = () => {
+    router.post('/dashboard', {
+      period: 'custom',
+      start_date: customStartDate,
+      end_date: customEndDate
+    }, {
+      preserveState: true,
+      preserveScroll: true,
+    });
+  };
+
+  // Helper to get period label
+  const getPeriodLabel = () => {
+    if (period === 'today') return 'Hari Ini';
+    if (period === 'yesterday') return 'Kemarin';
+    if (period === 'this_week') return 'Minggu Ini';
+    if (period === 'last_week') return 'Minggu Lalu';
+    if (period === 'this_month') return 'Bulan Ini';
+    if (period === 'last_month') return 'Bulan Lalu';
+    if (period === 'this_year') return 'Tahun Ini';
+    if (period === 'custom') {
+      return `${format(parseISO(customStartDate), 'dd MMM yyyy')} - ${format(parseISO(customEndDate), 'dd MMM yyyy')}`;
+    }
+    return '';
+  };
 
   // State untuk modal detail hari
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -177,13 +282,13 @@ export default function Dashboard({
     // In Echo, if there is a dot prefix, it listens for the exact event name
     const eventName = '.attendance.updated';
 
-    channel.listen(eventName, (data: any) => {
+    channel.listen(eventName, (data: unknown) => {
       console.log('Dashboard: 🔥 EVENT RECEIVED!', eventName, data);
       updateDashboardData(data);
     });
 
     // Fallback for class name if broadcastAs fails for some reason
-    channel.listen('AttendanceUpdated', (data: any) => {
+    channel.listen('AttendanceUpdated', (data: unknown) => {
       console.log('Dashboard: 🔥 EVENT RECEIVED (Fallback)!', 'AttendanceUpdated', data);
       updateDashboardData(data);
     });
@@ -210,7 +315,7 @@ export default function Dashboard({
   }, []);
 
   // Fungsi untuk handle klik pada bar chart
-  const handleBarClick = async (data: any, index: number, event: any) => {
+  const handleBarClick = async (_data: unknown, index: number) => {
     if (index >= 0 && index < chartData.length) {
       const clickedDate = chartData[index].date;
       setSelectedDate(clickedDate);
@@ -227,7 +332,7 @@ export default function Dashboard({
         if (!response.ok) throw new Error('Gagal mengambil data detail hari');
         const data = await response.json();
         setDayDetailData(data.attendances || []);
-      } catch (error) {
+      } catch {
         setDayDetailData([]);
       } finally {
         setIsLoadingDayDetail(false);
@@ -368,12 +473,69 @@ export default function Dashboard({
       <PageTransition>
 
         <div className="space-y-6 py-4">
-          {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Selamat datang di sistem absensi aslab - {current_date}
-            </p>
+          {/* Header with Filter */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+              <p className="text-muted-foreground">
+                Selamat datang di sistem absensi aslab - {current_date}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 bg-background border rounded-md px-3 py-1">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={period} onValueChange={handlePeriodChange}>
+                  <SelectTrigger className="w-[150px] border-0 focus:ring-0 h-8">
+                    <SelectValue placeholder="Pilih Periode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="today">Hari Ini</SelectItem>
+                    <SelectItem value="yesterday">Kemarin</SelectItem>
+                    <SelectItem value="this_week">Minggu Ini</SelectItem>
+                    <SelectItem value="last_week">Minggu Lalu</SelectItem>
+                    <SelectItem value="this_month">Bulan Ini</SelectItem>
+                    <SelectItem value="last_month">Bulan Lalu</SelectItem>
+                    <SelectItem value="this_year">Tahun Ini</SelectItem>
+                    <SelectItem value="custom">Rentang Tanggal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {period === 'custom' && (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="h-10 w-[150px]"
+                  />
+                  <span className="text-muted-foreground">s/d</span>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="h-10 w-[150px]"
+                  />
+                  <Button size="sm" onClick={handleApplyCustomFilter}>
+                    Terapkan
+                  </Button>
+                </div>
+              )}
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10"
+                onClick={() => router.post('/dashboard', {
+                  period: period,
+                  start_date: customStartDate,
+                  end_date: customEndDate
+                }, { preserveState: true, preserveScroll: true })}
+              >
+                <RefreshCcw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Statistics Cards with Enhanced Design */}
@@ -384,39 +546,24 @@ export default function Dashboard({
               description="Aslab aktif terdaftar"
               icon={Users}
               gradient="gradient-primary"
-              trend={{
-                value: 12,
-                label: "dari bulan lalu",
-                isPositive: true
-              }}
               className="fade-in"
             />
 
             <EnhancedCard
-              title="Check-in Hari Ini"
+              title={`Check-in ${getPeriodLabel()}`}
               value={stats.today_checkins}
               description="Aslab yang sudah datang"
               icon={UserCheck}
               gradient="gradient-success"
-              trend={{
-                value: 8,
-                label: "dari kemarin",
-                isPositive: true
-              }}
               className="fade-in fade-in-delay-1"
             />
 
             <EnhancedCard
-              title="Check-out Hari Ini"
+              title={`Check-out ${getPeriodLabel()}`}
               value={stats.today_checkouts}
               description="Aslab yang sudah pulang"
               icon={UserX}
               gradient="gradient-warning"
-              trend={{
-                value: 5,
-                label: "dari kemarin",
-                isPositive: false
-              }}
               className="fade-in fade-in-delay-2"
             />
 
@@ -442,7 +589,7 @@ export default function Dashboard({
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      Absensi Hari Ini
+                      Absensi {getPeriodLabel()}
                       {rfidDetected && (
                         <div className="flex items-center gap-1 text-green-600 text-sm">
                           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -457,7 +604,7 @@ export default function Dashboard({
                       )}
                     </CardTitle>
                     <CardDescription className="flex items-center justify-between">
-                      <span>Daftar kehadiran aslab pada {current_date} </span>
+                      <span>Daftar kehadiran aslab pada periode {getPeriodLabel()} </span>
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm" asChild>
@@ -472,7 +619,7 @@ export default function Dashboard({
                     columns={columns}
                     data={todayAttendances}
                     searchPlaceholder="Cari nama, prodi..."
-                    filename="absensi-hari-ini"
+                    filename={`absensi-${getPeriodLabel().replace(/\s+/g, '-')}`}
                     enableRowSelection={false}
                   />
                 </CardContent>
@@ -483,7 +630,7 @@ export default function Dashboard({
             <div>
               <Card>
                 <CardHeader>
-                  <CardTitle>Aslab Teraktif Bulan Ini</CardTitle>
+                  <CardTitle>Aslab Teraktif ({getPeriodLabel()})</CardTitle>
                   <CardDescription>
                     10 aslab dengan kehadiran terbanyak
                   </CardDescription>
@@ -528,10 +675,10 @@ export default function Dashboard({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Grafik Kehadiran 7 Hari Terakhir
+                Grafik Kehadiran ({getPeriodLabel()})
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
-                <span>Pola kehadiran aslab dalam seminggu terakhir</span>
+                <span>Pola kehadiran aslab dalam periode yang dipilih</span>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1 text-green-600">
                     <TrendingUp className="h-3 w-3" />

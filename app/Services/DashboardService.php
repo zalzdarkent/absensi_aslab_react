@@ -9,15 +9,23 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardService
 {
-    public function getDashboardStats()
+    public function getDashboardStats($startDate = null, $endDate = null)
     {
-        $today = now()->toDateString();
+        $startDate = $startDate ?: now()->toDateString();
+        $endDate = $endDate ?: $startDate;
 
         // Get stats
         $totalAslabs = User::where('role', 'aslab')->where('is_active', true)->count();
-        $todayCheckins = Attendance::where('date', $today)->where('type', 'check_in')->count();
-        $todayCheckouts = Attendance::where('date', $today)->where('type', 'check_out')->count();
-        $activeToday = $todayCheckins - $todayCheckouts;
+        $todayCheckins = Attendance::whereBetween('date', [$startDate, $endDate])->where('type', 'check_in')->count();
+        $todayCheckouts = Attendance::whereBetween('date', [$startDate, $endDate])->where('type', 'check_out')->count();
+
+        // Active today only makes sense if the range includes today
+        $today = now()->toDateString();
+        $activeToday = 0;
+        if ($startDate <= $today && $endDate >= $today) {
+            $activeToday = Attendance::where('date', $today)->where('type', 'check_in')->count() -
+                          Attendance::where('date', $today)->where('type', 'check_out')->count();
+        }
 
         return [
             'total_aslabs' => $totalAslabs,
@@ -27,28 +35,24 @@ class DashboardService
         ];
     }
 
-    public function getTodayAttendances()
+    public function getTodayAttendances($startDate = null, $endDate = null)
     {
-        $today = now()->toDateString();
+        $startDate = $startDate ?: now()->toDateString();
+        $endDate = $endDate ?: $startDate;
 
-        // Today's attendance list
-        $todayAttendances = Attendance::with('user')
-            ->where('date', $today)
+        // Attendance list for the period
+        $attendances = Attendance::with('user')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('timestamp', 'desc')
             ->get()
-            ->groupBy('user_id')
-            ->map(function ($userAttendances) {
-                $user = $userAttendances->first()->user;
-                $checkIn = $userAttendances->where('type', 'check_in')->first();
-                $checkOut = $userAttendances->where('type', 'check_out')->first();
-
-                Log::info('User attendance debug', [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'check_in_exists' => $checkIn ? true : false,
-                    'check_out_exists' => $checkOut ? true : false,
-                    'check_in_time' => $checkIn ? $checkIn->timestamp->format('H:i:s') : null,
-                    'check_out_time' => $checkOut ? $checkOut->timestamp->format('H:i:s') : null,
-                ]);
+            ->groupBy(function($item) {
+                return $item->user_id . '_' . $item->date;
+            })
+            ->map(function ($userDateAttendances) {
+                $first = $userDateAttendances->first();
+                $user = $first->user;
+                $checkIn = $userDateAttendances->where('type', 'check_in')->first();
+                $checkOut = $userDateAttendances->where('type', 'check_out')->first();
 
                 return [
                     'user' => [
@@ -57,6 +61,7 @@ class DashboardService
                         'prodi' => $user->prodi,
                         'semester' => $user->semester,
                     ],
+                    'date' => \Illuminate\Support\Carbon::parse($first->date)->format('Y-m-d'),
                     'check_in' => $checkIn ? $checkIn->timestamp->format('H:i:s') : null,
                     'check_out' => $checkOut ? $checkOut->timestamp->format('H:i:s') : null,
                     'status' => $this->getAttendanceStatus($checkIn, $checkOut),
@@ -64,43 +69,31 @@ class DashboardService
             })
             ->values();
 
-        return $todayAttendances;
+        return $attendances;
     }
 
-    public function getMostActiveAslabs()
+    public function getMostActiveAslabs($startDate = null, $endDate = null)
     {
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $startDate = $startDate ?: now()->startOfMonth()->toDateString();
+        $endDate = $endDate ?: now()->toDateString();
 
         Log::info('Getting most active aslabs', [
-            'current_month' => $currentMonth,
-            'current_year' => $currentYear
+            'start_date' => $startDate,
+            'end_date' => $endDate
         ]);
 
-        // Most active aslabs this month
+        // Most active aslabs in the period
         $mostActiveAslabs = User::where('role', 'aslab')
             ->where('is_active', true)
             ->withCount([
-                'attendances' => function ($query) use ($currentMonth, $currentYear) {
-                    $query->whereYear('date', $currentYear)
-                          ->whereMonth('date', $currentMonth)
+                'attendances' => function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('date', [$startDate, $endDate])
                           ->where('type', 'check_in');
                 }
             ])
             ->orderBy('attendances_count', 'desc')
             ->limit(10)
             ->get();
-
-        Log::info('Query result before mapping', [
-            'users_count' => $mostActiveAslabs->count(),
-            'users_data' => $mostActiveAslabs->map(function($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'attendances_count' => $user->attendances_count
-                ];
-            })
-        ]);
 
         $result = $mostActiveAslabs->map(function ($user) {
                 return [
@@ -111,36 +104,66 @@ class DashboardService
                 ];
             });
 
-        Log::info('Final most active aslabs result', ['result' => $result]);
-
         return $result;
     }
 
-    public function getWeeklyChartData()
+    public function getWeeklyChartData($startDate = null, $endDate = null)
     {
-        // Weekly attendance chart data
-        $weeklyData = collect();
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->toDateString();
-            $count = Attendance::where('date', $date)
-                              ->where('type', 'check_in')
-                              ->count();
-            $weeklyData->push([
-                'date' => Carbon::parse($date)->format('d/m'),
-                'count' => $count,
-            ]);
+        if (!$startDate || !$endDate) {
+            $endDate = now();
+            $startDate = now()->subDays(6);
+        } else {
+            $startDate = Carbon::parse($startDate);
+            $endDate = Carbon::parse($endDate);
         }
 
-        return $weeklyData;
+        $diffInDays = $startDate->diffInDays($endDate);
+
+        // Weekly attendance chart data
+        $chartData = collect();
+
+        // If range is small (<= 31 days), show daily
+        if ($diffInDays <= 31) {
+            for ($date = clone $startDate; $date <= $endDate; $date->addDay()) {
+                $dateString = $date->toDateString();
+                $count = Attendance::where('date', $dateString)
+                                  ->where('type', 'check_in')
+                                  ->count();
+                $chartData->push([
+                    'date' => $date->format('d/m'),
+                    'count' => $count,
+                ]);
+            }
+        } else {
+            // If range is large, show monthly
+            for ($date = clone $startDate; $date <= $endDate; $date->addMonth()) {
+                $monthStart = clone $date->startOfMonth();
+                $monthEnd = clone $date->endOfMonth();
+
+                // Adjust to range
+                if ($monthStart < $startDate) $monthStart = clone $startDate;
+                if ($monthEnd > $endDate) $monthEnd = clone $endDate;
+
+                $count = Attendance::whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                                  ->where('type', 'check_in')
+                                  ->count();
+                $chartData->push([
+                    'date' => $date->format('M Y'),
+                    'count' => $count,
+                ]);
+            }
+        }
+
+        return $chartData;
     }
 
-    public function getAllDashboardData()
+    public function getAllDashboardData($startDate = null, $endDate = null)
     {
         return [
-            'stats' => $this->getDashboardStats(),
-            'todayAttendances' => $this->getTodayAttendances(),
-            'mostActiveAslabs' => $this->getMostActiveAslabs(),
-            'weeklyChartData' => $this->getWeeklyChartData(),
+            'stats' => $this->getDashboardStats($startDate, $endDate),
+            'todayAttendances' => $this->getTodayAttendances($startDate, $endDate),
+            'mostActiveAslabs' => $this->getMostActiveAslabs($startDate, $endDate),
+            'weeklyChartData' => $this->getWeeklyChartData($startDate, $endDate),
         ];
     }
 
