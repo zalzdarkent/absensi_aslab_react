@@ -46,54 +46,58 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // TEMPORARY TEST ROUTE - REMOVE AFTER TESTING
     Route::get('/test-bahan', [BahanController::class, 'create'])->name('test-bahan');
 
-    // Admin only routes
-    Route::middleware(['role:admin'])->group(function () {
-        // Aslab management routes - only admin can manage aslabs
-        Route::resource('aslabs', AslabController::class);
-        Route::patch('aslabs/{aslab}/toggle-status', [AslabController::class, 'toggleStatus'])->name('aslabs.toggle-status');
+    // Admin and privileged users routes
+    Route::middleware(['role_or_permission:admin|manage_users|view_users|manage_roles|manage_aslabs'])->group(function () {
+        // Aslab management routes - admin or manage_aslabs (if we had it, but using manage_users for now)
+        Route::resource('aslabs', AslabController::class)->middleware('role_or_permission:admin|manage_users');
+        Route::patch('aslabs/{aslab}/toggle-status', [AslabController::class, 'toggleStatus'])->name('aslabs.toggle-status')->middleware('role_or_permission:admin|manage_users');
 
-        // User management routes - only admin can manage all users
+        // User management routes
         Route::resource('kelola-user', UserController::class)->parameters([
             'kelola-user' => 'user'
-        ]);
-        Route::patch('kelola-user/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('kelola-user.toggle-status');
+        ])->middleware('role_or_permission:admin|manage_users');
+        Route::patch('kelola-user/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('kelola-user.toggle-status')->middleware('role_or_permission:admin|manage_users');
+
+        // Role Management
+        Route::resource('roles', \App\Http\Controllers\RoleController::class)->middleware('role_or_permission:admin|manage_roles');
 
         // Manual attendance routes - only admin can manually record attendance
-        Route::get('/absen-piket', [AttendanceController::class, 'manualAttendancePage'])->name('attendance.manual');
-        Route::post('/absen-piket', [AttendanceController::class, 'storeManualAttendance'])->name('attendance.manual.store');
-        Route::get('/absen-piket/users', [AttendanceController::class, 'getUsers'])->name('attendance.manual.users');
+        Route::get('/absen-piket', [AttendanceController::class, 'manualAttendancePage'])->name('attendance.manual')->middleware('role_or_permission:admin|manage_attendance');
+        Route::post('/absen-piket', [AttendanceController::class, 'storeManualAttendance'])->name('attendance.manual.store')->middleware('role_or_permission:admin|manage_attendance');
+        Route::get('/absen-piket/users', [AttendanceController::class, 'getUsers'])->name('attendance.manual.users')->middleware('role_or_permission:admin|manage_attendance');
     });
 
-    // Admin and Aslab routes
-    Route::middleware(['role:admin,aslab'])->group(function () {
+    // Admin and Aslab routes (Management & Attendance)
+    // Using broad check here, then specific checks inside if needed, or just let users access if they have ANY relevant permission
+    Route::middleware(['role_or_permission:admin|aslab|view_assets|manage_assets|view_attendance|view_picket_schedule|manage_attendance'])->group(function () {
         // Attendance related routes
-        Route::get('/attendance-history', [AttendanceController::class, 'attendanceHistory'])->name('attendance.history');
-        Route::get('/attendance-scan', [AttendanceController::class, 'scanPage'])->name('attendance.scan');
-        Route::post('/attendance-scan', [AttendanceController::class, 'processRfidScan'])->name('attendance.process');
-        Route::get('/attendance-today', [AttendanceController::class, 'todaySummary'])->name('attendance.today');
+        Route::get('/attendance-history', [AttendanceController::class, 'attendanceHistory'])->name('attendance.history')->middleware('role_or_permission:admin|aslab|view_attendance_history');
+        Route::get('/attendance-scan', [AttendanceController::class, 'scanPage'])->name('attendance.scan')->middleware('role_or_permission:admin|aslab|manage_attendance');
+        Route::post('/attendance-scan', [AttendanceController::class, 'processRfidScan'])->name('attendance.process')->middleware('role_or_permission:admin|aslab|manage_attendance');
+        Route::get('/attendance-today', [AttendanceController::class, 'todaySummary'])->name('attendance.today')->middleware('role_or_permission:admin|aslab|view_attendance');
 
         // Jadwal Piket routes
-        Route::get('/jadwal-piket', [JadwalPiketController::class, 'index'])->name('jadwal-piket.index');
-        Route::post('/jadwal-piket/generate', [JadwalPiketController::class, 'generateAuto'])->name('jadwal-piket.generate');
-        Route::post('/jadwal-piket/update', [JadwalPiketController::class, 'updateManual'])->name('jadwal-piket.update');
-        Route::post('/jadwal-piket/swap', [JadwalPiketController::class, 'swapSchedule'])->name('jadwal-piket.swap');
-        Route::post('/jadwal-piket/batch-update', [JadwalPiketController::class, 'batchUpdate'])->name('jadwal-piket.batch-update');
-        Route::post('/jadwal-piket/reset', [JadwalPiketController::class, 'reset'])->name('jadwal-piket.reset');
+        Route::get('/jadwal-piket', [JadwalPiketController::class, 'index'])->name('jadwal-piket.index')->middleware('role_or_permission:admin|aslab|view_picket_schedule');
+        Route::post('/jadwal-piket/generate', [JadwalPiketController::class, 'generateAuto'])->name('jadwal-piket.generate')->middleware('role_or_permission:admin|manage_attendance');
+        Route::post('/jadwal-piket/update', [JadwalPiketController::class, 'updateManual'])->name('jadwal-piket.update')->middleware('role_or_permission:admin|manage_attendance');
+        Route::post('/jadwal-piket/swap', [JadwalPiketController::class, 'swapSchedule'])->name('jadwal-piket.swap')->middleware('role_or_permission:admin|aslab|manage_attendance'); // Aslab usually can swap?
+        Route::post('/jadwal-piket/batch-update', [JadwalPiketController::class, 'batchUpdate'])->name('jadwal-piket.batch-update')->middleware('role_or_permission:admin|manage_attendance');
+        Route::post('/jadwal-piket/reset', [JadwalPiketController::class, 'reset'])->name('jadwal-piket.reset')->middleware('role_or_permission:admin|manage_attendance');
 
         // Absensi Praktikum routes
-        Route::prefix('absensi-praktikum')->name('absensi-praktikum.')->group(function () {
+        Route::prefix('absensi-praktikum')->name('absensi-praktikum.')->middleware('role_or_permission:admin|aslab|view_attendance')->group(function () {
             // Kelas
             Route::get('kelas/search', [App\Http\Controllers\KelasController::class, 'search'])->name('kelas.search');
-            Route::post('kelas/bulk-delete', [App\Http\Controllers\KelasController::class, 'bulkDelete'])->name('kelas.bulk-delete');
+            Route::post('kelas/bulk-delete', [App\Http\Controllers\KelasController::class, 'bulkDelete'])->name('kelas.bulk-delete')->middleware('role_or_permission:admin|aslab|manage_attendance');
             Route::resource('kelas', App\Http\Controllers\KelasController::class);
 
             // Mata Kuliah Praktikum
-            Route::post('mata-kuliah-praktikum/bulk-delete', [App\Http\Controllers\MataKuliahPraktikumController::class, 'bulkDelete'])->name('mata-kuliah-praktikum.bulk-delete');
+            Route::post('mata-kuliah-praktikum/bulk-delete', [App\Http\Controllers\MataKuliahPraktikumController::class, 'bulkDelete'])->name('mata-kuliah-praktikum.bulk-delete')->middleware('role_or_permission:admin|aslab|manage_attendance');
             Route::resource('mata-kuliah-praktikum', App\Http\Controllers\MataKuliahPraktikumController::class);
 
             // Dosen Praktikum
             Route::get('dosen-praktikum/search', [App\Http\Controllers\DosenPraktikumController::class, 'search'])->name('dosen-praktikum.search');
-            Route::post('dosen-praktikum/bulk-delete', [App\Http\Controllers\DosenPraktikumController::class, 'bulkDelete'])->name('dosen-praktikum.bulk-delete');
+            Route::post('dosen-praktikum/bulk-delete', [App\Http\Controllers\DosenPraktikumController::class, 'bulkDelete'])->name('dosen-praktikum.bulk-delete')->middleware('role_or_permission:admin|aslab|manage_attendance');
             Route::resource('dosen-praktikum', App\Http\Controllers\DosenPraktikumController::class);
 
             // Kelas Praktikum
@@ -101,46 +105,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('kelas-praktikum', App\Http\Controllers\KelasPraktikumController::class);
 
             // Absensi Praktikum
-            Route::post('absensi/bulk-delete', [App\Http\Controllers\AbsensiPraktikumController::class, 'bulkDelete'])->name('absensi.bulk-delete');
+            Route::post('absensi/bulk-delete', [App\Http\Controllers\AbsensiPraktikumController::class, 'bulkDelete'])->name('absensi.bulk-delete')->middleware('role_or_permission:admin|aslab|manage_attendance');
             Route::resource('absensi', App\Http\Controllers\AbsensiPraktikumController::class)->parameters([
                 'absensi' => 'absensiPraktikum'
             ]);
         });
 
         // Aset Aslab routes - Admin and Aslab can manage assets
-        Route::get('aset-aslab/generate-kode', [AsetAslabController::class, 'generateKode'])->name('aset-aslab.generate-kode');
-        Route::post('aset-aslab-bulk-delete', [AsetAslabController::class, 'bulkDelete'])->name('aset-aslab.bulk-delete');
-        Route::resource('aset-aslab', AsetAslabController::class);
+        Route::get('aset-aslab/generate-kode', [AsetAslabController::class, 'generateKode'])->name('aset-aslab.generate-kode')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::post('aset-aslab-bulk-delete', [AsetAslabController::class, 'bulkDelete'])->name('aset-aslab.bulk-delete')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::resource('aset-aslab', AsetAslabController::class)->middleware('role_or_permission:admin|aslab|view_assets');
 
         // Jenis Aset Aslab routes
-        Route::post('jenis-aset-aslab', [JenisAsetAslabController::class, 'store'])->name('jenis-aset-aslab.store');
+        Route::post('jenis-aset-aslab', [JenisAsetAslabController::class, 'store'])->name('jenis-aset-aslab.store')->middleware('role_or_permission:admin|aslab|manage_assets');
 
         // Lokasi routes
-        Route::post('lokasi', [LokasiController::class, 'store'])->name('lokasi.store');
+        Route::post('lokasi', [LokasiController::class, 'store'])->name('lokasi.store')->middleware('role_or_permission:admin|aslab|manage_assets');
 
         // Bahan routes - Admin and Aslab can manage bahan
-        Route::get('bahan/create', [BahanController::class, 'create'])->name('bahan.create');
-        Route::post('bahan', [BahanController::class, 'store'])->name('bahan.store');
-        Route::get('bahan/{bahan}', [BahanController::class, 'show'])->name('bahan.show');
-        Route::get('bahan/{bahan}/edit', [BahanController::class, 'edit'])->name('bahan.edit');
-        Route::put('bahan/{bahan}', [BahanController::class, 'update'])->name('bahan.update');
-        Route::delete('bahan/{bahan}', [BahanController::class, 'destroy'])->name('bahan.destroy');
+        Route::get('bahan/create', [BahanController::class, 'create'])->name('bahan.create')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::post('bahan', [BahanController::class, 'store'])->name('bahan.store')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::get('bahan/{bahan}', [BahanController::class, 'show'])->name('bahan.show')->middleware('role_or_permission:admin|aslab|view_assets');
+        Route::get('bahan/{bahan}/edit', [BahanController::class, 'edit'])->name('bahan.edit')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::put('bahan/{bahan}', [BahanController::class, 'update'])->name('bahan.update')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::delete('bahan/{bahan}', [BahanController::class, 'destroy'])->name('bahan.destroy')->middleware('role_or_permission:admin|aslab|manage_assets');
 
         // Peminjaman Barang Bulk Actions
-        Route::post('peminjaman-barang-bulk-delete', [PeminjamanBarangController::class, 'bulkDelete'])->name('peminjaman-barang.bulk-delete');
-        Route::post('peminjaman-barang-bulk-approve', [PeminjamanBarangController::class, 'bulkApprove'])->name('peminjaman-barang.bulk-approve');
-        Route::post('peminjaman-barang-bulk-reject', [PeminjamanBarangController::class, 'bulkReject'])->name('peminjaman-barang.bulk-reject');
-        Route::post('peminjaman-barang-bulk-return', [PeminjamanBarangController::class, 'bulkReturn'])->name('peminjaman-barang.bulk-return');
+        Route::post('peminjaman-barang-bulk-delete', [PeminjamanBarangController::class, 'bulkDelete'])->name('peminjaman-barang.bulk-delete')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::post('peminjaman-barang-bulk-approve', [PeminjamanBarangController::class, 'bulkApprove'])->name('peminjaman-barang.bulk-approve')->middleware('role_or_permission:admin|aslab|approve_loans');
+        Route::post('peminjaman-barang-bulk-reject', [PeminjamanBarangController::class, 'bulkReject'])->name('peminjaman-barang.bulk-reject')->middleware('role_or_permission:admin|aslab|approve_loans');
+        Route::post('peminjaman-barang-bulk-return', [PeminjamanBarangController::class, 'bulkReturn'])->name('peminjaman-barang.bulk-return')->middleware('role_or_permission:admin|aslab|approve_loans');
 
         // Import routes
-        Route::post('import/aset', [ImportController::class, 'importAset'])->name('import.aset');
-        Route::post('import/bahan', [ImportController::class, 'importBahan'])->name('import.bahan');
-        Route::post('import/bulk-images', [ImportController::class, 'bulkUploadImages'])->name('import.bulk-images');
-        Route::post('import/preview', [ImportController::class, 'preview'])->name('import.preview');
+        Route::post('import/aset', [ImportController::class, 'importAset'])->name('import.aset')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::post('import/bahan', [ImportController::class, 'importBahan'])->name('import.bahan')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::post('import/bulk-images', [ImportController::class, 'bulkUploadImages'])->name('import.bulk-images')->middleware('role_or_permission:admin|aslab|manage_assets');
+        Route::post('import/preview', [ImportController::class, 'preview'])->name('import.preview')->middleware('role_or_permission:admin|aslab|manage_assets');
     });
 
     // All authenticated users can access peminjaman barang and aset
-    Route::middleware(['role:admin,aslab,mahasiswa,dosen'])->group(function () {
+    Route::middleware(['role:admin|aslab|mahasiswa|dosen'])->group(function () {
         // Notification routes
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
@@ -161,6 +165,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('peminjaman-barang.return');
     });
 });
+
+// Public route for NFC Picket View
+Route::get('/piket/v/{rfidCode}', [JadwalPiketController::class, 'standaloneView'])->name('piket.standalone');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

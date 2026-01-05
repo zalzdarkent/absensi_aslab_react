@@ -7,11 +7,42 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+
+use App\Models\Attendance;
+use App\Models\PeminjamanAset;
+use App\Models\PenggunaanBahan;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles;
+
+    public const ROLE_DEFAULTS = [
+        'aslab' => [
+            'view_dashboard', 'view_attendance', 'view_attendance_history',
+            'view_picket_schedule', 'view_assets', 'manage_assets',
+            'view_loans', 'approve_loans',
+        ],
+        'mahasiswa' => [
+            'view_dashboard', 'view_picket_schedule', 'view_loans',
+        ],
+        'dosen' => [
+            'view_dashboard', 'view_attendance_history',
+        ],
+    ];
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -124,22 +155,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has specific role
-     */
-    public function hasRole(string $role): bool
-    {
-        return $this->role === $role;
-    }
-
-    /**
-     * Check if user has any of the given roles
-     */
-    public function hasAnyRole(array $roles): bool
-    {
-        return in_array($this->role, $roles);
-    }
-
-    /**
      * Check if user is admin
      */
     public function isAdmin(): bool
@@ -209,6 +224,25 @@ class User extends Authenticatable
     public function hasTelegramConnected(): bool
     {
         return !empty($this->telegram_chat_id);
+    }
+
+    /**
+     * Get effective permissions (database + fallback if empty)
+     */
+    public function getEffectivePermissions()
+    {
+        if ($this->isAdmin()) {
+            return \Spatie\Permission\Models\Permission::all()->pluck('name');
+        }
+
+        $directPermissions = $this->getAllPermissions()->pluck('name');
+
+        if ($directPermissions->isNotEmpty()) {
+            return $directPermissions;
+        }
+
+        // Fallback to hardcoded defaults if no permissions assigned in DB
+        return collect(self::ROLE_DEFAULTS[$this->role] ?? []);
     }
 
     /**

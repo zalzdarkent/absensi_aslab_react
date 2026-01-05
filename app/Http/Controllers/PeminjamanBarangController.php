@@ -132,14 +132,6 @@ class PeminjamanBarangController extends Controller
         return Inertia::render('peminjaman-barang/index', [
             'pinjamBarangs' => $allRecords->values(),
             'stats' => $stats,
-            'auth' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name ?? 'Unknown User',
-                    'email' => $user->email ?? 'no-email@example.com',
-                    'role' => $user->role,
-                ]
-            ]
         ]);
     }
 
@@ -489,8 +481,8 @@ class PeminjamanBarangController extends Controller
 
     public function approve(Request $request, $id)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'aslab'])) {
-            abort(403);
+        if (!Auth::user()->can('approve_loans')) {
+            abort(403, 'Anda tidak memiliki izin untuk menyetujui peminjaman.');
         }
 
         // Handle composite ID for unified records
@@ -733,8 +725,8 @@ class PeminjamanBarangController extends Controller
 
     public function return(Request $request, $id)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'aslab'])) {
-            abort(403);
+        if (!Auth::user()->can('approve_loans')) {
+            abort(403, 'Anda tidak memiliki izin untuk mengembalikan barang.');
         }
 
         // Handle composite ID for unified records

@@ -1,0 +1,199 @@
+@startuml
+' ERD generated from SQL dump (excluding Laravel system tables)
+hide circle
+skinparam linetype ortho
+
+entity absensi_praktikums {
+  * id : bigint
+  --
+    aslab_id : bigint
+    tanggal : date
+    dosen_praktikum_id : bigint
+    pertemuan : varchar
+    sebagai : enum
+    kehadiran_dosen : enum
+    kelas_id : bigint
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity aset_aslabs {
+  * id : bigint
+  --
+    nama_aset : varchar
+    jenis_id : bigint
+    kode_aset : varchar
+    nomor_seri : varchar
+    stok : int
+    status : enum
+    catatan : text
+    gambar : varchar
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity attendances {
+  * id : bigint
+  --
+    user_id : bigint
+    type : enum
+    timestamp : timestamp
+    date : date
+    notes : text
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity bahan {
+  * id : bigint
+  --
+    nama : varchar
+    jenis_bahan : varchar
+    stok : int
+    catatan : text
+    gambar : varchar
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity dosen_mata_kuliah {
+  * id : bigint
+  --
+    dosen_praktikum_id : bigint
+    mata_kuliah_praktikum_id : bigint
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity dosen_praktikums {
+  * id : bigint
+  --
+    nama : varchar
+    nidn : varchar
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity jenis_aset_aslabs {
+  * id : bigint
+  --
+    nama_jenis_aset : varchar
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity kelas {
+  * id : bigint
+  --
+    kelas : int
+    jurusan : enum
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity mata_kuliah_praktikums {
+  * id : bigint
+  --
+    nama : varchar
+    kelas_id : bigint
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity notifications {
+  * id : bigint
+  --
+    user_id : bigint
+    type : varchar
+    title : varchar
+    message : text
+    data : json
+    read_at : timestamp
+    related_model_type : varchar
+    related_model_id : bigint
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity peminjaman_aset {
+  * id : bigint
+  --
+    aset_id : bigint
+    user_id : bigint
+    stok : int
+    tanggal_pinjam : datetime
+    tanggal_kembali : datetime
+    status : enum
+    approved_by : bigint
+    approved_at : timestamp
+    approval_note : text
+    keterangan : text
+    agreement_accepted : tinyint
+    manual_borrower_name : varchar
+    manual_borrower_phone : varchar
+    manual_borrower_class : varchar
+    target_return_date : datetime
+    bahan_id : bigint
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity penggunaan_bahan {
+  * id : bigint
+  --
+    bahan_id : bigint
+    user_id : bigint
+    tanggal_penggunaan : datetime
+    jumlah_digunakan : int
+    keperluan : varchar
+    catatan : text
+    approved_by : bigint
+    approved_at : timestamp
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity users {
+  * id : bigint
+  --
+    google_id : varchar
+    github_id : varchar
+    name : varchar
+    email : varchar
+    rfid_code : varchar
+    telegram_chat_id : varchar
+    telegram_notifications : tinyint
+    prodi : varchar
+    semester : int
+    role : enum
+    is_active : tinyint
+    piket_day : enum
+    email_verified_at : timestamp
+    avatar : varchar
+    password : varchar
+    remember_token : varchar
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+' Relationships (from FOREIGN KEY constraints)
+users ||--o{ attendances : "1..*"
+users ||--o{ peminjaman_aset : "1..*"
+users ||--o{ penggunaan_bahan : "1..*"
+users ||--o{ absensi_praktikums : "1..*"
+users ||--o{ notifications : "1..*"
+
+aset_aslabs ||--o{ peminjaman_aset : "1..*"
+jenis_aset_aslabs ||--o{ aset_aslabs : "1..*"
+
+bahan ||--o{ penggunaan_bahan : "1..*"
+bahan ||--o{ peminjaman_aset : "0..*"
+
+dosen_praktikums ||--o{ dosen_mata_kuliah : "1..*"
+dosen_praktikums ||--o{ absensi_praktikums : "1..*"
+
+mata_kuliah_praktikums ||--o{ dosen_mata_kuliah : "1..*"
+kelas ||--o{ mata_kuliah_praktikums : "1..*"
+kelas ||--o{ absensi_praktikums : "1..*"
+
+@enduml

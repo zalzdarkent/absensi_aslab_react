@@ -20,12 +20,21 @@ interface User {
     prodi: string | null;
     semester: number | null;
     role: string;
+    permissions?: Array<{ name: string }>;
     is_active: boolean;
+}
+
+interface Permission {
+    id: number;
+    name: string;
+    guard_name: string;
 }
 
 interface Props {
     user: User;
     success?: string;
+    availablePermissions: Record<string, Permission[]>;
+    currentPermissions: string[];
 }
 
 interface FormData {
@@ -36,6 +45,7 @@ interface FormData {
     prodi: string;
     semester: number | '';
     role: string;
+    permissions: string[];
     is_active: boolean;
 }
 
@@ -51,7 +61,8 @@ const ROLE_OPTIONS = [
     { value: 'dosen', label: 'Dosen' },
 ];
 
-export default function KelolaUserEdit({ user, success }: Props) {
+
+export default function KelolaUserEdit({ user, success, availablePermissions, currentPermissions }: Props) {
     const [showScanSuccess, setShowScanSuccess] = useState(false);
 
     // Show success toast when success prop is present
@@ -69,6 +80,7 @@ export default function KelolaUserEdit({ user, success }: Props) {
         prodi: user.prodi || '',
         semester: user.semester || '',
         role: user.role || '',
+        permissions: currentPermissions || [],
         is_active: user.is_active ?? true,
     });
 
@@ -185,7 +197,28 @@ export default function KelolaUserEdit({ user, success }: Props) {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="role">Role</Label>
-                                        <Select value={data.role} onValueChange={(value) => setData('role', value)}>
+                                        <Select value={data.role} onValueChange={(value) => {
+                                            let newPermissions: string[] = [];
+
+                                            if (value === 'admin') {
+                                                // Admin: Select all permissions
+                                                newPermissions = Object.values(availablePermissions).flat().map(p => p.name);
+                                            } else if (value === 'aslab') {
+                                                // Aslab: Select all except 'users' and 'roles'
+                                                newPermissions = Object.entries(availablePermissions)
+                                                    .filter(([group]) => group !== 'users' && group !== 'roles')
+                                                    .flatMap(([_, perms]) => perms.map(p => p.name));
+                                            } else if (value === 'mahasiswa' || value === 'dosen') {
+                                                // Mahasiswa/Dosen: Only 'loans'
+                                                newPermissions = availablePermissions['loans']?.map(p => p.name) || [];
+                                            }
+
+                                            setData(data => ({
+                                                ...data,
+                                                role: value,
+                                                permissions: newPermissions
+                                            }));
+                                        }}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Pilih role user" />
                                             </SelectTrigger>
@@ -296,6 +329,79 @@ export default function KelolaUserEdit({ user, success }: Props) {
                                             {user.rfid_code ? `RFID saat ini: ${user.rfid_code}. Masukkan kode baru untuk mengubah.` : 'Belum ada RFID terdaftar. Masukkan kode untuk mendaftarkan.'}
                                         </p>
                                         <InputError message={errors.rfid_code} />
+                                    </div>
+                                </div>
+
+                                {/* Permissions Information */}
+                                <div className="space-y-6">
+                                    <div className="border-b pb-4">
+                                        <h3 className="text-lg font-semibold">Hak Akses (Permissions)</h3>
+                                        <p className="text-sm text-muted-foreground">Sesuaikan hak akses spesifik untuk user ini.</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {Object.entries(availablePermissions).map(([group, permissions]) => {
+                                            const allSelected = permissions.every(p => data.permissions.includes(p.name));
+
+                                            return (
+                                                <div key={group} className="space-y-3 border p-4 rounded-lg">
+                                                    <div className="flex items-center justify-between border-b pb-2 mb-2">
+                                                        <h4 className="font-medium capitalize">{group}</h4>
+                                                        <div className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={`select-all-${group}`}
+                                                                checked={allSelected}
+                                                                onCheckedChange={(checked) => {
+                                                                    const groupPermissionNames = permissions.map(p => p.name);
+                                                                    if (checked) {
+                                                                        // Add all permissions from this group that aren't already selected
+                                                                        const newPermissions = [...data.permissions];
+                                                                        groupPermissionNames.forEach(name => {
+                                                                            if (!newPermissions.includes(name)) {
+                                                                                newPermissions.push(name);
+                                                                            }
+                                                                        });
+                                                                        setData('permissions', newPermissions);
+                                                                    } else {
+                                                                        // Remove all permissions from this group
+                                                                        setData('permissions', data.permissions.filter(p => !groupPermissionNames.includes(p)));
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <Label
+                                                                htmlFor={`select-all-${group}`}
+                                                                className="text-xs text-muted-foreground cursor-pointer"
+                                                            >
+                                                                Select All
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {permissions.map((permission) => (
+                                                            <div key={permission.id} className="flex items-center space-x-2">
+                                                                <Checkbox
+                                                                    id={`perm-${permission.id}`}
+                                                                    checked={data.permissions.includes(permission.name)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (checked) {
+                                                                            setData('permissions', [...data.permissions, permission.name]);
+                                                                        } else {
+                                                                            setData('permissions', data.permissions.filter(p => p !== permission.name));
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <Label
+                                                                    htmlFor={`perm-${permission.id}`}
+                                                                    className="text-sm font-normal cursor-pointer"
+                                                                >
+                                                                    {permission.name.replace(/_/g, ' ')}
+                                                                </Label>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 

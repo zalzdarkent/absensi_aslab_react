@@ -146,4 +146,24 @@ class JadwalPiketController extends Controller
             return redirect()->back()->with('error', 'Gagal reset jadwal: ' . $e->getMessage());
         }
     }
+
+    public function standaloneView($rfidCode)
+    {
+        $user = User::where('rfid_code', $rfidCode)->firstOrFail();
+        
+        // Get colleagues on the same day
+        $colleagues = [];
+        if ($user->piket_day) {
+            $colleagues = User::where('piket_day', $user->piket_day)
+                ->where('id', '!=', $user->id)
+                ->where('role', 'aslab')
+                ->where('is_active', true)
+                ->get();
+        }
+
+        return Inertia::render('jadwal-piket/standalone', [
+            'user' => $user,
+            'colleagues' => $colleagues,
+        ]);
+    }
 }

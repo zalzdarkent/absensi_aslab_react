@@ -1,8 +1,11 @@
 # Gunakan PHP FPM sebagai base
 FROM php:8.2-fpm
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
+# Install dependencies dengan retry
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     libpng-dev \
     libjpeg-dev \
@@ -10,10 +13,15 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     zip unzip curl git \
-    nodejs npm \
     vim \
     supervisor \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 22.x dari nodesource
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions yang diperlukan untuk Laravel
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
@@ -40,7 +48,7 @@ WORKDIR /var/www
 COPY . .
 
 # Install PHP dependencies untuk production
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 # Set correct permissions BEFORE artisan command
 RUN chown -R www-data:www-data /var/www \

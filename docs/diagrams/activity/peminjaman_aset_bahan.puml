@@ -4,33 +4,54 @@
 title Activity Diagram - Peminjaman Aset dan Bahan
 
 start
-:User Pilih Aset/Bahan\n& Input Jumlah;
 
-:Validasi Stok;
-
-if (Stok Cukup?) then (Tidak)
-  :Tampilkan Error;
+if (Peminjam Terdaftar di Sistem?) then (Ya)
+  :User Pilih Aset/Bahan\n& Input Jumlah;
+  :Validasi Stok;
+  if (Stok Cukup?) then (Tidak)
+    :Tampilkan Error;
+    stop
+  else (Ya)
+    :Kurangi Stok\n& Simpan Peminjaman (Pending);
+  endif
+  :Admin Review;
+  if (Approve?) then (Reject)
+    :Kembalikan Stok\n& Notifikasi User;
+    stop
+  else (Approve)
+    :Update Status Approved\n& Notifikasi User;
+  endif
+  if (Tipe Aset?) then (Ya)
+    :User Kembalikan Aset;
+    :Tambah Stok Kembali;
+  else (Bahan Habis Pakai)
+    :Selesai;
+  endif
   stop
-else (Ya)
-  :Kurangi Stok\n& Simpan Peminjaman (Pending);
-endif
-
-:Admin Review;
-
-if (Approve?) then (Reject)
-  :Kembalikan Stok\n& Notifikasi User;
+else (Tidak)
+  :Peminjam Datang Langsung ke Lab;
+  :Admin/Aslab Catat Manual Peminjaman di Sistem;
+  :Validasi Stok;
+  if (Stok Cukup?) then (Tidak)
+    :Tampilkan Error;
+    stop
+  else (Ya)
+    :Kurangi Stok\n& Simpan Peminjaman (Pending);
+  endif
+  :Admin Review;
+  if (Approve?) then (Reject)
+    :Kembalikan Stok\n& Notifikasi Peminjam;
+    stop
+  else (Approve)
+    :Update Status Approved\n& Notifikasi Peminjam;
+  endif
+  if (Tipe Aset?) then (Ya)
+    :Peminjam Kembalikan Aset;
+    :Tambah Stok Kembali;
+  else (Bahan Habis Pakai)
+    :Selesai;
+  endif
   stop
-else (Approve)
-  :Update Status Approved\n& Notifikasi User;
 endif
-
-if (Tipe Aset?) then (Ya)
-  :User Kembalikan Aset;
-  :Tambah Stok Kembali;
-else (Bahan Habis Pakai)
-  :Selesai;
-endif
-
-stop
 
 @enduml

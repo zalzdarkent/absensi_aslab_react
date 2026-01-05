@@ -36,22 +36,22 @@ class NotificationController extends Controller
         $notifications = collect();
 
         foreach ($peminjamanList as $peminjaman) {
-            $itemName = $peminjaman->asetAslab->nama_aset ?? $peminjaman->bahan->nama ?? 'Item';
+            $itemName = $peminjaman->asetAslab?->nama_aset ?? $peminjaman->bahan?->nama ?? 'Item';
 
             if (in_array($user->role, ['admin', 'aslab'])) {
                 // For admin/aslab, show loan requests (focus on pending ones)
                 $isUnread = $peminjaman->status === 'pending';
                 $type = 'peminjaman_created';
                 $title = 'Permintaan Peminjaman';
-                $message = $peminjaman->user->name . ' mengajukan peminjaman ' . $itemName;
+                $message = ($peminjaman->user?->name ?? 'Unknown User') . ' mengajukan peminjaman ' . $itemName;
 
                 if ($peminjaman->status === 'approved') {
                     $title = 'Peminjaman Disetujui';
-                    $message = 'Peminjaman ' . $itemName . ' oleh ' . $peminjaman->user->name . ' telah disetujui';
+                    $message = 'Peminjaman ' . $itemName . ' oleh ' . ($peminjaman->user?->name ?? 'Unknown User') . ' telah disetujui';
                     $type = 'peminjaman_approved';
                 } elseif ($peminjaman->status === 'rejected') {
                     $title = 'Peminjaman Ditolak';
-                    $message = 'Peminjaman ' . $itemName . ' oleh ' . $peminjaman->user->name . ' telah ditolak';
+                    $message = 'Peminjaman ' . $itemName . ' oleh ' . ($peminjaman->user?->name ?? 'Unknown User') . ' telah ditolak';
                     $type = 'peminjaman_rejected';
                 }
 
@@ -173,8 +173,8 @@ class NotificationController extends Controller
                 $messages[$type],
                 [
                     'peminjaman_id' => $peminjaman->id,
-                    'item_name' => $peminjaman->asetAslab->nama_aset ?? $peminjaman->bahan->nama ?? 'Item',
-                    'user_name' => $peminjaman->user->name
+                    'item_name' => $peminjaman->asetAslab?->nama_aset ?? $peminjaman->bahan?->nama ?? 'Item',
+                    'user_name' => $peminjaman->user?->name ?? 'Unknown User'
                 ],
                 $peminjaman
             );

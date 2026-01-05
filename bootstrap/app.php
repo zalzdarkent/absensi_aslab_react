@@ -28,7 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminOnly::class,
             'admin.aslab' => \App\Http\Middleware\AdminAslabOnly::class,
             'auth.user' => \App\Http\Middleware\AuthenticatedUser::class,
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
