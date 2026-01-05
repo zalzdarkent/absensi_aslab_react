@@ -36,7 +36,12 @@ class DashboardController extends Controller
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'period' => $request->input('period', 'today')
-            ]
+            ],
+            'day_detail_data' => Inertia::lazy(fn () =>
+                $request->has('detail_date')
+                    ? $this->dashboardService->getDayDetail($request->input('detail_date'))
+                    : []
+            ),
         ]);
     }
 

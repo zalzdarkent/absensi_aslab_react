@@ -79,6 +79,7 @@ interface Props {
     end_date: string | null;
     period: string;
   };
+  day_detail_data?: DayDetailAttendance[];
 }
 
 export default function Dashboard({
@@ -87,7 +88,8 @@ export default function Dashboard({
   most_active_aslabs: initialMostActiveAslabs,
   weekly_chart_data: initialWeeklyChartData,
   current_date,
-  filters
+  filters,
+  day_detail_data
 }: Props) {
   const columns = createTodayAttendanceColumns();
   const { auth } = usePage<{ auth: { user: AuthUser } }>().props;
@@ -114,7 +116,10 @@ export default function Dashboard({
     setTodayAttendances(initialAttendances);
     setMostActiveAslabs(initialMostActiveAslabs);
     setWeeklyChartData(initialWeeklyChartData);
-  }, [initialStats, initialAttendances, initialMostActiveAslabs, initialWeeklyChartData]);
+    if (day_detail_data) {
+      setDayDetailData(day_detail_data);
+    }
+  }, [initialStats, initialAttendances, initialMostActiveAslabs, initialWeeklyChartData, day_detail_data]);
 
   const handlePeriodChange = (value: string) => {
     setPeriod(value);
@@ -315,28 +320,23 @@ export default function Dashboard({
   }, []);
 
   // Fungsi untuk handle klik pada bar chart
-  const handleBarClick = async (_data: unknown, index: number) => {
+  const handleBarClick = (_data: unknown, index: number) => {
     if (index >= 0 && index < chartData.length) {
       const clickedDate = chartData[index].date;
       setSelectedDate(clickedDate);
-      setIsModalOpen(true);
       setIsLoadingDayDetail(true);
 
-      try {
-        const response = await fetch(`/dashboard/day-detail-data?date=${encodeURIComponent(clickedDate)}`, {
-          headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-          },
-        });
-        if (!response.ok) throw new Error('Gagal mengambil data detail hari');
-        const data = await response.json();
-        setDayDetailData(data.attendances || []);
-      } catch {
-        setDayDetailData([]);
-      } finally {
-        setIsLoadingDayDetail(false);
-      }
+      router.reload({
+        only: ['day_detail_data'],
+        data: { detail_date: clickedDate },
+        onSuccess: () => {
+          setIsModalOpen(true);
+          setIsLoadingDayDetail(false);
+        },
+        onError: () => {
+          setIsLoadingDayDetail(false);
+        }
+      });
     }
   };
 
