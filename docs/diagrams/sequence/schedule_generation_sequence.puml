@@ -2,7 +2,7 @@
 !theme plain
 skinparam maxMessageSize 120
 
-title Sequence Diagram - Generate Jadwal Piket Otomatis
+title Sequence Diagram - Kelola Jadwal Piket Otomatis
 
 actor "Admin" as Admin
 participant "Controller" as Controller
