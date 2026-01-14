@@ -67,7 +67,6 @@ class PermissionSeeder extends Seeder
                 'manage_assets',
                 'view_loans',
                 'approve_loans',
-                'view_users',
             ],
             'mahasiswa' => [
                 'view_dashboard',

@@ -18,14 +18,30 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $dashboardData = $this->dashboardService->getAllDashboardData();
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $stats = $this->dashboardService->getDashboardStats($startDate, $endDate);
+        $todayAttendances = $this->dashboardService->getTodayAttendances($startDate, $endDate);
+        $mostActiveAslabs = $this->dashboardService->getMostActiveAslabs($startDate, $endDate);
+        $weeklyChartData = $this->dashboardService->getWeeklyChartData($startDate, $endDate);
 
         return Inertia::render('dashboard', [
-            'stats' => $dashboardData['stats'],
-            'today_attendances' => $dashboardData['todayAttendances'],
-            'most_active_aslabs' => $dashboardData['mostActiveAslabs'],
-            'weekly_chart_data' => $dashboardData['weeklyChartData'],
+            'stats' => $stats,
+            'today_attendances' => $todayAttendances,
+            'most_active_aslabs' => $mostActiveAslabs,
+            'weekly_chart_data' => $weeklyChartData,
             'current_date' => now()->format('d F Y'),
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'period' => $request->input('period', 'today')
+            ],
+            'day_detail_data' => Inertia::lazy(fn () =>
+                $request->has('detail_date')
+                    ? $this->dashboardService->getDayDetail($request->input('detail_date'))
+                    : []
+            ),
         ]);
     }
 

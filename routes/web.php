@@ -21,7 +21,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard - accessible to all logged-in users
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::match(['get', 'post'], '/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/day-detail', [DashboardController::class, 'dayDetail'])->name('dashboard.day-detail');
     Route::get('/dashboard/day-detail-data', [DashboardController::class, 'dayDetailData'])->name('dashboard.day-detail-data');
     Route::get('/attendance-today', [DashboardController::class, 'attendanceToday'])->name('attendance.today');

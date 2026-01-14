@@ -12,6 +12,7 @@ interface User {
 
 interface TodayAttendance {
   user: User;
+  date: string;
   check_in: string | null;
   check_out: string | null;
   status: string;
@@ -53,6 +54,21 @@ export const createTodayAttendanceColumns = (): ColumnDef<TodayAttendance>[] => 
           <div className="text-sm text-muted-foreground">
             Sem {user.semester}
           </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'date',
+    header: 'Tanggal',
+    cell: ({ row }) => {
+      return (
+        <div className="text-sm">
+          {new Date(row.original.date).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          })}
         </div>
       );
     },

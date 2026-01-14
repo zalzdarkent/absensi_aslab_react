@@ -51,6 +51,8 @@ interface DataTableProps<TData, TValue> {
   highlightKey?: string;
   getRowId?: (originalRow: TData, index: number, parent?: any) => string;
   defaultSorting?: SortingState;
+  defaultPageSize?: number;
+  pageSizeOptions?: number[];
 }
 
 export function DataTable<TData, TValue>({
@@ -65,12 +67,18 @@ export function DataTable<TData, TValue>({
   highlightKey = "id",
   getRowId,
   defaultSorting = [],
+  defaultPageSize = 10,
+  pageSizeOptions = [10, 20, 30, 40, 50, 100, 500],
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(defaultSorting);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: defaultPageSize,
+  });
 
   // Add checkbox column for row selection if enabled
   const tableColumns = React.useMemo(() => {
@@ -114,6 +122,7 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
     globalFilterFn: "includesString",
     getRowId,
     state: {
@@ -122,6 +131,7 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
       globalFilter,
+      pagination,
     },
   });
 
@@ -311,7 +321,7 @@ export function DataTable<TData, TValue>({
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 30, 40, 50, 100, 500].map((pageSize) => (
+              {pageSizeOptions.map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
