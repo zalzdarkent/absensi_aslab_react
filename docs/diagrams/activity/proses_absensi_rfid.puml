@@ -3,35 +3,52 @@
 
 title Activity Diagram - Proses Absensi RFID
 
+|Aslab / Admin|
 start
 
-if (User Membawa RFID Card?) then (Ya)
-  :User Scan RFID Card;
+if (Membawa RFID Card?) then (Ya)
+  :Scan RFID Card;
+
+  |Sistem|
   :Validasi RFID & User;
-  if (RFID Valid?) then (Tidak)
-    :Tampilkan Error\nRFID Tidak Terdaftar;
-    stop
-  else (Ya)
-    :Cek Status Absensi Hari Ini;
-  endif
-  if (Sudah Check-in?) then (Belum)
-    :Simpan Check-in;
-    :Tampilkan Sukses\nSelamat Datang;
-    stop
-  else (Sudah)
-    if (Sudah Check-out?) then (Belum)
-      :Simpan Check-out;
-      :Tampilkan Sukses\nSampai Jumpa;
+  
+  if (RFID Valid?) then (Ya)
+    :Cek Status Absensi\nHari Ini;
+    
+    if (Sudah Check-in?) then (Belum)
+      :Simpan Data Check-in;
+      :Tampilkan Pesan Sukses\n"Selamat Datang";
+      |Asisten / Admin|
       stop
     else (Sudah)
-      :Tampilkan Error\nSudah Absen Lengkap;
-      stop
+      if (Sudah Check-out?) then (Belum)
+        |Sistem|
+        :Simpan Data Check-out;
+        :Tampilkan Pesan Sukses\n"Sampai Jumpa";
+        |Asisten / Admin|
+        stop
+      else (Sudah)
+        |Sistem|
+        :Tampilkan Error\n"Sudah Absen Lengkap";
+        |Asisten / Admin|
+        stop
+      endif
     endif
+  else (Tidak)
+    :Tampilkan Error\n"RFID Tidak Terdaftar";
+    |Asisten / Admin|
+    stop
   endif
+
 else (Tidak)
-  :User ke Admin untuk Absen Manual;
-  :Admin Proses Absen Manual;
-  :Tampilkan Sukses/Error Absen Manual;
+  |Asisten / Admin|
+  :Melapor ke Admin untuk\nAbsensi Manual;
+  :Admin Input Absensi\nManual;
+  
+  |Sistem|
+  :Validasi & Simpan\nAbsensi Manual;
+  :Tampilkan Status\nAbsensi Manual;
+  |Asisten / Admin|
   stop
 endif
 

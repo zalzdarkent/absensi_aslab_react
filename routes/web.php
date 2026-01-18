@@ -152,6 +152,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Peminjaman Barang routes - accessible to all user types (handles both aset and bahan)
         Route::get('/peminjaman-barang/search-items', [PeminjamanBarangController::class, 'searchItems'])->name('peminjaman-barang.search-items');
+        Route::get('/peminjaman-barang/{id}/export-pdf', [PeminjamanBarangController::class, 'exportPdf'])->name('peminjaman-barang.export-pdf');
         Route::resource('peminjaman-barang', PeminjamanBarangController::class)->parameters([
             'peminjaman-barang' => 'id'
         ])->where([

@@ -4,7 +4,6 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
-import { PeminjamanDetailModal } from '@/components/ui/peminjaman-detail-modal';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -50,7 +49,6 @@ interface Props {
 
 export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Props) {
     const [selectedPeminjaman, setSelectedPeminjaman] = useState<PinjamBarang | null>(null);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [highlightId, setHighlightId] = useState<number | null>(null);
 
     // Handle highlight from URL parameter
@@ -95,8 +93,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
     const canApprove = auth.user.permissions?.includes('approve_loans') || auth.user.role === 'admin';
 
     const handleViewDetail = (peminjaman: PinjamBarang) => {
-        setSelectedPeminjaman(peminjaman);
-        setIsDetailModalOpen(true);
+        router.get(`/peminjaman-barang/${peminjaman.id}`);
     };
 
     const handleApprovalAction = (peminjaman: PinjamBarang, action: 'approve' | 'reject') => {
@@ -529,10 +526,12 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewDetail(row.original)}
+                            asChild
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950"
                         >
-                            <Eye className="h-4 w-4" />
+                            <Link href={`/peminjaman-barang/${row.original.id}`}>
+                                <Eye className="h-4 w-4" />
+                            </Link>
                         </Button>
 
                         {/* Approval buttons - only show for admin/aslab and pending status */}
@@ -599,7 +598,7 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                             Peminjaman Barang
                         </h1>
                         <p className="text-sm sm:text-base text-muted-foreground">
-                            Kelola peminjaman barang laboratorium assistant
+                            Kelola peminjaman barang laboratorium
                         </p>
                     </div>
                     <Button asChild className="w-full sm:w-auto">
@@ -789,13 +788,6 @@ export default function PeminjamanBarangIndex({ pinjamBarangs, stats, auth }: Pr
                 </Card>
             </div>
 
-            {/* Peminjaman Detail Modal */}
-            <PeminjamanDetailModal
-                peminjaman={selectedPeminjaman}
-                isOpen={isDetailModalOpen}
-                onOpenChange={setIsDetailModalOpen}
-                onReturn={handleReturn}
-            />
 
             {/* Approval Modal */}
             <Dialog open={isApprovalModalOpen} onOpenChange={setIsApprovalModalOpen}>
