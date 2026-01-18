@@ -264,7 +264,7 @@
                             </div>
                         @endif
                     </div>
-                    <p><strong>( {{ $peminjaman['approved_by'] ?? '..........................' }} )</strong></p>
+                    <p><strong>( Purwantoro, M.Kom )</strong></p>
                 </td>
             </tr>
         </table>
