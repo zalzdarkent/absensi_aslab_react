@@ -2,124 +2,117 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Surat Peminjaman Barang - {{ $peminjaman['id'] }}</title>
+    <title>Surat Peminjaman - {{ $peminjaman['id'] }}</title>
     <style>
+        @page {
+            margin: 1cm;
+        }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #333;
+            font-size: 11px;
+            line-height: 1.3;
+            color: #000;
             margin: 0;
             padding: 0;
         }
         .kop-table {
             width: 100%;
-            border-bottom: 2px solid #000;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            border: none;
+            margin-bottom: 5px;
         }
         .kop-logo {
-            width: 90px;
+            width: 110px;
             text-align: left;
             vertical-align: middle;
         }
         .kop-text {
             text-align: center;
             vertical-align: middle;
-            padding-right: 90px;
+            padding-right: 110px;
         }
         .kop-text h1 {
             margin: 0;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: normal;
             text-transform: uppercase;
         }
         .kop-text h2 {
             margin: 0;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             text-transform: uppercase;
         }
         .kop-text h3 {
             margin: 0;
-            font-size: 15px;
+            font-size: 17px;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .kop-text p {
-            margin: 2px 0;
-            font-size: 9px;
-            font-weight: normal;
+            margin: 1px 0;
+            font-size: 10px;
         }
-        .title {
-            text-align: center;
+        .line-separator {
+            border-top: 2px solid #000;
             margin-bottom: 20px;
         }
-        .title h2 {
-            margin: 0;
-            font-size: 14px;
-            text-decoration: underline;
+        
+        .info-section {
+            margin-bottom: 25px;
+            width: 100%;
+        }
+        .info-table {
+            width: 100%;
+            border: none;
+        }
+        .info-table td {
+            padding: 2px 0;
+            vertical-align: top;
+        }
+        .label {
+            width: 140px;
             font-weight: bold;
         }
-        .section {
-            margin-bottom: 15px;
+        .colon {
+            width: 15px;
+            text-align: center;
         }
-        .section-title {
-            font-weight: bold;
-            background-color: #f2f2f2;
-            padding: 5px 10px;
-            margin-bottom: 10px;
-            border-left: 4px solid #333;
-            text-transform: uppercase;
-            font-size: 11px;
-        }
-        table {
+
+        .main-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-top: 10px;
         }
-        table th, table td {
-            padding: 8px 12px;
-            text-align: left;
-            border: 1px solid #ddd;
+        .main-table th, .main-table td {
+            border: 1px solid #000;
+            padding: 8px 10px;
+            text-align: center;
         }
-        table th {
-            background-color: #f9f9f9;
-            width: 30%;
+        .main-table th {
+            background-color: #f2f2f2;
             font-weight: bold;
+            text-transform: uppercase;
         }
+        .text-left {
+            text-align: left !important;
+        }
+        
         .footer {
             margin-top: 40px;
+            width: 100%;
         }
         .signature-table {
             width: 100%;
             border: none;
         }
         .signature-table td {
-            border: none;
-            width: 33%;
+            width: 50%;
             text-align: center;
             vertical-align: top;
         }
-        .signature-space {
-            height: 60px;
-        }
-        .note {
-            font-size: 9px;
-            font-style: italic;
-            margin-top: 20px;
-            border-top: 1px solid #ddd;
-            padding-top: 5px;
-            color: #666;
-        }
-        .sig-box {
-            margin: 5px auto;
-            border: 1px dashed #ccc;
-            padding: 6px;
-            font-family: monospace;
-            font-size: 8px;
-            display: inline-block;
-            background-color: #fcfcfc;
+        .sig-space {
+            height: 70px;
         }
     </style>
 </head>
@@ -128,139 +121,109 @@
         <tr>
             <td class="kop-logo">
                 @php
-                    \Carbon\Carbon::setLocale('id');
-                    $gdEnabled = extension_loaded('gd');
                     $logoPath = public_path('img/logo_aslab.png');
                 @endphp
-                
-                @if($gdEnabled && file_exists($logoPath))
-                    <img src="{{ $logoPath }}" width="80" height="80">
-                @else
-                    {{-- Premium Text-based Fallback --}}
-                    <div style="width: 80px; height: 80px; background-color: #000; color: #fff; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Georgia', serif;">
-                        <div style="font-size: 24px; font-weight: bold; line-height: 1; padding-top: 20px;">LAB<br><span style="font-size: 14px; opacity: 0.8;">KOM</span></div>
-                    </div>
+                @if(file_exists($logoPath))
+                    <img src="{{ $logoPath }}" width="105" height="105">
                 @endif
             </td>
             <td class="kop-text">
-                <h1>KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</h1>
+                <h1>KEMENTERIAN PENDIDIKAN TINGGI, SAINS,</h1>
+                <h1>DAN TEKNOLOGI</h1>
                 <h2>UNIVERSITAS SINGAPERBANGSA KARAWANG</h2>
                 <h3>LABORATORIUM KOMPUTER<br>FAKULTAS ILMU KOMPUTER</h3>
                 <p>Jl. H.S Ronggowaluyo Teluk Jambe Karawang 41361</p>
-                <p>Email: labkom.fasilkom@unsika.ac.id Telp: +62 896 2289 4396</p>
+                <p>Email: <span style="color: blue; text-decoration: underline;">labkom.fasilkom@unsika.ac.id</span> Telp: +62 896 2289 4396</p>
             </td>
         </tr>
     </table>
 
-    <div class="title">
-        <h2>SURAT KETERANGAN PEMINJAMAN</h2>
-        <p style="margin-top: 5px;">Kode Barang: #{{ $peminjaman['kode_barang'] }}</p>
-    </div>
+    <div class="line-separator"></div>
 
-    <div class="section">
-        <div class="section-title">I. INFORMASI PEMINJAM</div>
-        <table>
+    @php
+        \Carbon\Carbon::setLocale('id');
+        $namaPeminjam = $peminjaman['manual_borrower_name'] ?? $peminjaman['nama_peminjam'];
+        $kelas = $peminjaman['manual_borrower_class'] ?? '-';
+        $wa = $peminjaman['manual_borrower_phone'] ?? '-';
+        
+        $tglPinjam = \Carbon\Carbon::parse($peminjaman['tanggal_pinjam'])->translatedFormat('d F Y (H:i)');
+        $tglKembali = $peminjaman['tanggal_kembali'] 
+            ? \Carbon\Carbon::parse($peminjaman['tanggal_kembali'])->translatedFormat('d F Y (H:i)')
+            : ($peminjaman['target_return_date'] 
+                ? \Carbon\Carbon::parse($peminjaman['target_return_date'])->translatedFormat('d F Y (H:i)') . ' (Estimasi)'
+                : '-');
+    @endphp
+
+    <div class="info-section">
+        <h2 style="text-align: center; text-decoration: underline; margin-bottom: 20px;">SURAT PEMINJAMAN INVENTARIS</h2>
+        
+        <table class="info-table">
             <tr>
-                <th>Nama Peminjam</th>
-                <td>{{ $peminjaman['nama_peminjam'] }}</td>
+                <td class="label">Nama Peminjam</td>
+                <td class="colon">:</td>
+                <td>{{ $namaPeminjam }}</td>
             </tr>
-            @if($peminjaman['manual_borrower_name'])
             <tr>
-                <th>Penerima (Manual)</th>
-                <td>{{ $peminjaman['manual_borrower_name'] }}</td>
+                <td class="label">Kelas / Instansi</td>
+                <td class="colon">:</td>
+                <td>{{ $kelas }}</td>
             </tr>
-            @endif
-            @if($peminjaman['manual_borrower_class'])
             <tr>
-                <th>Kelas / Jurusan</th>
-                <td>{{ $peminjaman['manual_borrower_class'] }}</td>
+                <td class="label">No. WhatsApp</td>
+                <td class="colon">:</td>
+                <td>{{ $wa }}</td>
             </tr>
-            @endif
-            @if($peminjaman['manual_borrower_phone'])
             <tr>
-                <th>No. WhatsApp</th>
-                <td>{{ $peminjaman['manual_borrower_phone'] }}</td>
+                <td class="label">Waktu Peminjaman</td>
+                <td class="colon">:</td>
+                <td>{{ $tglPinjam }} s/d {{ $tglKembali }}</td>
             </tr>
-            @endif
+            <tr>
+                <td class="label">Keperluan</td>
+                <td class="colon">:</td>
+                <td>{{ $peminjaman['keterangan'] ?? 'Peminjaman rutin sarana laboratorium.' }}</td>
+            </tr>
         </table>
     </div>
 
-    <div class="section">
-        <div class="section-title">II. RINCIAN BARANG & LOKASI</div>
-        <table>
+    <table class="main-table">
+        <thead>
             <tr>
-                <th>Nama Barang</th>
-                <td><strong>{{ $peminjaman['nama_barang'] }}</strong></td>
+                <th style="width: 40px;">No</th>
+                <th class="text-left">Nama Barang</th>
+                <th style="width: 100px;">Jenis</th>
+                <th style="width: 80px;">Jumlah</th>
             </tr>
+        </thead>
+        <tbody>
             <tr>
-                <th>Kode Barang</th>
-                <td>{{ $peminjaman['kode_barang'] }}</td>
-            </tr>
-            <tr>
-                <th>Tipe / Kategori</th>
+                <td>1</td>
+                <td class="text-left">
+                    <strong>{{ $peminjaman['nama_barang'] }}</strong><br>
+                    <small>Kode: {{ $peminjaman['kode_barang'] }}</small>
+                </td>
                 <td style="text-transform: capitalize;">{{ $peminjaman['tipe_barang'] }}</td>
-            </tr>
-            <tr>
-                <th>Jumlah Dipinjam</th>
                 <td>{{ $peminjaman['jumlah'] }} unit</td>
             </tr>
-            <tr>
-                <th>Lokasi Barang</th>
-                <td>{{ $peminjaman['lokasi'] ?? 'Laboratorium Komputer' }}</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">III. JADWAL & STATUS</div>
-        <table>
-            <tr>
-                <th>Tanggal Pinjam</th>
-                <td>{{ \Carbon\Carbon::parse($peminjaman['tanggal_pinjam'])->translatedFormat('l, d F Y (H:i)') }} WIB</td>
-            </tr>
-            @if($peminjaman['target_return_date'])
-            <tr>
-                <th>Target Pengembalian</th>
-                <td>{{ \Carbon\Carbon::parse($peminjaman['target_return_date'])->translatedFormat('l, d F Y (H:i)') }} WIB</td>
-            </tr>
-            @endif
-            @if($peminjaman['tanggal_kembali'])
-            <tr>
-                <th>Aktual Dikembalikan</th>
-                <td>{{ \Carbon\Carbon::parse($peminjaman['tanggal_kembali'])->translatedFormat('l, d F Y (H:i)') }} WIB</td>
-            </tr>
-            @endif
-            <tr>
-                <th>Status Saat Ini</th>
-                <td>{{ $peminjaman['status_text'] }}</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">IV. KETERANGAN / KEPERLUAN</div>
-        <div style="padding: 12px; border: 1px solid #ddd; min-height: 40px;">
-            {{ $peminjaman['keterangan'] ?? 'Peminjaman rutin sarana laboratorium.' }}
-        </div>
-    </div>
+            {{-- Display extra rows if needed for bulk (future proof) --}}
+        </tbody>
+    </table>
 
     <div class="footer">
         <table class="signature-table">
             <tr>
                 <td>
                     <p>Peminjam,</p>
-                    <div class="signature-space"></div>
-                    <p><strong>( {{ $peminjaman['manual_borrower_name'] ?? $peminjaman['nama_peminjam'] }} )</strong></p>
+                    <div class="sig-space"></div>
+                    <p><strong>( {{ $namaPeminjam }} )</strong></p>
                 </td>
-                <td></td>
                 <td>
-                    <p>Karawang, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>Kepala Laboratorium,</p>
-                    <div class="signature-space">
+                    <p>Karawang, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>Mengetahui,</p>
+                    <div class="sig-space">
                         @if($peminjaman['approved_at'])
-                            <div class="sig-box">
-                                [ VERIFIED BY SYSTEM ]<br>
-                                SIG: {{ strtoupper(substr(md5($peminjaman['approved_at']), 0, 12)) }}<br>
-                                {{ date('d-m-Y H:i', strtotime($peminjaman['approved_at'])) }}
+                            <div style="font-size: 8px; border: 1px dashed #ccc; padding: 5px; display: inline-block; font-family: monospace;">
+                                VERIFIED BY SYSTEM<br>
+                                {{ \Carbon\Carbon::parse($peminjaman['approved_at'])->format('d/m/Y H:i') }}
                             </div>
                         @endif
                     </div>
@@ -269,9 +232,7 @@
             </tr>
         </table>
     </div>
-
-    <div class="note">
-        <p><strong>Catatan Penting:</strong> Bukti peminjaman ini sah dikeluarkan oleh sistem. Peminjam bertanggung jawab penuh atas kondisi barang selama masa peminjaman. Kerusakan atau kehilangan barang wajib diganti sesuai dengan ketentuan yang berlaku di Laboratorium Komputer FIK UNSIKA.</p>
-    </div>
 </body>
 </html>
+
+
