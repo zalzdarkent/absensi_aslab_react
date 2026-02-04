@@ -1,0 +1,34 @@
+@startuml Login Sequence
+!theme plain
+skinparam maxMessageSize 120
+
+title Sequence Diagram - Proses Login
+
+
+actor "User" as User
+boundary "Login Form" as Boundary
+control "LoginController" as Control
+entity "UserEntity" as Entity
+
+
+User -> Boundary: Input Email & Password
+activate Boundary
+Boundary -> Control: Submit Login(Email, Password)
+activate Control
+Control -> Control: Validasi Input
+Control -> Entity: Cek Kredensial
+activate Entity
+Entity --> Control: Hasil Verifikasi
+deactivate Entity
+
+alt Login Gagal
+    Control --> Boundary: Tampilkan Pesan Error
+else Login Berhasil
+    Control -> Control: Buat Session
+    Control --> Boundary: Redirect ke Dashboard
+end
+
+deactivate Control
+deactivate Boundary
+
+@enduml

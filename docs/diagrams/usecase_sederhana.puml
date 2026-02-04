@@ -1,52 +1,55 @@
+
+
 @startuml
 left to right direction
 skinparam packageStyle rectangle
+skinparam backgroundColor #FDF6E3
+skinparam usecaseBorderColor Black
+skinparam usecaseBackgroundColor #FFF2CC
+skinparam actorBorderColor Black
+skinparam actorBackgroundColor #FDF6E3
 
 actor Admin
 actor Aslab
+
+rectangle "Lab Management System" {
+  usecase UC_Login as "Masuk"
+  usecase UC_Register as "Daftar"
+  usecase UC_Inventory as "Kelola Data\nAset & Bahan"
+  usecase UC_Attendance as "Absensi\nAslab"
+  usecase UC_Borrow as "Peminjaman\nAset & Bahan"
+  usecase UC_Return as "Pengembalian\nAset & Bahan"
+  usecase UC_Schedule as "Kelola\nJadwal"
+  usecase UC_Report as "Laporan"
+}
+
 actor Mahasiswa
 actor Dosen
 
-rectangle "Lab Management System" {
 
-  usecase UC_Login as "Login"
-  usecase UC_Register as "Register"
 
-  usecase UC_Dashboard as "View Dashboard"
-  usecase UC_Attendance as "Manage Attendance"
-  usecase UC_Inventory as "Manage Inventory"
-  usecase UC_Borrow as "Borrow Asset"
-  usecase UC_Return as "Return Asset"
-  usecase UC_Report as "Generate Report"
-  usecase UC_Schedule as "Manage Schedule"
-  usecase UC_Notification as "Send Notification"
-}
+Admin -right-> UC_Login
+Admin -right-> UC_Inventory
+Admin -right-> UC_Schedule
+Admin -right-> UC_Return
 
-' ===== Admin =====
-Admin --> UC_Login
-Admin --> UC_Dashboard
-Admin --> UC_Inventory
-Admin --> UC_Report
-Admin --> UC_Schedule
+Aslab -right-> UC_Login
+Aslab -right-> UC_Attendance
+Aslab -right-> UC_Borrow
+Aslab -right-> UC_Return
+Aslab -right-> UC_Register
 
-' ===== Aslab =====
-Aslab --> UC_Login
-Aslab --> UC_Dashboard
-Aslab --> UC_Attendance
-Aslab --> UC_Borrow
-Aslab --> UC_Return
+Mahasiswa -left-> UC_Register
+Mahasiswa -left-> UC_Login
+Mahasiswa -left-> UC_Borrow
 
-' ===== Mahasiswa =====
-Mahasiswa --> UC_Register
-Mahasiswa --> UC_Login
-Mahasiswa --> UC_Borrow
+Dosen -left-> UC_Register
+Dosen -left-> UC_Login
+Dosen -left-> UC_Borrow
 
-' ===== Dosen =====
-Dosen --> UC_Register
-Dosen --> UC_Login
-Dosen --> UC_Borrow
 
-UC_Attendance .> UC_Notification : <<include>>
-UC_Schedule .> UC_Notification : <<include>>
+' Contoh include dan extend
+UC_Borrow ..> UC_Return : <<include>>
+UC_Inventory ..> UC_Report : <<extend>>
 
 @enduml

@@ -1,38 +1,50 @@
 @startuml Proses Absensi RFID
 !theme plain
+skinparam ConditionEndStyle hline
 
 title Activity Diagram - Proses Absensi RFID
 
+|User (Aslab & Admin)|
 start
 
-if (User Membawa RFID Card?) then (Ya)
-  :User Scan RFID Card;
-  :Validasi RFID & User;
+if (Membawa RFID Card?) then (Ya)
+  :Scan RFID Card ke Reader;
+  
+  |Sistem Absensi|
+  :Validasi ID Card & User;
+  
   if (RFID Valid?) then (Tidak)
-    :Tampilkan Error\nRFID Tidak Terdaftar;
-    stop
+    :Tampilkan Pesan Error\n"RFID Tidak Terdaftar";
+    detach
   else (Ya)
-    :Cek Status Absensi Hari Ini;
+    :Cek Status Absensi Hari Ini\n(Database);
   endif
+  
   if (Sudah Check-in?) then (Belum)
-    :Simpan Check-in;
-    :Tampilkan Sukses\nSelamat Datang;
-    stop
+    :Simpan Data Check-in;
+    :Tampilkan Pesan Sukses\n"Selamat Datang";
+    detach
   else (Sudah)
     if (Sudah Check-out?) then (Belum)
-      :Simpan Check-out;
-      :Tampilkan Sukses\nSampai Jumpa;
-      stop
+      :Simpan Data Check-out;
+      :Tampilkan Pesan Sukses\n"Sampai Jumpa";
+      detach
     else (Sudah)
-      :Tampilkan Error\nSudah Absen Lengkap;
-      stop
+      :Tampilkan Pesan Error\n"Anda Sudah Absen Lengkap";
+      detach
     endif
   endif
-else (Tidak)
-  :User ke Admin untuk Absen Manual;
-  :Admin Proses Absen Manual;
-  :Tampilkan Sukses/Error Absen Manual;
+
+else (Tidak - Manual)
+  |User (Aslab & Admin)|
+  :Lapor ke Admin untuk\nAbsen Manual;
+  :Admin Input Data Absensi\nsecara Manual;
+  
+  |Sistem Absensi|
+  :Proses Simpan Data Manual;
+  :Tampilkan Status\nSukses/Gagal;
   stop
+
 endif
 
 @enduml

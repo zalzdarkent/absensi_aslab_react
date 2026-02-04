@@ -1,0 +1,42 @@
+@startuml Activity Diagram Login
+!theme plain
+skinparam ConditionEndStyle hline
+
+title Activity Diagram - Proses Login
+
+|User|
+start
+:Akses Halaman Login;
+
+|Sistem|
+:Tampilkan Form Login;
+
+|User|
+:Input Email & Password;
+:Klik Tombol Login;
+
+|Sistem|
+:Validasi Input;
+
+if (Input Valid?) then (Tidak)
+  :Tampilkan Pesan Error;
+  stop
+else (Ya)
+endif
+
+:Cek Kredensial di Database;
+
+if (Kredensial Valid?) then (Tidak)
+  :Tampilkan Pesan Error\n"Email atau Password Salah";
+  stop
+else (Ya)
+endif
+
+:Buat Session;
+:Redirect ke Dashboard;
+
+|User|
+:Masuk ke Dashboard;
+stop
+
+@enduml

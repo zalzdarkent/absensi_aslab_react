@@ -1,0 +1,39 @@
+@startuml Manual Attendance Sequence
+!theme plain
+skinparam maxMessageSize 120
+
+title Sequence Diagram - Sistem Absensi Manual (BCE)
+
+actor "Admin" as Admin
+boundary "Manual Attendance Form" as Boundary
+control "ManualAttendanceController" as Control
+entity "UserEntity" as UserEntity
+entity "AttendanceEntity" as AttendanceEntity
+
+Admin -> Boundary: Akses halaman absen manual
+activate Boundary
+Boundary -> Control: Submit data absen (nama aslab, jenis absen, catatan)
+activate Control
+Control -> UserEntity: Validasi nama aslab
+activate UserEntity
+UserEntity --> Control: Status validasi
+deactivate UserEntity
+Control -> AttendanceEntity: Cek status absensi hari ini
+activate AttendanceEntity
+AttendanceEntity --> Control: Status absensi
+
+deactivate AttendanceEntity
+alt Data Tidak Valid atau Sudah Absen
+    Control --> Boundary: Tampilkan pesan error ("Aslab sudah absen hari ini")
+    Boundary --> Admin: Input ulang data
+else Data Valid
+    Control -> AttendanceEntity: Simpan data absen
+    AttendanceEntity --> Control: Success
+    Control --> Boundary: Tampilkan data absen
+    Boundary --> Admin: Selesai
+end
+
+deactivate Control
+
+deactivate Boundary
+@enduml

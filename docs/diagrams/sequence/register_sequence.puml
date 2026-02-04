@@ -1,0 +1,36 @@
+@startuml Register Sequence
+!theme plain
+skinparam maxMessageSize 120
+
+title Sequence Diagram - Proses Registrasi
+
+
+actor "User" as User
+boundary "Register Form" as Boundary
+control "RegisterController" as Control
+entity "UserEntity" as Entity
+
+
+User -> Boundary: Input Nama, Email, Password
+activate Boundary
+Boundary -> Control: Submit Registrasi(Nama, Email, Password)
+activate Control
+Control -> Control: Validasi Input
+Control -> Entity: Cek Email Terdaftar
+activate Entity
+Entity --> Control: Hasil Pengecekan
+deactivate Entity
+
+alt Email Sudah Terdaftar
+    Control --> Boundary: Tampilkan Pesan Error
+else Registrasi Berhasil
+    Control -> Entity: Simpan Data User
+    Entity --> Control: Success
+    Control -> Control: Buat Session
+    Control --> Boundary: Redirect ke Dashboard
+end
+
+deactivate Control
+deactivate Boundary
+
+@enduml

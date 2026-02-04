@@ -1,0 +1,49 @@
+@startuml Proses Absensi RFID (Aslab)
+!theme plain
+skinparam ConditionEndStyle hline
+skinparam conditionStyle diamond
+
+title Activity Diagram - Proses Absensi RFID (Aslab)
+
+|Aslab|
+|Sistem|
+
+|Aslab|
+start
+
+if (Membawa RFID Card?) then (ya)
+  :Scan RFID Card\nke Reader;
+  
+  |Sistem|
+  :Terima Data RFID;
+  :Validasi ID Card & User;
+  
+  if (RFID Valid?) then (tidak)
+    :Tampilkan Pesan Error\n"RFID Tidak Terdaftar";
+    stop
+  else (ya)
+    :Cek Status Absensi\nHari Ini (Database);
+  endif
+  
+  if (Sudah Check-in?) then (belum)
+    :Simpan Data Check-in;
+    :Tampilkan Pesan Sukses\n"Selamat Datang";
+    stop
+  else (sudah)
+    if (Sudah Check-out?) then (belum)
+      :Simpan Data Check-out;
+      :Tampilkan Pesan Sukses\n"Sampai Jumpa";
+      stop
+    else (sudah)
+      :Tampilkan Pesan Error\n"Anda Sudah Absen Lengkap";
+      stop
+    endif
+  endif
+
+else (tidak)
+  |Aslab|
+  :Lapor ke Admin untuk\nAbsen Manual;
+  stop
+endif
+
+@enduml

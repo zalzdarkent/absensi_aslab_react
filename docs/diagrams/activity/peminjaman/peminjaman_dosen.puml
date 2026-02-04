@@ -1,90 +1,63 @@
-@startuml Peminjaman Aset dan Bahan
+@startuml Peminjaman Aset dan Bahan (Dosen)
 !theme plain
 skinparam ConditionEndStyle hline
 skinparam conditionStyle diamond
 
-title Activity Diagram - Peminjaman Aset dan Bahan
+title Activity Diagram - Peminjaman Aset dan Bahan (Dosen)
 
-|Admin|
-|Aslab|
-|Mahasiswa|
 |Dosen|
 |Sistem|
 
-|Mahasiswa|
-start
-:Pilih Menu\nPeminjaman;
-
 |Dosen|
+start
 :Pilih Menu\nPeminjaman;
 
 |Sistem|
 :Tampilkan Halaman\nPeminjaman Aset/Bahan;
 
-|Mahasiswa|
-:Pilih Aset/Bahan\n& Input Jumlah;
-
 |Dosen|
 :Pilih Aset/Bahan\n& Input Jumlah;
+:Klik Submit;
 
 |Sistem|
 :Validasi Stok;
 
 if (Stok Cukup?) then (tidak)
   :Tampilkan Error\nStok Tidak Cukup;
-  |Mahasiswa|
   stop
 else (ya)
   :Kurangi Stok;
   :Simpan Peminjaman\n(Status: Pending);
   :Kirim Notifikasi\nke Admin;
+  :Tampilkan Pesan\nMenunggu Approval;
 endif
 
-|Admin|
-:Review Peminjaman;
+:Proses Approval\noleh Admin;
 
-|Aslab|
-:Bantu Review\nPeminjaman;
-
-|Sistem|
-if (Approve?) then (tidak)
+if (Disetujui?) then (tidak)
+  :Kirim Notifikasi\nPeminjaman Ditolak;
   :Kembalikan Stok;
-  :Update Status Rejected;
-  :Notifikasi Peminjam\n(Ditolak);
-  |Mahasiswa|
   stop
 else (ya)
-  :Update Status Approved;
-  :Notifikasi Peminjam\n(Disetujui);
+  :Kirim Notifikasi\nPeminjaman Disetujui;
 endif
 
+|Dosen|
+:Ambil Aset/Bahan\ndi Lab;
+
+|Sistem|
 if (Tipe Aset?) then (ya)
-  |Mahasiswa|
-  :Kembalikan Aset\nke Lab;
-  
   |Dosen|
   :Kembalikan Aset\nke Lab;
   
-  |Admin|
-  :Verifikasi Pengembalian;
-  
-  |Aslab|
-  :Bantu Verifikasi\nPengembalian;
-  
   |Sistem|
+  :Proses Verifikasi\nPengembalian;
   :Tambah Stok Kembali;
   :Update Status\nDikembalikan;
+  stop
 else (tidak - Bahan Habis Pakai)
   :Update Status Selesai;
+  stop
 endif
-
-|Mahasiswa|
-:Selesai;
-
-|Dosen|
-:Selesai;
-
-|Mahasiswa|
-stop
 
 @enduml

@@ -4,35 +4,42 @@ skinparam maxMessageSize 120
 
 title Sequence Diagram - Sistem Absensi RFID
 
-actor "RFID Scanner" as Scanner
-participant "Controller" as Controller
-database "Database" as DB
 
-Scanner -> Controller: Scan RFID Code
-activate Controller
+actor "Aslab" as Scanner
+boundary "RFID Scanner" as Boundary
+control "AttendanceController" as Control
+entity "UserEntity" as UserEntity
+entity "AttendanceEntity" as AttendanceEntity
 
-Controller -> DB: Validasi User & Cek Status Absensi
-activate DB
-DB --> Controller: Data User & Status
-deactivate DB
+
+Scanner -> Boundary: Scan RFID Code
+activate Boundary
+Boundary -> Control: Kirim RFID Code
+activate Control
+Control -> UserEntity: Validasi User
+activate UserEntity
+UserEntity --> Control: Status User
+deactivate UserEntity
+Control -> AttendanceEntity: Cek Status Absensi
+activate AttendanceEntity
+AttendanceEntity --> Control: Status Absensi
+deactivate AttendanceEntity
 
 alt RFID Tidak Valid
-    Controller --> Scanner: Error: RFID tidak terdaftar
-
+    Control --> Boundary: Error: RFID tidak terdaftar
 else Belum Check-in
-    Controller -> DB: Simpan Check-in
-    DB --> Controller: Success
-    Controller --> Scanner: Berhasil Check-in
-
+    Control -> AttendanceEntity: Simpan Check-in
+    AttendanceEntity --> Control: Success
+    Control --> Boundary: Berhasil Check-in
 else Sudah Check-in, Belum Check-out
-    Controller -> DB: Simpan Check-out
-    DB --> Controller: Success
-    Controller --> Scanner: Berhasil Check-out
-
+    Control -> AttendanceEntity: Simpan Check-out
+    AttendanceEntity --> Control: Success
+    Control --> Boundary: Berhasil Check-out
 else Sudah Lengkap
-    Controller --> Scanner: Error: Sudah absen hari ini
+    Control --> Boundary: Error: Sudah absen hari ini
 end
 
-deactivate Controller
+deactivate Control
+deactivate Boundary
 
 @enduml

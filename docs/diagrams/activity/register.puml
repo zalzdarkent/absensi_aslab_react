@@ -1,0 +1,43 @@
+@startuml Activity Diagram Register
+!theme plain
+skinparam ConditionEndStyle hline
+
+title Activity Diagram - Proses Registrasi
+
+|User|
+start
+:Akses Halaman Register;
+
+|Sistem|
+:Tampilkan Form Registrasi;
+
+|User|
+:Input Nama, Email, Password;
+:Klik Tombol Register;
+
+|Sistem|
+:Validasi Input;
+
+if (Input Valid?) then (Tidak)
+  :Tampilkan Pesan Error;
+  stop
+else (Ya)
+endif
+
+:Cek Email di Database;
+
+if (Email Sudah Terdaftar?) then (Ya)
+  :Tampilkan Pesan Error\n"Email sudah digunakan";
+  stop
+else (Tidak)
+endif
+
+:Simpan Data User Baru;
+:Buat Session;
+:Redirect ke Dashboard;
+
+|User|
+:Masuk ke Dashboard;
+stop
+
+@enduml

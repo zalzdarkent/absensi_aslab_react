@@ -1,0 +1,40 @@
+@startuml Input Absensi Manual (Admin)
+!theme plain
+skinparam ConditionEndStyle hline
+skinparam conditionStyle diamond
+
+title Activity Diagram - Input Absensi Manual (Admin)
+
+|Admin|
+|Sistem|
+
+|Admin|
+start
+
+if (Aslab Membawa\nRFID Card?) then (ya)
+  :Aslab Proses Sendiri\nmelalui RFID Reader;
+  stop
+else (tidak)
+  :Buka Form Input\nAbsensi Manual;
+  
+  |Sistem|
+  :Tampilkan Form\nInput Absensi;
+  
+  |Admin|
+  :Input Data Absensi\n(Nama Aslab, Waktu, Tipe);
+  :Submit Form;
+  
+  |Sistem|
+  :Validasi Data Input;
+  
+  if (Data Valid?) then (tidak)
+    :Tampilkan Pesan Error;
+    stop
+  else (ya)
+    :Simpan Data Absensi;
+    :Tampilkan Pesan Sukses;
+    stop
+  endif
+endif
+
+@enduml

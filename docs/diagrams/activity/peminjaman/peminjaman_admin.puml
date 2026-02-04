@@ -1,0 +1,47 @@
+@startuml Peminjaman Aset dan Bahan (Admin)
+!theme plain
+skinparam ConditionEndStyle hline
+skinparam conditionStyle diamond
+
+title Activity Diagram - Peminjaman Aset dan Bahan (Admin)
+
+|Admin|
+|Sistem|
+
+|Admin|
+start
+:Pilih Menu\nPeminjaman;
+
+|Sistem|
+:Tampilkan Halaman\nPeminjaman Aset/Bahan;
+
+|Admin|
+:Pilih Aset/Bahan\n& Input Jumlah;
+:Klik Submit;
+
+|Sistem|
+:Validasi Stok;
+
+if (Stok Cukup?) then (tidak)
+  :Tampilkan Error\nStok Tidak Cukup;
+  stop
+else (ya)
+  :Kurangi Stok;
+  :Simpan Peminjaman\n(Status: Approved);
+  :Tampilkan Pesan Sukses;
+endif
+
+if (Tipe Aset?) then (ya)
+  |Admin|
+  :Kembalikan Aset\nke Lab;
+  
+  |Sistem|
+  :Tambah Stok Kembali;
+  :Update Status\nDikembalikan;
+  stop
+else (tidak - Bahan Habis Pakai)
+  :Update Status Selesai;
+  stop
+endif
+
+@enduml

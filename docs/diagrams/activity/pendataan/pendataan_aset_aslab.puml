@@ -1,0 +1,46 @@
+@startuml Pendataan Aset Bahan (Aslab)
+!theme plain
+skinparam ConditionEndStyle hline
+skinparam conditionStyle diamond
+
+title Activity Diagram - Pendataan Bahan (Aslab)
+
+|Aslab|
+|Sistem|
+
+|Aslab|
+start
+:Masuk Halaman\nPendataan Bahan;
+
+|Sistem|
+:Tampilkan Form\nInput Data;
+
+|Aslab|
+:Input Data Bahan\n(nama, jenis, stok, status);
+
+if (Upload Gambar?) then (ya)
+  :Upload File Gambar;
+else (tidak)
+endif
+
+|Sistem|
+if (Ada Gambar?) then (tidak)
+  :Gunakan Gambar Default;
+else (ya)
+  :Proses Upload Gambar;
+endif
+
+:Validasi Input Data;
+
+if (Data Valid?) then (tidak)
+  :Tampilkan Error\nValidasi;
+  stop
+else (ya)
+  :Generate Kode Otomatis;
+  :Simpan ke Database\n& Storage;
+  :Tampilkan Pesan\nSukses;
+  :Tampilkan Daftar Bahan;
+  stop
+endif
+
+@enduml

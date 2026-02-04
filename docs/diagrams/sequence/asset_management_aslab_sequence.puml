@@ -1,40 +1,40 @@
-﻿@startuml Asset Management - Admin
+@startuml Asset Management - Aslab
 !theme plain
 skinparam maxMessageSize 120
 
-title Sequence Diagram - Manajemen Aset (Admin)
+title Sequence Diagram - Manajemen Aset (Aslab)
 
-actor "Admin" as Admin
+actor "Aslab" as Aslab
 boundary "Asset Management Page" as Boundary
 control "AssetController" as Control
 entity "AssetEntity" as AssetEntity
 
-Admin -> Boundary: Akses halaman manajemen aset
+Aslab -> Boundary: Akses halaman manajemen aset
 Boundary -> Control: Request data aset
 Control -> AssetEntity: Ambil data aset
 AssetEntity --> Control: Data aset
 Control --> Boundary: Tampilkan daftar aset
 
 alt Create (Tambah)
-    Admin -> Boundary: Input data aset baru
+    Aslab -> Boundary: Input data aset baru
     Boundary -> Control: Simpan aset baru
     Control -> AssetEntity: Generate kode & simpan
     AssetEntity --> Control: Success
     Control --> Boundary: Tampilkan pesan sukses
 else Read (Lihat)
-    Admin -> Boundary: Klik detail aset
+    Aslab -> Boundary: Klik detail aset
     Boundary -> Control: Request detail aset
     Control -> AssetEntity: Ambil detail aset
     AssetEntity --> Control: Detail aset
     Control --> Boundary: Tampilkan detail
 else Update (Edit)
-    Admin -> Boundary: Edit data aset
+    Aslab -> Boundary: Edit data aset
     Boundary -> Control: Update aset
     Control -> AssetEntity: Simpan perubahan
     AssetEntity --> Control: Success
     Control --> Boundary: Tampilkan pesan sukses
 else Delete (Hapus)
-    Admin -> Boundary: Hapus aset
+    Aslab -> Boundary: Hapus aset
     Boundary -> Control: Kirim perintah hapus
     Control -> AssetEntity: Hapus data aset
     AssetEntity --> Control: Success

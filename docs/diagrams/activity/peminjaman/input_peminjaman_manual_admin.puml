@@ -1,0 +1,63 @@
+@startuml Input Peminjaman Manual (Admin)
+!theme plain
+skinparam ConditionEndStyle hline
+skinparam conditionStyle diamond
+
+title Activity Diagram - Input Peminjaman Manual (Admin)
+
+|Admin|
+|Sistem|
+
+|Admin|
+start
+:Mahasiswa/Dosen Datang\nLangsung ke Lab;
+:Buka Form Input\nPeminjaman Manual;
+
+|Sistem|
+:Tampilkan Form\nPeminjaman Manual;
+
+|Admin|
+:Input Data Peminjam\n(Nama, NIM/NIP);
+:Pilih Aset/Bahan\n& Input Jumlah;
+:Klik Submit;
+
+|Sistem|
+:Validasi Data Input;
+
+if (Data Valid?) then (tidak)
+  :Tampilkan Error\nValidasi;
+  stop
+else (ya)
+  :Validasi Stok;
+endif
+
+if (Stok Cukup?) then (tidak)
+  :Tampilkan Error\nStok Tidak Cukup;
+  stop
+else (ya)
+  :Kurangi Stok;
+  :Simpan Peminjaman\n(Status: Approved);
+  :Tampilkan Pesan Sukses;
+endif
+
+if (Tipe Aset?) then (ya)
+  |Admin|
+  :Terima Pengembalian\nAset dari Peminjam;
+  
+  if (Kondisi Baik?) then (tidak)
+    :Input Catatan Kerusakan;
+  else (ya)
+  endif
+  
+  :Klik Konfirmasi\nPengembalian;
+  
+  |Sistem|
+  :Tambah Stok Kembali;
+  :Update Status\nDikembalikan;
+  stop
+else (tidak - Bahan Habis Pakai)
+  :Update Status Selesai;
+  stop
+endif
+
+@enduml
