@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PeminjamanBarangController extends Controller
 {
@@ -417,6 +418,8 @@ class PeminjamanBarangController extends Controller
                         'manual_borrower_name' => $record->manual_borrower_name,
                         'manual_borrower_phone' => $record->manual_borrower_phone,
                         'manual_borrower_class' => $record->manual_borrower_class,
+                        'gambar' => $record->asetAslab->gambar,
+                        'lokasi' => $record->asetAslab->lokasi?->nama_lokasi,
                     ]
                 ]);
             } elseif ($record->bahan_id && $record->bahan) {
@@ -442,6 +445,8 @@ class PeminjamanBarangController extends Controller
                         'manual_borrower_name' => $record->manual_borrower_name,
                         'manual_borrower_phone' => $record->manual_borrower_phone,
                         'manual_borrower_class' => $record->manual_borrower_class,
+                        'gambar' => $record->bahan->gambar,
+                        'lokasi' => $record->bahan->lokasi?->nama_lokasi,
                     ]
                 ]);
             } else {
@@ -471,12 +476,95 @@ class PeminjamanBarangController extends Controller
                     'status_text' => 'Digunakan',
                     'keterangan' => $record->keperluan,
                     'approval_note' => $record->catatan,
-                    'approved_by' => $record->approvedBy?->name,
                     'approved_at' => $record->approved_at,
                     'agreement_accepted' => true,
+                    'gambar' => $record->bahan->gambar,
+                    'lokasi' => $record->bahan->lokasi?->nama_lokasi,
                 ]
             ]);
         }
+    }
+
+    public function exportPdf($id)
+    {
+        // Handle composite ID for unified records
+        $recordType = 'peminjaman'; // default
+        $originalId = $id;
+
+        if (strpos($id, 'peminjaman_') === 0) {
+            $originalId = str_replace('peminjaman_', '', $id);
+            $recordType = 'peminjaman';
+        } elseif (strpos($id, 'penggunaan_') === 0) {
+            $originalId = str_replace('penggunaan_', '', $id);
+            $recordType = 'penggunaan';
+        }
+
+        if ($recordType === 'peminjaman') {
+            $record = PeminjamanAset::with(['asetAslab.lokasi', 'bahan.lokasi', 'user', 'approvedBy'])->findOrFail($originalId);
+
+            // Check if user can view this record
+            if (!in_array(Auth::user()->role, ['admin', 'aslab']) && $record->user_id !== Auth::id()) {
+                abort(403);
+            }
+
+            $data = [
+                'id' => $record->id,
+                'record_type' => 'peminjaman',
+                'nama_peminjam' => $record->user->name,
+                'nama_barang' => $record->aset_id ? $record->asetAslab?->nama_aset : $record->bahan?->nama,
+                'kode_barang' => $record->aset_id ? $record->asetAslab?->kode_aset : ($record->bahan?->kode ?? 'N/A'),
+                'tipe_barang' => $record->aset_id ? 'aset' : 'bahan',
+                'jumlah' => $record->stok,
+                'tanggal_pinjam' => $record->tanggal_pinjam,
+                'tanggal_kembali' => $record->tanggal_kembali,
+                'target_return_date' => $record->target_return_date,
+                'status' => $record->status,
+                'status_text' => $record->status_text,
+                'keterangan' => $record->keterangan,
+                'approval_note' => $record->approval_note,
+                'approved_by' => $record->approvedBy?->name,
+                'approved_at' => $record->approved_at,
+                'manual_borrower_name' => $record->manual_borrower_name,
+                'manual_borrower_phone' => $record->manual_borrower_phone,
+                'manual_borrower_class' => $record->manual_borrower_class,
+                'lokasi' => $record->aset_id ? $record->asetAslab?->lokasi?->nama_lokasi : $record->bahan?->lokasi?->nama_lokasi,
+            ];
+        } else {
+            $record = PenggunaanBahan::with(['bahan.lokasi', 'user', 'approvedBy'])->findOrFail($originalId);
+
+            // Check if user can view this record
+            if (!in_array(Auth::user()->role, ['admin', 'aslab']) && $record->user_id !== Auth::id()) {
+                abort(403);
+            }
+
+            $data = [
+                'id' => $record->id,
+                'record_type' => 'penggunaan',
+                'nama_peminjam' => $record->user->name,
+                'nama_barang' => $record->bahan->nama,
+                'kode_barang' => $record->bahan->kode ?? 'N/A',
+                'tipe_barang' => 'bahan',
+                'jumlah' => $record->jumlah_digunakan,
+                'tanggal_pinjam' => $record->tanggal_penggunaan,
+                'tanggal_kembali' => null,
+                'target_return_date' => null,
+                'status' => 'used',
+                'status_text' => 'Digunakan',
+                'keterangan' => $record->keperluan,
+                'approval_note' => $record->catatan,
+                'approved_by' => $record->approvedBy?->name,
+                'approved_at' => $record->approved_at,
+                'manual_borrower_name' => null,
+                'manual_borrower_phone' => null,
+                'manual_borrower_class' => null,
+                'lokasi' => $record->bahan->lokasi?->nama_lokasi,
+            ];
+        }
+
+        $pdf = Pdf::loadView('pdf.peminjaman', ['peminjaman' => $data]);
+        
+        $filename = 'Peminjaman_' . str_replace(' ', '_', $data['nama_barang']) . '_' . $data['id'] . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function approve(Request $request, $id)

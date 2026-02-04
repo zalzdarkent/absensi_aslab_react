@@ -111,7 +111,7 @@ Kami dari Laboratorium ingin mengingatkan tentang peminjaman barang:
 
 Mohon untuk mengembalikan barang sesuai jadwal. Jika ada kendala, silakan hubungi kami.
 
-Terima kasih atas perhatian dan kerjasamanya!`;
+Terima kasih atas perhatian dan kerjasamanya😊`;
         }
     } else {
         // Tidak ada target date

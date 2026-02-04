@@ -4,45 +4,52 @@ skinparam ConditionEndStyle hline
 
 title Activity Diagram - Proses Absensi RFID
 
-|User (Aslab & Admin)|
+|Aslab / Admin|
 start
 
 if (Membawa RFID Card?) then (Ya)
-  :Scan RFID Card ke Reader;
+  :Scan RFID Card;
+
+  |Sistem|
+  :Validasi RFID & User;
   
-  |Sistem Absensi|
-  :Validasi ID Card & User;
-  
-  if (RFID Valid?) then (Tidak)
-    :Tampilkan Pesan Error\n"RFID Tidak Terdaftar";
-    detach
-  else (Ya)
-    :Cek Status Absensi Hari Ini\n(Database);
-  endif
-  
-  if (Sudah Check-in?) then (Belum)
-    :Simpan Data Check-in;
-    :Tampilkan Pesan Sukses\n"Selamat Datang";
-    detach
-  else (Sudah)
-    if (Sudah Check-out?) then (Belum)
-      :Simpan Data Check-out;
-      :Tampilkan Pesan Sukses\n"Sampai Jumpa";
-      detach
+  if (RFID Valid?) then (Ya)
+    :Cek Status Absensi\nHari Ini;
+    
+    if (Sudah Check-in?) then (Belum)
+      :Simpan Data Check-in;
+      :Tampilkan Pesan Sukses\n"Selamat Datang";
+      |Asisten / Admin|
+      stop
     else (Sudah)
-      :Tampilkan Pesan Error\n"Anda Sudah Absen Lengkap";
-      detach
+      if (Sudah Check-out?) then (Belum)
+        |Sistem|
+        :Simpan Data Check-out;
+        :Tampilkan Pesan Sukses\n"Sampai Jumpa";
+        |Asisten / Admin|
+        stop
+      else (Sudah)
+        |Sistem|
+        :Tampilkan Error\n"Sudah Absen Lengkap";
+        |Asisten / Admin|
+        stop
+      endif
     endif
+  else (Tidak)
+    :Tampilkan Error\n"RFID Tidak Terdaftar";
+    |Asisten / Admin|
+    stop
   endif
 
-else (Tidak - Manual)
-  |User (Aslab & Admin)|
-  :Lapor ke Admin untuk\nAbsen Manual;
-  :Admin Input Data Absensi\nsecara Manual;
+else (Tidak)
+  |Asisten / Admin|
+  :Melapor ke Admin untuk\nAbsensi Manual;
+  :Admin Input Absensi\nManual;
   
-  |Sistem Absensi|
-  :Proses Simpan Data Manual;
-  :Tampilkan Status\nSukses/Gagal;
+  |Sistem|
+  :Validasi & Simpan\nAbsensi Manual;
+  :Tampilkan Status\nAbsensi Manual;
+  |Asisten / Admin|
   stop
 
 endif

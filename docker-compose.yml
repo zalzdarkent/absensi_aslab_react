@@ -65,6 +65,14 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     command: /bin/sh -c "while true; do php artisan schedule:run; sleep 60; done"
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=mysql
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-aslab}
+      - DB_USERNAME=${DB_USERNAME:-aslab}
+      - DB_PASSWORD=${DB_PASSWORD}
     volumes:
       - .:/var/www
     depends_on:
